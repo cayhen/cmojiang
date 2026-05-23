@@ -29,6 +29,11 @@ function makeRequest(body: object) {
 describe('POST /api/unlock', () => {
   beforeEach(() => jest.clearAllMocks());
 
+  it('returns 400 when fields are missing', async () => {
+    const res = await POST(makeRequest({}));
+    expect(res.status).toBe(400);
+  });
+
   it('returns 404 when collection not found', async () => {
     mockSingle.mockResolvedValue({ data: null, error: { message: 'Not found' } });
     const res = await POST(makeRequest({ collectionId: 'x', password: 'pw' }));

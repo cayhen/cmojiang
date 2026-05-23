@@ -5,7 +5,15 @@ import { signToken } from '@/lib/auth';
 import { sessionCookieOptions } from '@/lib/session';
 
 export async function POST(req: NextRequest) {
-  const { collectionId, password } = await req.json();
+  let collectionId: string | undefined;
+  let password: string | undefined;
+  try {
+    const body = await req.json() as { collectionId?: string; password?: string };
+    collectionId = body.collectionId;
+    password = body.password;
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+  }
 
   if (!collectionId || !password) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
