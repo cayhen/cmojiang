@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation';
 import { supabaseAdmin } from '@/lib/supabase';
 import { UnlockForm } from '@/components/UnlockForm';
 
+export const revalidate = 0;
+
 export default async function UnlockPage({ params }: { params: { id: string } }) {
   const { data: collection } = await supabaseAdmin
     .from('collections')

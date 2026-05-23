@@ -12,7 +12,9 @@ export default async function HomePage() {
   const collections = (data ?? []).map(c => ({
     id: c.id,
     name: c.name,
-    photo_count: (c.photos as { count: number }[])[0]?.count ?? 0,
+    photo_count: Array.isArray(c.photos) && typeof (c.photos[0] as { count?: number })?.count === 'number'
+      ? (c.photos[0] as { count: number }).count
+      : 0,
   }));
 
   return (

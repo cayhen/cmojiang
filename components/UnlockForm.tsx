@@ -14,17 +14,21 @@ export function UnlockForm({ collectionId }: { collectionId: string }) {
     setLoading(true);
     setError('');
 
-    const res = await fetch('/api/unlock', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ collectionId, password }),
-    });
+    try {
+      const res = await fetch('/api/unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ collectionId, password }),
+      });
 
-    if (res.ok) {
-      router.push(`/c/${collectionId}/gallery`);
-    } else {
+      if (res.ok) {
+        router.push(`/c/${collectionId}/gallery`);
+        return;
+      }
+
       const data = await res.json();
       setError(data.error ?? 'Something went wrong');
+    } finally {
       setLoading(false);
     }
   }
