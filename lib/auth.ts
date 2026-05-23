@@ -14,7 +14,8 @@ export async function signToken(collectionId: string): Promise<string> {
 export async function verifyToken(token: string): Promise<{ collectionId: string } | null> {
   try {
     const { payload } = await jwtVerify(token, secret());
-    return { collectionId: payload.collectionId as string };
+    if (typeof payload.collectionId !== 'string') return null;
+    return { collectionId: payload.collectionId };
   } catch {
     return null;
   }
