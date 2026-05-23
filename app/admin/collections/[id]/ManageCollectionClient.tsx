@@ -27,30 +27,39 @@ export function ManageCollectionClient({
     setUploading(true);
     setUploadErrors([]);
 
-    const formData = new FormData();
-    Array.from(files).forEach(f => formData.append('photos', f));
+    try {
+      const formData = new FormData();
+      Array.from(files).forEach(f => formData.append('photos', f));
 
-    const res = await fetch(`/api/admin/collections/${collection.id}/photos`, {
-      method: 'POST',
-      body: formData,
-    });
+      const res = await fetch(`/api/admin/collections/${collection.id}/photos`, {
+        method: 'POST',
+        body: formData,
+      });
 
-    const results = await res.json();
-    const errors = results
-      .filter((r: { error?: string }) => r.error)
-      .map((r: { filename: string; error: string }) => `${r.filename}: ${r.error}`);
-    setUploadErrors(errors);
-    setUploading(false);
-    router.push(`/admin/collections/${collection.id}`);
+      const results = await res.json();
+      const errors = results
+        .filter((r: { error?: string }) => r.error)
+        .map((r: { filename: string; error: string }) => `${r.filename}: ${r.error}`);
+      setUploadErrors(errors);
+      router.push(`/admin/collections/${collection.id}`);
+    } catch {
+      setUploadErrors(['Upload failed. Please try again.']);
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function handleDelete(photoId: string) {
     if (!confirm('Delete this photo?')) return;
-    await fetch(`/api/admin/collections/${collection.id}/photos`, {
+    const res = await fetch(`/api/admin/collections/${collection.id}/photos`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ photoId }),
     });
+    if (!res.ok) {
+      alert('Failed to delete photo.');
+      return;
+    }
     setPhotos(ps => ps.filter(p => p.id !== photoId));
   }
 
@@ -67,7 +76,11 @@ export function ManageCollectionClient({
 
   async function handleDeleteCollection() {
     if (!confirm(`Delete "${collection.name}" and all its photos? This cannot be undone.`)) return;
-    await fetch(`/api/admin/collections/${collection.id}`, { method: 'DELETE' });
+    const res = await fetch(`/api/admin/collections/${collection.id}`, { method: 'DELETE' });
+    if (!res.ok) {
+      alert('Failed to delete collection.');
+      return;
+    }
     router.push('/admin/dashboard');
   }
 

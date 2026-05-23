@@ -47,6 +47,7 @@ export async function GET(
   const passthrough = new PassThrough();
   const archive = archiver('zip', { zlib: { level: 6 } });
   archive.pipe(passthrough);
+  archive.on('error', err => passthrough.destroy(err));
 
   (async () => {
     for (const { url, filename } of signedPhotos) {
@@ -56,7 +57,7 @@ export async function GET(
       archive.append(Readable.fromWeb(res.body as Parameters<typeof Readable.fromWeb>[0]), { name: filename });
     }
     await archive.finalize();
-  })();
+  })().catch(err => passthrough.destroy(err));
 
   const stream = new ReadableStream({
     start(controller) {

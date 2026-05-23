@@ -32,5 +32,5 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   // Matches /admin/anything but NOT /admin itself (login page)
-  matcher: ['/admin/:path+'],
+  matcher: ['/admin/:path+', '/api/admin/:path+'],
 };

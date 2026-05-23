@@ -59,9 +59,11 @@ export async function DELETE(
 
   if (!photo) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  await supabaseAdmin.storage.from('photos').remove([photo.storage_path]);
+  const { error: storageError } = await supabaseAdmin.storage.from('photos').remove([photo.storage_path]);
+  if (storageError) return NextResponse.json({ error: 'Storage delete failed' }, { status: 500 });
 
-  await supabaseAdmin.from('photos').delete().eq('id', photoId);
+  const { error: dbError } = await supabaseAdmin.from('photos').delete().eq('id', photoId);
+  if (dbError) return NextResponse.json({ error: 'DB delete failed' }, { status: 500 });
 
   return new NextResponse(null, { status: 204 });
 }

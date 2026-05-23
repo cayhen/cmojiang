@@ -16,17 +16,22 @@ export default function NewCollectionPage() {
     setLoading(true);
     setError('');
 
-    const res = await fetch('/api/admin/collections', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, password }),
-    });
+    try {
+      const res = await fetch('/api/admin/collections', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, password }),
+      });
 
-    if (res.ok) {
-      router.push('/admin/dashboard');
-    } else {
-      const data = await res.json();
-      setError(data.error ?? 'Failed to create');
+      if (res.ok) {
+        router.push('/admin/dashboard');
+      } else {
+        const data = await res.json();
+        setError(data.error ?? 'Failed to create');
+      }
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
       setLoading(false);
     }
   }
