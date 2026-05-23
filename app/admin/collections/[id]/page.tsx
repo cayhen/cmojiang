@@ -1,0 +1,32 @@
+import { notFound } from 'next/navigation';
+import { supabaseAdmin } from '@/lib/supabase';
+import { ManageCollectionClient } from './ManageCollectionClient';
+
+export default async function ManageCollectionPage({ params }: { params: { id: string } }) {
+  const [{ data: collection }, { data: photos }] = await Promise.all([
+    supabaseAdmin.from('collections').select('id, name').eq('id', params.id).single(),
+    supabaseAdmin
+      .from('photos')
+      .select('id, filename, storage_path')
+      .eq('collection_id', params.id)
+      .order('uploaded_at', { ascending: true }),
+  ]);
+
+  if (!collection) notFound();
+
+  const photosWithUrls = await Promise.all(
+    (photos ?? []).map(async photo => {
+      const { data } = await supabaseAdmin.storage
+        .from('photos')
+        .createSignedUrl(photo.storage_path, 3600);
+      return { id: photo.id, filename: photo.filename, url: data?.signedUrl ?? '' };
+    })
+  );
+
+  return (
+    <ManageCollectionClient
+      collection={collection}
+      initialPhotos={photosWithUrls}
+    />
+  );
+}
