@@ -36,9 +36,7 @@ export function ManageCollectionClient({
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(
-            fileList.map(f => ({ filename: f.name, contentType: f.type }))
-          ),
+          body: JSON.stringify({ files: fileList.map(f => ({ filename: f.name })) }),
         }
       );
 
