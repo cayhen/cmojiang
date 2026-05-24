@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { supabaseAdmin } from '@/lib/supabase';
-import { signToken } from '@/lib/auth';
-import { sessionCookieOptions } from '@/lib/session';
+import { signToken, verifyUserToken } from '@/lib/auth';
+import { sessionCookieOptions, USER_COOKIE_NAME } from '@/lib/session';
 
 export async function POST(req: NextRequest) {
   let collectionId: string | undefined;
@@ -33,6 +33,17 @@ export async function POST(req: NextRequest) {
 
   if (!valid) {
     return NextResponse.json({ error: 'Incorrect password' }, { status: 401 });
+  }
+
+  // Record access for logged-in users
+  const userToken = req.cookies.get(USER_COOKIE_NAME)?.value;
+  if (userToken) {
+    const userSession = await verifyUserToken(userToken);
+    if (userSession) {
+      await supabaseAdmin
+        .from('user_collection_access')
+        .upsert({ user_id: userSession.userId, collection_id: collectionId }, { onConflict: 'user_id,collection_id' });
+    }
   }
 
   const token = await signToken(collectionId);
