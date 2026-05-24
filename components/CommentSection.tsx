@@ -1,0 +1,117 @@
+'use client';
+
+import { useState } from 'react';
+
+interface Comment {
+  id: string;
+  content: string;
+  created_at: string;
+  username: string;
+}
+
+interface Props {
+  collectionId: string;
+  initialComments: Comment[];
+  currentUsername: string | null;
+}
+
+export function CommentSection({ collectionId, initialComments, currentUsername }: Props) {
+  const [comments, setComments] = useState(initialComments);
+  const [newComment, setNewComment] = useState('');
+  const [posting, setPosting] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handlePost(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+    setPosting(true);
+    setError('');
+
+    try {
+      const res = await fetch(`/api/collections/${collectionId}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: newComment.trim() }),
+      });
+
+      if (res.ok) {
+        const comment = await res.json();
+        setComments(cs => [...cs, comment]);
+        setNewComment('');
+      } else {
+        const data = await res.json();
+        setError(data.error ?? 'Failed to post');
+      }
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setPosting(false);
+    }
+  }
+
+  async function handleDelete(commentId: string) {
+    const res = await fetch(`/api/comments/${commentId}`, { method: 'DELETE' });
+    if (res.ok) {
+      setComments(cs => cs.filter(c => c.id !== commentId));
+    }
+  }
+
+  return (
+    <section className="mt-12 pb-12 max-w-lg">
+      <p className="text-[#3a3a3a] text-xs uppercase tracking-widest mb-4">Comments</p>
+
+      {comments.length === 0 && (
+        <p className="text-[#3a3a3a] text-sm font-light mb-4">No comments yet.</p>
+      )}
+
+      <div className="space-y-4 mb-6">
+        {comments.map(c => (
+          <div key={c.id} className="group">
+            <div className="flex items-baseline justify-between">
+              <span className="text-[#555] text-xs">{c.username}</span>
+              <span className="text-[#2a2a2a] text-xs">
+                {new Date(c.created_at).toLocaleDateString()}
+              </span>
+            </div>
+            <div className="flex items-start justify-between mt-0.5">
+              <p className="text-[#888] text-sm font-light">{c.content}</p>
+              {currentUsername === c.username && (
+                <button
+                  onClick={() => handleDelete(c.id)}
+                  className="text-[#2a2a2a] hover:text-[#555] text-xs ml-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                  aria-label="Delete comment"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {currentUsername ? (
+        <form onSubmit={handlePost} className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Add a comment..."
+            value={newComment}
+            onChange={e => setNewComment(e.target.value)}
+            className="flex-1 bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2 text-[#888] text-sm placeholder:text-[#3a3a3a] focus:outline-none focus:border-[#2a2a2a] font-light"
+          />
+          <button
+            type="submit"
+            disabled={posting || !newComment.trim()}
+            className="bg-[#161616] border border-[#1a1a1a] text-[#666] text-sm px-4 rounded hover:border-[#2a2a2a] hover:text-[#888] transition-colors disabled:opacity-50"
+          >
+            {posting ? '...' : 'Post'}
+          </button>
+        </form>
+      ) : (
+        <p className="text-[#3a3a3a] text-xs">
+          <a href="/login" className="hover:text-[#555] transition-colors">Sign in</a> to leave a comment.
+        </p>
+      )}
+      {error && <p className="text-red-500/70 text-xs mt-1">{error}</p>}
+    </section>
+  );
+}

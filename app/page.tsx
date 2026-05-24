@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import { SearchBar } from '@/components/SearchBar';
+import { UserNav } from '@/components/UserNav';
 
 export const revalidate = 0;
 
@@ -20,9 +21,10 @@ export default async function HomePage() {
   return (
     <main className="min-h-screen p-8 max-w-2xl mx-auto">
       <header className="mb-8">
-        <p className="text-[#3a3a3a] text-xs tracking-widest uppercase font-light">
-          Caden Jiang — Photos
-        </p>
+        <div className="flex justify-between items-center">
+          <p className="text-[#3a3a3a] text-xs tracking-widest uppercase font-light">Caden Jiang — Photos</p>
+          <UserNav />
+        </div>
       </header>
       <SearchBar collections={collections} />
     </main>
