@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ['archiver'],
+  experimental: {
+    serverComponentsExternalPackages: ['archiver'],
+  },
 };
 
 export default nextConfig;
