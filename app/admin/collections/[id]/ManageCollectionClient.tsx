@@ -87,20 +87,20 @@ export function ManageCollectionClient({
   return (
     <main className="min-h-screen p-8 max-w-2xl mx-auto">
       <div className="flex items-center gap-4 mb-8">
-        <Link href="/admin/dashboard" className="text-[#3a3a3a] text-xs hover:text-[#555]">← Back</Link>
-        <p className="text-[#888] text-sm font-light">{collection.name}</p>
+        <Link href="/admin/dashboard" className="text-[#666] text-xs hover:text-[#777]">← Back</Link>
+        <p className="text-[#bbb] text-sm font-light">{collection.name}</p>
       </div>
 
       {/* Upload */}
       <section className="mb-8">
-        <p className="text-[#3a3a3a] text-xs uppercase tracking-widest mb-3">Upload Photos</p>
+        <p className="text-[#666] text-xs uppercase tracking-widest mb-3">Upload Photos</p>
         <div
           className="border border-dashed border-[#2a2a2a] rounded p-8 text-center cursor-pointer hover:border-[#3a3a3a] transition-colors"
           onClick={() => fileInputRef.current?.click()}
           onDragOver={e => e.preventDefault()}
           onDrop={e => { e.preventDefault(); handleUpload(e.dataTransfer.files); }}
         >
-          <p className="text-[#3a3a3a] text-sm font-light">
+          <p className="text-[#666] text-sm font-light">
             {uploading ? 'Uploading...' : 'Drag photos here or click to select'}
           </p>
           <input
@@ -119,7 +119,7 @@ export function ManageCollectionClient({
 
       {/* Photos */}
       <section className="mb-8">
-        <p className="text-[#3a3a3a] text-xs uppercase tracking-widest mb-3">
+        <p className="text-[#666] text-xs uppercase tracking-widest mb-3">
           Photos ({photos.length})
         </p>
         <div className="grid grid-cols-3 gap-2">
@@ -139,7 +139,7 @@ export function ManageCollectionClient({
 
       {/* Change password */}
       <section className="mb-8">
-        <p className="text-[#3a3a3a] text-xs uppercase tracking-widest mb-3">Change Password</p>
+        <p className="text-[#666] text-xs uppercase tracking-widest mb-3">Change Password</p>
         <form onSubmit={handlePasswordUpdate} className="flex gap-2">
           <input
             type="password"
@@ -147,16 +147,16 @@ export function ManageCollectionClient({
             value={newPassword}
             onChange={e => setNewPassword(e.target.value)}
             required
-            className="flex-1 bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2 text-[#888] text-sm placeholder:text-[#3a3a3a] focus:outline-none focus:border-[#2a2a2a] font-light"
+            className="flex-1 bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2 text-[#bbb] text-sm placeholder:text-[#666] focus:outline-none focus:border-[#2a2a2a] font-light"
           />
           <button
             type="submit"
-            className="bg-[#161616] border border-[#1a1a1a] text-[#666] text-sm px-4 rounded hover:border-[#2a2a2a] hover:text-[#888] transition-colors"
+            className="bg-[#161616] border border-[#1a1a1a] text-[#888] text-sm px-4 rounded hover:border-[#2a2a2a] hover:text-[#bbb] transition-colors"
           >
             Update
           </button>
         </form>
-        {passwordMsg && <p className="text-[#555] text-xs mt-1">{passwordMsg}</p>}
+        {passwordMsg && <p className="text-[#777] text-xs mt-1">{passwordMsg}</p>}
       </section>
 
       {/* Delete collection */}

@@ -35,7 +35,7 @@ export default async function UnlockPage({ params }: { params: { id: string } })
   return (
     <main className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-xs">
-        <h1 className="text-[#888] font-light text-lg text-center mb-8">
+        <h1 className="text-[#bbb] font-light text-lg text-center mb-8">
           {collection.name}
         </h1>
         <UnlockForm collectionId={collection.id} />

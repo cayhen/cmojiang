@@ -49,7 +49,7 @@ export function Lightbox({ photos, initialIndex, onClose }: Props) {
                 onClick={() => setIndex(i => Math.max(i - 1, 0))}
                 disabled={index === 0}
                 aria-label="Previous photo"
-                className="text-[#555] hover:text-[#888] disabled:opacity-30 text-sm transition-colors"
+                className="text-[#777] hover:text-[#bbb] disabled:opacity-30 text-sm transition-colors"
               >
                 ← Prev
               </button>
@@ -57,7 +57,7 @@ export function Lightbox({ photos, initialIndex, onClose }: Props) {
                 onClick={() => setIndex(i => Math.min(i + 1, photos.length - 1))}
                 disabled={index === photos.length - 1}
                 aria-label="Next photo"
-                className="text-[#555] hover:text-[#888] disabled:opacity-30 text-sm transition-colors"
+                className="text-[#777] hover:text-[#bbb] disabled:opacity-30 text-sm transition-colors"
               >
                 Next →
               </button>
@@ -65,7 +65,7 @@ export function Lightbox({ photos, initialIndex, onClose }: Props) {
             <a
               href={photo.url}
               download={photo.filename}
-              className="text-[#555] hover:text-[#888] text-sm transition-colors"
+              className="text-[#777] hover:text-[#bbb] text-sm transition-colors"
             >
               Download
             </a>
@@ -74,7 +74,7 @@ export function Lightbox({ photos, initialIndex, onClose }: Props) {
         <button
           onClick={onClose}
           aria-label="Close lightbox"
-          className="absolute top-4 right-4 text-[#555] hover:text-[#888] text-2xl leading-none transition-colors"
+          className="absolute top-4 right-4 text-[#777] hover:text-[#bbb] text-2xl leading-none transition-colors"
         >
           ×
         </button>

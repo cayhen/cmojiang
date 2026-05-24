@@ -81,10 +81,10 @@ export default async function GalleryPage({ params }: { params: { id: string } }
     <main className="min-h-screen p-6">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <Link href="/" className="text-[#3a3a3a] text-xs hover:text-[#555] transition-colors">
+          <Link href="/" className="text-[#666] text-xs hover:text-[#777] transition-colors">
             ← All
           </Link>
-          <h1 className="text-[#888] font-light text-sm">{collection.name}</h1>
+          <h1 className="text-[#bbb] font-light text-sm">{collection.name}</h1>
           <KudosButton
             collectionId={params.id}
             initialCount={kudosCount ?? 0}
@@ -96,14 +96,14 @@ export default async function GalleryPage({ params }: { params: { id: string } }
           <UserNav />
           <a
             href={`/api/collections/${params.id}/zip`}
-            className="text-[#3a3a3a] text-xs hover:text-[#666] transition-colors"
+            className="text-[#666] text-xs hover:text-[#888] transition-colors"
           >
             Download all
           </a>
         </div>
       </div>
       {photosWithUrls.length === 0 ? (
-        <p className="text-[#3a3a3a] text-sm">No photos yet.</p>
+        <p className="text-[#666] text-sm">No photos yet.</p>
       ) : (
         <MasonryGrid photos={photosWithUrls} />
       )}

@@ -48,9 +48,9 @@ export function KudosButton({ collectionId, initialCount, initialHasKudos, logge
       onClick={toggle}
       disabled={loading}
       aria-label={hasKudos ? 'Remove kudos' : 'Give kudos'}
-      className="flex items-center gap-1.5 text-[#3a3a3a] hover:text-[#666] transition-colors disabled:opacity-50 group"
+      className="flex items-center gap-1.5 text-[#666] hover:text-[#888] transition-colors disabled:opacity-50 group"
     >
-      <span className={`text-base leading-none transition-colors ${hasKudos ? 'text-[#888]' : 'text-[#3a3a3a] group-hover:text-[#666]'}`}>
+      <span className={`text-base leading-none transition-colors ${hasKudos ? 'text-[#bbb]' : 'text-[#666] group-hover:text-[#888]'}`}>
         {hasKudos ? '♥' : '♡'}
       </span>
       <span className="text-xs font-light">{count}</span>

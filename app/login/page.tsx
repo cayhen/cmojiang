@@ -39,7 +39,7 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-xs">
-        <p className="text-[#3a3a3a] text-xs tracking-widest uppercase mb-8 text-center font-light">Sign in</p>
+        <p className="text-[#666] text-xs tracking-widest uppercase mb-8 text-center font-light">Sign in</p>
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
             type="text"
@@ -48,7 +48,7 @@ export default function LoginPage() {
             onChange={e => setUsername(e.target.value)}
             required
             autoFocus
-            className="w-full bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2.5 text-[#888] text-sm placeholder:text-[#3a3a3a] focus:outline-none focus:border-[#2a2a2a] font-light"
+            className="w-full bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2.5 text-[#bbb] text-sm placeholder:text-[#666] focus:outline-none focus:border-[#2a2a2a] font-light"
           />
           <input
             type="password"
@@ -56,20 +56,20 @@ export default function LoginPage() {
             value={password}
             onChange={e => setPassword(e.target.value)}
             required
-            className="w-full bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2.5 text-[#888] text-sm placeholder:text-[#3a3a3a] focus:outline-none focus:border-[#2a2a2a] font-light"
+            className="w-full bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2.5 text-[#bbb] text-sm placeholder:text-[#666] focus:outline-none focus:border-[#2a2a2a] font-light"
           />
           {error && <p className="text-red-500/70 text-xs">{error}</p>}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#161616] border border-[#1a1a1a] text-[#666] text-sm py-2.5 rounded hover:border-[#2a2a2a] hover:text-[#888] transition-colors disabled:opacity-50"
+            className="w-full bg-[#161616] border border-[#1a1a1a] text-[#888] text-sm py-2.5 rounded hover:border-[#2a2a2a] hover:text-[#bbb] transition-colors disabled:opacity-50"
           >
             {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
-        <p className="text-[#3a3a3a] text-xs text-center mt-5">
+        <p className="text-[#666] text-xs text-center mt-5">
           No account?{' '}
-          <Link href="/signup" className="hover:text-[#555] transition-colors">Create one</Link>
+          <Link href="/signup" className="hover:text-[#777] transition-colors">Create one</Link>
         </p>
       </div>
     </main>

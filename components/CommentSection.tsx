@@ -58,27 +58,27 @@ export function CommentSection({ collectionId, initialComments, currentUsername 
 
   return (
     <section className="mt-12 pb-12 max-w-lg">
-      <p className="text-[#3a3a3a] text-xs uppercase tracking-widest mb-4">Comments</p>
+      <p className="text-[#666] text-xs uppercase tracking-widest mb-4">Comments</p>
 
       {comments.length === 0 && (
-        <p className="text-[#3a3a3a] text-sm font-light mb-4">No comments yet.</p>
+        <p className="text-[#666] text-sm font-light mb-4">No comments yet.</p>
       )}
 
       <div className="space-y-4 mb-6">
         {comments.map(c => (
           <div key={c.id} className="group">
             <div className="flex items-baseline justify-between">
-              <span className="text-[#555] text-xs">{c.username}</span>
-              <span className="text-[#2a2a2a] text-xs">
+              <span className="text-[#777] text-xs">{c.username}</span>
+              <span className="text-[#555] text-xs">
                 {new Date(c.created_at).toLocaleDateString()}
               </span>
             </div>
             <div className="flex items-start justify-between mt-0.5">
-              <p className="text-[#888] text-sm font-light">{c.content}</p>
+              <p className="text-[#bbb] text-sm font-light">{c.content}</p>
               {currentUsername === c.username && (
                 <button
                   onClick={() => handleDelete(c.id)}
-                  className="text-[#2a2a2a] hover:text-[#555] text-xs ml-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                  className="text-[#555] hover:text-[#777] text-xs ml-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                   aria-label="Delete comment"
                 >
                   ×
@@ -96,19 +96,19 @@ export function CommentSection({ collectionId, initialComments, currentUsername 
             placeholder="Add a comment..."
             value={newComment}
             onChange={e => setNewComment(e.target.value)}
-            className="flex-1 bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2 text-[#888] text-sm placeholder:text-[#3a3a3a] focus:outline-none focus:border-[#2a2a2a] font-light"
+            className="flex-1 bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2 text-[#bbb] text-sm placeholder:text-[#666] focus:outline-none focus:border-[#2a2a2a] font-light"
           />
           <button
             type="submit"
             disabled={posting || !newComment.trim()}
-            className="bg-[#161616] border border-[#1a1a1a] text-[#666] text-sm px-4 rounded hover:border-[#2a2a2a] hover:text-[#888] transition-colors disabled:opacity-50"
+            className="bg-[#161616] border border-[#1a1a1a] text-[#888] text-sm px-4 rounded hover:border-[#2a2a2a] hover:text-[#bbb] transition-colors disabled:opacity-50"
           >
             {posting ? '...' : 'Post'}
           </button>
         </form>
       ) : (
-        <p className="text-[#3a3a3a] text-xs">
-          <a href="/login" className="hover:text-[#555] transition-colors">Sign in</a> to leave a comment.
+        <p className="text-[#666] text-xs">
+          <a href="/login" className="hover:text-[#777] transition-colors">Sign in</a> to leave a comment.
         </p>
       )}
       {error && <p className="text-red-500/70 text-xs mt-1">{error}</p>}

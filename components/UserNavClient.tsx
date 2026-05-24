@@ -15,10 +15,10 @@ export function UserNavClient({ username }: { username: string | null }) {
   if (username) {
     return (
       <div className="flex items-center gap-3">
-        <span className="text-[#3a3a3a] text-xs font-light">{username}</span>
+        <span className="text-[#666] text-xs font-light">{username}</span>
         <button
           onClick={handleLogout}
-          className="text-[#2a2a2a] text-xs hover:text-[#555] transition-colors"
+          className="text-[#555] text-xs hover:text-[#777] transition-colors"
         >
           Sign out
         </button>
@@ -28,10 +28,10 @@ export function UserNavClient({ username }: { username: string | null }) {
 
   return (
     <div className="flex items-center gap-3">
-      <Link href="/login" className="text-[#3a3a3a] text-xs hover:text-[#555] transition-colors">
+      <Link href="/login" className="text-[#666] text-xs hover:text-[#777] transition-colors">
         Sign in
       </Link>
-      <Link href="/signup" className="text-[#3a3a3a] text-xs hover:text-[#555] transition-colors">
+      <Link href="/signup" className="text-[#666] text-xs hover:text-[#777] transition-colors">
         Create account
       </Link>
     </div>
