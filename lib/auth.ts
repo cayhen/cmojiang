@@ -39,3 +39,22 @@ export async function verifyAdminToken(token: string): Promise<boolean> {
     return false;
   }
 }
+
+export async function signUserToken(userId: string, username: string): Promise<string> {
+  const s = new TextEncoder().encode(process.env.JWT_SECRET!);
+  return new SignJWT({ userId, username })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setExpirationTime('30d')
+    .sign(s);
+}
+
+export async function verifyUserToken(token: string): Promise<{ userId: string; username: string } | null> {
+  try {
+    const s = new TextEncoder().encode(process.env.JWT_SECRET!);
+    const { payload } = await jwtVerify(token, s);
+    if (typeof payload.userId !== 'string' || typeof payload.username !== 'string') return null;
+    return { userId: payload.userId, username: payload.username };
+  } catch {
+    return null;
+  }
+}
