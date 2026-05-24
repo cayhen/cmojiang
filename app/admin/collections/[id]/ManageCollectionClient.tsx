@@ -28,26 +28,69 @@ export function ManageCollectionClient({
     setUploadErrors([]);
 
     try {
-      const formData = new FormData();
-      Array.from(files).forEach(f => formData.append('photos', f));
+      const fileList = Array.from(files);
 
-      const res = await fetch(`/api/admin/collections/${collection.id}/photos`, {
-        method: 'POST',
-        body: formData,
-      });
+      // Step 1: get signed upload URLs from the server
+      const urlRes = await fetch(
+        `/api/admin/collections/${collection.id}/photos/upload-url`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(
+            fileList.map(f => ({ filename: f.name, contentType: f.type }))
+          ),
+        }
+      );
 
-      if (!res.ok) {
-        const text = await res.text();
-        setUploadErrors([`Upload failed (${res.status}): ${text.slice(0, 200)}`]);
+      if (!urlRes.ok) {
+        const text = await urlRes.text();
+        setUploadErrors([`Failed to get upload URLs (${urlRes.status}): ${text.slice(0, 200)}`]);
         return;
       }
 
-      const results = await res.json();
-      const errors = results
+      const urlResults: { filename: string; storagePath?: string; signedUrl?: string; error?: string }[] =
+        await urlRes.json();
+
+      const urlErrors = urlResults.filter(r => r.error).map(r => `${r.filename}: ${r.error}`);
+      if (urlErrors.length) { setUploadErrors(urlErrors); return; }
+
+      // Step 2: upload each file directly to Supabase (bypasses Vercel size limit)
+      const uploadErrors: string[] = [];
+      const confirmed: { storagePath: string; filename: string }[] = [];
+
+      await Promise.all(
+        urlResults.map(async ({ filename, storagePath, signedUrl }) => {
+          const file = fileList.find(f => f.name === filename)!;
+          const res = await fetch(signedUrl!, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
+          if (!res.ok) {
+            uploadErrors.push(`${filename}: storage upload failed (${res.status})`);
+          } else {
+            confirmed.push({ storagePath: storagePath!, filename });
+          }
+        })
+      );
+
+      if (uploadErrors.length) { setUploadErrors(uploadErrors); return; }
+
+      // Step 3: save metadata to database
+      const confirmRes = await fetch(`/api/admin/collections/${collection.id}/photos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uploads: confirmed }),
+      });
+
+      if (!confirmRes.ok) {
+        const text = await confirmRes.text();
+        setUploadErrors([`Failed to save photos (${confirmRes.status}): ${text.slice(0, 200)}`]);
+        return;
+      }
+
+      const confirmResults = await confirmRes.json();
+      const confirmErrors = confirmResults
         .filter((r: { error?: string }) => r.error)
         .map((r: { filename: string; error: string }) => `${r.filename}: ${r.error}`);
-      setUploadErrors(errors);
-      if (!errors.length) router.refresh();
+      setUploadErrors(confirmErrors);
+      if (!confirmErrors.length) router.refresh();
     } catch (err) {
       setUploadErrors([`Upload failed: ${err instanceof Error ? err.message : String(err)}`]);
     } finally {

@@ -1,43 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { randomUUID } from 'crypto';
-import path from 'path';
 
+// Called after client uploads directly to Supabase Storage via signed URL.
+// Body: { uploads: [{ storagePath, filename }] }
 export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const formData = await req.formData();
-  const files = formData.getAll('photos') as File[];
+  const { uploads } = await req.json() as {
+    uploads: { storagePath: string; filename: string }[];
+  };
 
-  if (!files.length) {
-    return NextResponse.json({ error: 'No files provided' }, { status: 400 });
+  if (!uploads?.length) {
+    return NextResponse.json({ error: 'No uploads provided' }, { status: 400 });
   }
 
   const results = await Promise.all(
-    files.map(async file => {
-      const photoId = randomUUID();
-      const ext = path.extname(file.name).toLowerCase() || '.jpg';
-      const storagePath = `${params.id}/${photoId}${ext}`;
-
-      const buffer = await file.arrayBuffer();
-
-      const { error: uploadError } = await supabaseAdmin.storage
-        .from('photos')
-        .upload(storagePath, buffer, { contentType: file.type });
-
-      if (uploadError) return { filename: file.name, error: uploadError.message };
-
+    uploads.map(async ({ storagePath, filename }) => {
       const { error: dbError } = await supabaseAdmin
         .from('photos')
-        .insert({ collection_id: params.id, storage_path: storagePath, filename: file.name });
+        .insert({ collection_id: params.id, storage_path: storagePath, filename });
 
       if (dbError) {
         await supabaseAdmin.storage.from('photos').remove([storagePath]);
-        return { filename: file.name, error: dbError.message };
+        return { filename, error: dbError.message };
       }
 
-      return { filename: file.name, ok: true };
+      return { filename, ok: true };
     })
   );
 
