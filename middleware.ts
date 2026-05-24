@@ -1,36 +1,18 @@
-import { createServerClient } from '@supabase/ssr';
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import 'server-only';
+import { NextRequest, NextResponse } from 'next/server';
+import { verifyAdminToken } from '@/lib/auth';
 
 export async function middleware(req: NextRequest) {
-  let res = NextResponse.next({ request: { headers: req.headers } });
+  const token = req.cookies.get('admin_session')?.value;
+  const isValid = token ? await verifyAdminToken(token) : false;
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return req.cookies.getAll(); },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            req.cookies.set(name, value);
-            res.cookies.set(name, value, options);
-          });
-        },
-      },
-    }
-  );
-
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user || user.email !== 'cadenjiang777@gmail.com') {
+  if (!isValid) {
     return NextResponse.redirect(new URL('/admin', req.url));
   }
 
-  return res;
+  return NextResponse.next();
 }
 
 export const config = {
-  // Matches /admin/anything but NOT /admin itself (login page)
   matcher: ['/admin/:path+', '/api/admin/:path+'],
 };

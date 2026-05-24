@@ -21,3 +21,21 @@ export async function verifyToken(token: string): Promise<{ collectionId: string
     return null;
   }
 }
+
+export async function signAdminToken(): Promise<string> {
+  const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
+  return new SignJWT({ admin: true })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setExpirationTime('7d')
+    .sign(secret);
+}
+
+export async function verifyAdminToken(token: string): Promise<boolean> {
+  try {
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
+    const { payload } = await jwtVerify(token, secret);
+    return payload.admin === true;
+  } catch {
+    return false;
+  }
+}
