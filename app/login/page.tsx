@@ -39,7 +39,10 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-xs">
-        <p className="text-[#666] text-xs tracking-widest uppercase mb-8 text-center font-light">Sign in</p>
+        <div className="flex items-center mb-8">
+          <Link href="/" className="text-[#555] text-xs hover:text-[#888] transition-colors">← Back</Link>
+          <p className="flex-1 text-[#666] text-xs tracking-widest uppercase text-center font-light">Sign in</p>
+        </div>
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
             type="text"
