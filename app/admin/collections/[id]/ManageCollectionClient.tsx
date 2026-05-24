@@ -36,14 +36,20 @@ export function ManageCollectionClient({
         body: formData,
       });
 
+      if (!res.ok) {
+        const text = await res.text();
+        setUploadErrors([`Upload failed (${res.status}): ${text.slice(0, 200)}`]);
+        return;
+      }
+
       const results = await res.json();
       const errors = results
         .filter((r: { error?: string }) => r.error)
         .map((r: { filename: string; error: string }) => `${r.filename}: ${r.error}`);
       setUploadErrors(errors);
-      router.push(`/admin/collections/${collection.id}`);
-    } catch {
-      setUploadErrors(['Upload failed. Please try again.']);
+      if (!errors.length) router.refresh();
+    } catch (err) {
+      setUploadErrors([`Upload failed: ${err instanceof Error ? err.message : String(err)}`]);
     } finally {
       setUploading(false);
     }
