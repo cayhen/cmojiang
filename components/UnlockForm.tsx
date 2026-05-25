@@ -17,6 +17,7 @@ function LockIcon({ open, fading }: { open: boolean; fading: boolean }) {
         strokeWidth="1.25"
         strokeLinecap="round"
         strokeLinejoin="round"
+        overflow="visible"
         className="text-[#bbb]"
       >
         {/* Lock body — always visible */}
