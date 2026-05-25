@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import FocusTrap from 'focus-trap-react';
 
-interface Photo { id: string; filename: string; url: string; }
+interface Photo { id: string; filename: string; url: string; collectionId?: string; }
 
 interface Props {
   photos: Photo[];
@@ -63,7 +63,7 @@ export function Lightbox({ photos, initialIndex, onClose }: Props) {
               </button>
             </div>
             <a
-              href={photo.url}
+              href={`/api/photo/${photo.id}`}
               download={photo.filename}
               className="text-[#777] hover:text-[#bbb] text-sm transition-colors"
             >

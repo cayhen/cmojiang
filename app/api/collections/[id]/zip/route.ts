@@ -51,9 +51,14 @@ export async function GET(
   (async () => {
     for (const { url, filename } of signedPhotos) {
       if (!url) continue;
-      const res = await fetch(url);
-      if (!res.body) continue;
-      archive.append(Readable.fromWeb(res.body as Parameters<typeof Readable.fromWeb>[0]), { name: filename });
+      try {
+        const res = await fetch(url);
+        if (!res.ok || !res.body) continue;
+        archive.append(Readable.fromWeb(res.body as Parameters<typeof Readable.fromWeb>[0]), { name: filename });
+      } catch {
+        // Skip photos that fail to fetch rather than crashing the whole zip
+        continue;
+      }
     }
     await archive.finalize();
   })().catch(err => passthrough.destroy(err));
