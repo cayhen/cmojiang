@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import FocusTrap from 'focus-trap-react';
 
-interface Photo { id: string; filename: string; url: string; collectionId?: string; }
+interface Photo { id: string; filename: string; url: string; originalUrl?: string; collectionId?: string; }
 
 interface Props {
   photos: Photo[];
@@ -39,7 +39,7 @@ export function Lightbox({ photos, initialIndex, onClose }: Props) {
           onClick={e => e.stopPropagation()}
         >
           <img
-            src={photo.url}
+            src={photo.originalUrl ?? photo.url}
             alt={photo.filename}
             className="max-h-[80vh] max-w-full object-contain"
           />

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Lightbox } from './Lightbox';
 
-interface Photo { id: string; filename: string; url: string; }
+interface Photo { id: string; filename: string; url: string; originalUrl?: string; }
 
 interface Props {
   photos: Photo[];
@@ -41,6 +41,7 @@ export function MasonryGrid({ photos, selectionMode, selectedIds, onTap }: Props
                 src={photo.url}
                 alt={photo.filename}
                 loading="lazy"
+                onError={e => { if (photo.originalUrl) e.currentTarget.src = photo.originalUrl; }}
                 className={`w-full block rounded-sm transition-opacity ${selected ? 'opacity-60' : 'opacity-100'}`}
               />
               {selectionMode && (

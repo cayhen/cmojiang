@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { supabaseAdmin } from '@/lib/supabase';
-import { publicPhotoUrl } from '@/lib/r2';
+import { publicPhotoUrl, thumbPath } from '@/lib/r2';
 import { ManageCollectionClient } from './ManageCollectionClient';
 
 export default async function ManageCollectionPage({ params }: { params: { id: string } }) {
@@ -18,7 +18,8 @@ export default async function ManageCollectionPage({ params }: { params: { id: s
   const photosWithUrls = (photos ?? []).map(photo => ({
     id: photo.id,
     filename: photo.filename,
-    url: publicPhotoUrl(photo.storage_path),
+    url: publicPhotoUrl(thumbPath(photo.storage_path)),
+    originalUrl: publicPhotoUrl(photo.storage_path),
   }));
 
   return (

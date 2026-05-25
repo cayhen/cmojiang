@@ -25,6 +25,28 @@ export function ManageCollectionClient({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
+  async function compressThumbnail(file: File): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        const scale = Math.min(1, 1200 / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(
+          blob => blob ? resolve(blob) : reject(new Error('toBlob failed')),
+          'image/jpeg',
+          0.8
+        );
+      };
+      img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error('Image load failed')); };
+      img.src = objectUrl;
+    });
+  }
+
   async function handleUpload(files: FileList | null) {
     if (!files?.length) return;
     setUploading(true);
@@ -67,7 +89,7 @@ export function ManageCollectionClient({
         return;
       }
 
-      const urlResults: { filename: string; storagePath?: string; signedUrl?: string; error?: string }[] =
+      const urlResults: { filename: string; storagePath?: string; signedUrl?: string; thumbSignedUrl?: string; error?: string }[] =
         await urlRes.json();
 
       const urlErrors = urlResults.filter(r => r.error).map(r => `${r.filename}: ${r.error}`);
@@ -80,12 +102,17 @@ export function ManageCollectionClient({
       const totalFiles = urlResults.length;
 
       await Promise.all(
-        urlResults.map(async ({ filename, storagePath, signedUrl }) => {
+        urlResults.map(async ({ filename, storagePath, signedUrl, thumbSignedUrl }) => {
           const file = fileList.find(f => f.name === filename)!;
-          const res = await fetch(signedUrl!, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
+          const thumbBlob = await compressThumbnail(file);
+          const [res, thumbRes] = await Promise.all([
+            fetch(signedUrl!, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } }),
+            fetch(thumbSignedUrl!, { method: 'PUT', body: thumbBlob, headers: { 'Content-Type': 'image/jpeg' } }),
+          ]);
           if (!res.ok) {
             uploadErrors.push(`${filename}: storage upload failed (${res.status})`);
           } else {
+            if (!thumbRes.ok) console.warn(`${filename}: thumbnail upload failed (${thumbRes.status})`);
             confirmed.push({ storagePath: storagePath!, filename });
           }
           completedUploads++;

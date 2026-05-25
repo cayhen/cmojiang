@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import path from 'path';
-import { getUploadUrl } from '@/lib/r2';
+import { getUploadUrl, thumbPath } from '@/lib/r2';
 
 const CONTENT_TYPES: Record<string, string> = {
   '.jpg': 'image/jpeg',
@@ -28,8 +28,11 @@ export async function POST(
         const ext = path.extname(filename).toLowerCase() || '.jpg';
         const storagePath = `${params.id}/${photoId}${ext}`;
         const contentType = CONTENT_TYPES[ext] ?? 'image/jpeg';
-        const signedUrl = await getUploadUrl(storagePath, contentType);
-        return { filename, storagePath, signedUrl };
+        const [signedUrl, thumbSignedUrl] = await Promise.all([
+          getUploadUrl(storagePath, contentType),
+          getUploadUrl(thumbPath(storagePath), 'image/jpeg'),
+        ]);
+        return { filename, storagePath, signedUrl, thumbSignedUrl };
       } catch (err) {
         return { filename, error: err instanceof Error ? err.message : String(err) };
       }

@@ -9,7 +9,8 @@ import { CommentSection } from './CommentSection';
 export interface GalleryPhoto {
   id: string;
   filename: string;
-  url: string;
+  url: string;         // thumbnail — for masonry grid
+  originalUrl: string; // full quality — for lightbox
 }
 
 interface Comment {
