@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { UnlockForm } from '@/components/UnlockForm';
 import { verifyUserToken } from '@/lib/auth';
 import { USER_COOKIE_NAME } from '@/lib/session';
+import Link from 'next/link';
 
 export const revalidate = 0;
 
@@ -35,6 +36,9 @@ export default async function UnlockPage({ params }: { params: { id: string } })
   return (
     <main className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-xs">
+        <Link href="/" className="block text-[#555] text-xs hover:text-[#777] transition-colors mb-8">
+          ← Back
+        </Link>
         <h1 className="text-[#bbb] font-light text-lg text-center mb-8">
           {collection.name}
         </h1>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
+import { revalidatePath } from 'next/cache';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET() {
@@ -28,5 +29,6 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error) return NextResponse.json({ error: 'Failed to create' }, { status: 500 });
+  revalidatePath('/admin/dashboard');
   return NextResponse.json(data, { status: 201 });
 }

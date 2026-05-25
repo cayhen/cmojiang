@@ -23,13 +23,13 @@ function LockIcon({ open, fading }: { open: boolean; fading: boolean }) {
         <rect x="3" y="11" width="18" height="11" rx="2" />
         <circle cx="12" cy="16" r="1" fill="currentColor" stroke="none" />
 
-        {/* Shackle — pops straight up when open */}
+        {/* Shackle — swings open from right pivot */}
         <path
           d="M7 11V7a5 5 0 0 1 10 0v4"
           className="transition-all duration-500 ease-out"
           style={{
-            transformOrigin: '12px 11px',
-            transform: open ? 'translateY(-4px)' : 'translateY(0)',
+            transformOrigin: '17px 11px',
+            transform: open ? 'rotate(-60deg)' : 'rotate(0deg)',
             opacity: 1,
           }}
         />
