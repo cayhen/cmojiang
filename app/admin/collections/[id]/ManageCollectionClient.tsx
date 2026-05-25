@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -15,6 +15,7 @@ export function ManageCollectionClient({
   initialPhotos: Photo[];
 }) {
   const [photos, setPhotos] = useState(initialPhotos);
+  useEffect(() => { setPhotos(initialPhotos); }, [initialPhotos]);
   const [uploading, setUploading] = useState(false);
   const [uploadErrors, setUploadErrors] = useState<string[]>([]);
   const [newPassword, setNewPassword] = useState('');
