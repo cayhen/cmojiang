@@ -6,7 +6,7 @@ export const revalidate = 0;
 export default async function AdminDashboard() {
   const { data: collections } = await supabaseAdmin
     .from('collections')
-    .select('id, name, created_at, photos(count)')
+    .select('id, name, password_plain, created_at, photos(count)')
     .order('created_at', { ascending: false });
 
   return (
@@ -30,6 +30,9 @@ export default async function AdminDashboard() {
               <p className="text-[#bbb] text-sm font-light">{c.name}</p>
               <p className="text-[#666] text-xs">
                 {(c.photos as { count: number }[])[0]?.count ?? 0} photos
+                {(c as { password_plain?: string }).password_plain && (
+                  <span className="ml-2 text-[#555]">· {(c as { password_plain: string }).password_plain}</span>
+                )}
               </p>
             </div>
             <Link

@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await supabaseAdmin
     .from('collections')
-    .insert({ name: name.trim(), password_hash })
+    .insert({ name: name.trim(), password_hash, password_plain: password })
     .select('id, name')
     .single();
 

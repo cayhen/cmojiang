@@ -10,7 +10,10 @@ export async function PATCH(
   const updates: Record<string, string> = {};
 
   if (name?.trim()) updates.name = name.trim();
-  if (password) updates.password_hash = await bcrypt.hash(password, 12);
+  if (password) {
+    updates.password_hash = await bcrypt.hash(password, 12);
+    updates.password_plain = password;
+  }
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: 'Nothing to update' }, { status: 400 });
