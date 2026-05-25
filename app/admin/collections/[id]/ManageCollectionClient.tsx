@@ -17,6 +17,8 @@ export function ManageCollectionClient({
   const [photos, setPhotos] = useState(initialPhotos);
   useEffect(() => { setPhotos(initialPhotos); }, [initialPhotos]);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0); // 0–1
+  const [uploadStatus, setUploadStatus] = useState('');
   const [uploadErrors, setUploadErrors] = useState<string[]>([]);
   const [newPassword, setNewPassword] = useState('');
   const [passwordMsg, setPasswordMsg] = useState('');
@@ -26,6 +28,8 @@ export function ManageCollectionClient({
   async function handleUpload(files: FileList | null) {
     if (!files?.length) return;
     setUploading(true);
+    setUploadProgress(0);
+    setUploadStatus('');
     setUploadErrors([]);
 
     try {
@@ -33,9 +37,11 @@ export function ManageCollectionClient({
 
       // Convert any HEIC files to JPEG before uploading
       const fileList: File[] = [];
-      for (const file of rawFiles) {
+      for (let i = 0; i < rawFiles.length; i++) {
+        const file = rawFiles[i];
         const isHeic = file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic';
         if (isHeic) {
+          setUploadStatus(`Converting ${i + 1}/${rawFiles.length}…`);
           const heic2any = (await import('heic2any')).default;
           const blob = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 }) as Blob;
           fileList.push(new File([blob], file.name.replace(/\.heic$/i, '.jpg'), { type: 'image/jpeg' }));
@@ -45,6 +51,7 @@ export function ManageCollectionClient({
       }
 
       // Step 1: get signed upload URLs from the server
+      setUploadStatus('Preparing…');
       const urlRes = await fetch(
         `/api/admin/collections/${collection.id}/photos/upload-url`,
         {
@@ -66,9 +73,11 @@ export function ManageCollectionClient({
       const urlErrors = urlResults.filter(r => r.error).map(r => `${r.filename}: ${r.error}`);
       if (urlErrors.length) { setUploadErrors(urlErrors); return; }
 
-      // Step 2: upload each file directly to Supabase (bypasses Vercel size limit)
+      // Step 2: upload each file directly to R2 (bypasses Vercel size limit)
       const uploadErrors: string[] = [];
       const confirmed: { storagePath: string; filename: string }[] = [];
+      let completedUploads = 0;
+      const totalFiles = urlResults.length;
 
       await Promise.all(
         urlResults.map(async ({ filename, storagePath, signedUrl }) => {
@@ -79,6 +88,9 @@ export function ManageCollectionClient({
           } else {
             confirmed.push({ storagePath: storagePath!, filename });
           }
+          completedUploads++;
+          setUploadProgress(completedUploads / totalFiles);
+          setUploadStatus(`Uploading ${completedUploads}/${totalFiles}`);
         })
       );
 
@@ -107,6 +119,8 @@ export function ManageCollectionClient({
       setUploadErrors([`Upload failed: ${err instanceof Error ? err.message : String(err)}`]);
     } finally {
       setUploading(false);
+      setUploadProgress(0);
+      setUploadStatus('');
     }
   }
 
@@ -167,7 +181,7 @@ export function ManageCollectionClient({
           onDrop={e => { e.preventDefault(); handleUpload(e.dataTransfer.files); }}
         >
           <p className="text-[#666] text-sm font-light">
-            {uploading ? 'Uploading...' : 'Drag photos here or click to select'}
+            {uploading ? (uploadStatus || 'Uploading…') : 'Drag photos here or click to select'}
           </p>
           <input
             ref={fileInputRef}
@@ -178,6 +192,20 @@ export function ManageCollectionClient({
             onChange={e => handleUpload(e.target.files)}
           />
         </div>
+        {uploading && (
+          <div className="mt-3 space-y-1">
+            <div className="flex justify-between text-[#555] text-xs">
+              <span>{uploadStatus || 'Uploading…'}</span>
+              <span>{Math.round(uploadProgress * 100)}%</span>
+            </div>
+            <div className="h-px bg-[#1e1e1e] rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[#555] transition-all duration-200"
+                style={{ width: `${uploadProgress * 100}%` }}
+              />
+            </div>
+          </div>
+        )}
         {uploadErrors.map((err, i) => (
           <p key={i} className="text-red-500/70 text-xs mt-1">{err}</p>
         ))}

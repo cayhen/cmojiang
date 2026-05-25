@@ -44,6 +44,7 @@ export function GalleryClient({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [zipProgress, setZipProgress] = useState(0); // 0–1
 
   function toggleSelect(id: string) {
     setSelectedIds(prev => {
@@ -68,6 +69,10 @@ export function GalleryClient({
 
   async function downloadPhotos(photoList: GalleryPhoto[], zipName: string) {
     setDownloading(true);
+    setZipProgress(0);
+    let completed = 0;
+    const total = photoList.length;
+
     try {
       const JSZip = (await import('jszip')).default;
       const zip = new JSZip();
@@ -75,9 +80,12 @@ export function GalleryClient({
       await Promise.all(
         photoList.map(async photo => {
           const res = await fetch(`/api/photo/${photo.id}`);
-          if (!res.ok) return;
-          const blob = await res.blob();
-          zip.file(photo.filename, blob);
+          if (res.ok) {
+            const blob = await res.blob();
+            zip.file(photo.filename, blob);
+          }
+          completed++;
+          setZipProgress(completed / total);
         })
       );
 
@@ -92,6 +100,7 @@ export function GalleryClient({
       console.error('Download failed', err);
     } finally {
       setDownloading(false);
+      setZipProgress(0);
       exitSelection();
     }
   }
@@ -136,6 +145,22 @@ export function GalleryClient({
           )}
         </div>
       </div>
+
+      {/* Zip progress bar */}
+      {downloading && (
+        <div className="mb-4 space-y-1">
+          <div className="flex justify-between text-[#555] text-xs">
+            <span>Zipping…</span>
+            <span>{Math.round(zipProgress * 100)}%</span>
+          </div>
+          <div className="h-px bg-[#1e1e1e] rounded-full overflow-hidden">
+            <div
+              className="h-full bg-[#555] transition-all duration-200"
+              style={{ width: `${zipProgress * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Grid */}
       <MasonryGrid
