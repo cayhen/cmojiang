@@ -31,19 +31,38 @@ export async function GET(
     return new NextResponse('Unauthorized', { status: 401 });
   }
 
-  // Fetch from R2 and stream to browser with download headers
-  const url = await getDownloadUrl(photo.storage_path, 300);
-  const r2Res = await fetch(url);
+  const headers = {
+    'Content-Disposition': `attachment; filename="${photo.filename}"`,
+    'Cache-Control': 'private, max-age=300',
+  };
 
-  if (!r2Res.ok || !r2Res.body) {
-    return new NextResponse('Photo unavailable', { status: 502 });
+  // Try R2 first, fall back to Supabase Storage for pre-migration photos
+  try {
+    const r2Url = await getDownloadUrl(photo.storage_path, 300);
+    const r2Res = await fetch(r2Url);
+    if (r2Res.ok && r2Res.body) {
+      return new NextResponse(r2Res.body, {
+        headers: { ...headers, 'Content-Type': r2Res.headers.get('Content-Type') ?? 'image/jpeg' },
+      });
+    }
+  } catch {
+    // Fall through to Supabase
   }
 
-  return new NextResponse(r2Res.body, {
-    headers: {
-      'Content-Type': r2Res.headers.get('Content-Type') ?? 'image/jpeg',
-      'Content-Disposition': `attachment; filename="${photo.filename}"`,
-      'Cache-Control': 'private, max-age=300',
-    },
-  });
+  // Supabase Storage fallback
+  try {
+    const { data: supaRes } = await supabaseAdmin.storage
+      .from('photos')
+      .download(photo.storage_path);
+    if (supaRes) {
+      const buffer = Buffer.from(await supaRes.arrayBuffer());
+      return new NextResponse(buffer, {
+        headers: { ...headers, 'Content-Type': supaRes.type || 'image/jpeg' },
+      });
+    }
+  } catch {
+    // Fall through
+  }
+
+  return new NextResponse('Photo unavailable', { status: 502 });
 }

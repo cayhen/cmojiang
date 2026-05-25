@@ -38,8 +38,12 @@ export async function GET(
 
   const signedPhotos = await Promise.all(
     photos.map(async p => {
-      const url = await getDownloadUrl(p.storage_path, 1800);
-      return { url, filename: p.filename };
+      try {
+        const url = await getDownloadUrl(p.storage_path, 1800);
+        return { url, filename: p.filename, storagePath: p.storage_path };
+      } catch {
+        return { url: '', filename: p.filename, storagePath: p.storage_path };
+      }
     })
   );
 
@@ -49,15 +53,27 @@ export async function GET(
   archive.on('error', err => passthrough.destroy(err));
 
   (async () => {
-    for (const { url, filename } of signedPhotos) {
-      if (!url) continue;
-      try {
-        const res = await fetch(url);
-        if (!res.ok || !res.body) continue;
-        archive.append(Readable.fromWeb(res.body as Parameters<typeof Readable.fromWeb>[0]), { name: filename });
-      } catch {
-        // Skip photos that fail to fetch rather than crashing the whole zip
-        continue;
+    for (const { url, filename, storagePath } of signedPhotos) {
+      // Try R2 first
+      let appended = false;
+      if (url) {
+        try {
+          const res = await fetch(url);
+          if (res.ok && res.body) {
+            archive.append(Readable.fromWeb(res.body as Parameters<typeof Readable.fromWeb>[0]), { name: filename });
+            appended = true;
+          }
+        } catch { /* fall through */ }
+      }
+      // Fall back to Supabase Storage for pre-migration photos
+      if (!appended) {
+        try {
+          const { data } = await supabaseAdmin.storage.from('photos').download(storagePath);
+          if (data) {
+            const buf = Buffer.from(await data.arrayBuffer());
+            archive.append(buf, { name: filename });
+          }
+        } catch { /* skip */ }
       }
     }
     await archive.finalize();
