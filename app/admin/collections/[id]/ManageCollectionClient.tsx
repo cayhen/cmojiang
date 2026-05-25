@@ -29,7 +29,20 @@ export function ManageCollectionClient({
     setUploadErrors([]);
 
     try {
-      const fileList = Array.from(files);
+      const rawFiles = Array.from(files);
+
+      // Convert any HEIC files to JPEG before uploading
+      const fileList: File[] = [];
+      for (const file of rawFiles) {
+        const isHeic = file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic';
+        if (isHeic) {
+          const heic2any = (await import('heic2any')).default;
+          const blob = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 }) as Blob;
+          fileList.push(new File([blob], file.name.replace(/\.heic$/i, '.jpg'), { type: 'image/jpeg' }));
+        } else {
+          fileList.push(file);
+        }
+      }
 
       // Step 1: get signed upload URLs from the server
       const urlRes = await fetch(
@@ -159,7 +172,7 @@ export function ManageCollectionClient({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/jpeg,image/png"
+            accept="image/jpeg,image/png,image/webp,image/heic,.heic"
             multiple
             className="hidden"
             onChange={e => handleUpload(e.target.files)}
