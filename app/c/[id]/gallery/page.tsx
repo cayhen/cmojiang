@@ -4,7 +4,7 @@ import { verifyToken } from '@/lib/auth';
 import { COOKIE_NAME } from '@/lib/session';
 import { getUserSession } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
-import { getDownloadUrl } from '@/lib/r2';
+import { publicPhotoUrl } from '@/lib/r2';
 import { GalleryClient } from '@/components/GalleryClient';
 import { UserNav } from '@/components/UserNav';
 import Link from 'next/link';
@@ -36,12 +36,11 @@ export default async function GalleryPage({ params }: { params: { id: string } }
     .eq('collection_id', params.id)
     .order('uploaded_at', { ascending: true });
 
-  const photosWithUrls = await Promise.all(
-    (photos ?? []).map(async photo => {
-      const url = await getDownloadUrl(photo.storage_path, 3600);
-      return { id: photo.id, filename: photo.filename, url };
-    })
-  );
+  const photosWithUrls = (photos ?? []).map(photo => ({
+    id: photo.id,
+    filename: photo.filename,
+    url: publicPhotoUrl(photo.storage_path),
+  }));
 
   const userSession = await getUserSession();
 
