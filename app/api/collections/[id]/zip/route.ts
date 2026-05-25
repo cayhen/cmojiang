@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth';
 import { COOKIE_NAME } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getDownloadUrl } from '@/lib/r2';
 import archiver from 'archiver';
 import { PassThrough, Readable } from 'stream';
 
@@ -37,10 +38,8 @@ export async function GET(
 
   const signedPhotos = await Promise.all(
     photos.map(async p => {
-      const { data } = await supabaseAdmin.storage
-        .from('photos')
-        .createSignedUrl(p.storage_path, 1800);
-      return { url: data?.signedUrl ?? '', filename: p.filename };
+      const url = await getDownloadUrl(p.storage_path, 1800);
+      return { url, filename: p.filename };
     })
   );
 

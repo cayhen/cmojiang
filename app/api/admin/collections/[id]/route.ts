@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { supabaseAdmin } from '@/lib/supabase';
+import { deleteObjects } from '@/lib/r2';
 
 export async function PATCH(
   req: NextRequest,
@@ -34,14 +35,15 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  // List and remove all files from storage first
-  const { data: files } = await supabaseAdmin.storage
+  // Fetch all storage_path values for this collection from DB
+  const { data: photos } = await supabaseAdmin
     .from('photos')
-    .list(params.id);
+    .select('storage_path')
+    .eq('collection_id', params.id);
 
-  if (files?.length) {
-    const paths = files.map(f => `${params.id}/${f.name}`);
-    await supabaseAdmin.storage.from('photos').remove(paths);
+  // Delete all objects from R2
+  if (photos?.length) {
+    await deleteObjects(photos.map(p => p.storage_path));
   }
 
   const { error } = await supabaseAdmin

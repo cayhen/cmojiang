@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { deleteObject } from '@/lib/r2';
 
-// Called after client uploads directly to Supabase Storage via signed URL.
+// Called after client uploads directly to R2 via presigned PUT URL.
 // Body: { uploads: [{ storagePath, filename }] }
 export async function POST(
   req: NextRequest,
@@ -22,7 +23,8 @@ export async function POST(
         .insert({ collection_id: params.id, storage_path: storagePath, filename });
 
       if (dbError) {
-        await supabaseAdmin.storage.from('photos').remove([storagePath]);
+        // Clean up the orphaned R2 object
+        await deleteObject(storagePath).catch(() => {});
         return { filename, error: dbError.message };
       }
 
@@ -48,8 +50,11 @@ export async function DELETE(
 
   if (!photo) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  const { error: storageError } = await supabaseAdmin.storage.from('photos').remove([photo.storage_path]);
-  if (storageError) return NextResponse.json({ error: 'Storage delete failed' }, { status: 500 });
+  try {
+    await deleteObject(photo.storage_path);
+  } catch {
+    return NextResponse.json({ error: 'Storage delete failed' }, { status: 500 });
+  }
 
   const { error: dbError } = await supabaseAdmin.from('photos').delete().eq('id', photoId);
   if (dbError) return NextResponse.json({ error: 'DB delete failed' }, { status: 500 });

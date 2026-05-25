@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
 import { randomUUID } from 'crypto';
 import path from 'path';
+import { getUploadUrl } from '@/lib/r2';
+
+const CONTENT_TYPES: Record<string, string> = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.heic': 'image/heic',
+};
 
 export async function POST(
   req: NextRequest,
@@ -15,17 +23,16 @@ export async function POST(
 
   const results = await Promise.all(
     files.map(async ({ filename }) => {
-      const photoId = randomUUID();
-      const ext = path.extname(filename).toLowerCase() || '.jpg';
-      const storagePath = `${params.id}/${photoId}${ext}`;
-
-      const { data, error } = await supabaseAdmin.storage
-        .from('photos')
-        .createSignedUploadUrl(storagePath);
-
-      if (error) return { filename, error: error.message };
-
-      return { filename, storagePath, signedUrl: data.signedUrl };
+      try {
+        const photoId = randomUUID();
+        const ext = path.extname(filename).toLowerCase() || '.jpg';
+        const storagePath = `${params.id}/${photoId}${ext}`;
+        const contentType = CONTENT_TYPES[ext] ?? 'image/jpeg';
+        const signedUrl = await getUploadUrl(storagePath, contentType);
+        return { filename, storagePath, signedUrl };
+      } catch (err) {
+        return { filename, error: err instanceof Error ? err.message : String(err) };
+      }
     })
   );
 

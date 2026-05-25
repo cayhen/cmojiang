@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getDownloadUrl } from '@/lib/r2';
 import { ManageCollectionClient } from './ManageCollectionClient';
 
 export default async function ManageCollectionPage({ params }: { params: { id: string } }) {
@@ -16,10 +17,8 @@ export default async function ManageCollectionPage({ params }: { params: { id: s
 
   const photosWithUrls = await Promise.all(
     (photos ?? []).map(async photo => {
-      const { data } = await supabaseAdmin.storage
-        .from('photos')
-        .createSignedUrl(photo.storage_path, 3600);
-      return { id: photo.id, filename: photo.filename, url: data?.signedUrl ?? '' };
+      const url = await getDownloadUrl(photo.storage_path, 3600);
+      return { id: photo.id, filename: photo.filename, url };
     })
   );
 

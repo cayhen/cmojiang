@@ -4,9 +4,8 @@ import { verifyToken } from '@/lib/auth';
 import { COOKIE_NAME } from '@/lib/session';
 import { getUserSession } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
-import { MasonryGrid } from '@/components/MasonryGrid';
-import { KudosButton } from '@/components/KudosButton';
-import { CommentSection } from '@/components/CommentSection';
+import { getDownloadUrl } from '@/lib/r2';
+import { GalleryClient } from '@/components/GalleryClient';
 import { UserNav } from '@/components/UserNav';
 import Link from 'next/link';
 
@@ -39,10 +38,8 @@ export default async function GalleryPage({ params }: { params: { id: string } }
 
   const photosWithUrls = await Promise.all(
     (photos ?? []).map(async photo => {
-      const { data } = await supabaseAdmin.storage
-        .from('photos')
-        .createSignedUrl(photo.storage_path, 3600);
-      return { id: photo.id, filename: photo.filename, url: data?.signedUrl ?? '' };
+      const url = await getDownloadUrl(photo.storage_path, 3600);
+      return { id: photo.id, filename: photo.filename, url };
     })
   );
 
@@ -85,33 +82,23 @@ export default async function GalleryPage({ params }: { params: { id: string } }
             ← All
           </Link>
           <h1 className="text-[#bbb] font-light text-sm">{collection.name}</h1>
-          <KudosButton
-            collectionId={params.id}
-            initialCount={kudosCount ?? 0}
-            initialHasKudos={hasKudos}
-            loggedIn={!!userSession}
-          />
         </div>
-        <div className="flex items-center gap-4">
-          <UserNav />
-          <a
-            href={`/api/collections/${params.id}/zip`}
-            className="text-[#666] text-xs hover:text-[#888] transition-colors"
-          >
-            Download all
-          </a>
-        </div>
+        <UserNav />
       </div>
+
       {photosWithUrls.length === 0 ? (
         <p className="text-[#666] text-sm">No photos yet.</p>
       ) : (
-        <MasonryGrid photos={photosWithUrls} />
+        <GalleryClient
+          collectionId={params.id}
+          photos={photosWithUrls}
+          kudosCount={kudosCount ?? 0}
+          hasKudos={hasKudos}
+          loggedIn={!!userSession}
+          comments={comments}
+          currentUsername={userSession?.username ?? null}
+        />
       )}
-      <CommentSection
-        collectionId={params.id}
-        initialComments={comments}
-        currentUsername={userSession?.username ?? null}
-      />
     </main>
   );
 }

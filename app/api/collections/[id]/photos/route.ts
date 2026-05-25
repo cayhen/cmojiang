@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth';
 import { COOKIE_NAME } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getDownloadUrl } from '@/lib/r2';
 
 export async function GET(
   _req: NextRequest,
@@ -28,10 +29,8 @@ export async function GET(
 
   const photosWithUrls = await Promise.all(
     (photos ?? []).map(async photo => {
-      const { data } = await supabaseAdmin.storage
-        .from('photos')
-        .createSignedUrl(photo.storage_path, 3600);
-      return { id: photo.id, filename: photo.filename, url: data?.signedUrl ?? '' };
+      const url = await getDownloadUrl(photo.storage_path, 3600);
+      return { id: photo.id, filename: photo.filename, url };
     })
   );
 
