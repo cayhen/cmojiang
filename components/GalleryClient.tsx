@@ -21,6 +21,7 @@ interface Comment {
 
 interface Props {
   collectionId: string;
+  collectionName: string;
   photos: GalleryPhoto[];
   kudosCount: number;
   hasKudos: boolean;
@@ -31,6 +32,7 @@ interface Props {
 
 export function GalleryClient({
   collectionId,
+  collectionName,
   photos,
   kudosCount,
   hasKudos,
@@ -41,6 +43,7 @@ export function GalleryClient({
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [downloading, setDownloading] = useState(false);
 
   function toggleSelect(id: string) {
     setSelectedIds(prev => {
@@ -63,12 +66,38 @@ export function GalleryClient({
     }
   }
 
-  const selectedCount = selectedIds.size;
-  const downloadAllUrl = `/api/collections/${collectionId}/zip`;
-  const downloadSelectedUrl =
-    selectedCount > 0
-      ? `${downloadAllUrl}?ids=${Array.from(selectedIds).join(',')}`
-      : downloadAllUrl;
+  async function downloadPhotos(photoList: GalleryPhoto[], zipName: string) {
+    setDownloading(true);
+    try {
+      const JSZip = (await import('jszip')).default;
+      const zip = new JSZip();
+
+      await Promise.all(
+        photoList.map(async photo => {
+          const res = await fetch(`/api/photo/${photo.id}`);
+          if (!res.ok) return;
+          const blob = await res.blob();
+          zip.file(photo.filename, blob);
+        })
+      );
+
+      const blob = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${zipName}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download failed', err);
+    } finally {
+      setDownloading(false);
+      exitSelection();
+    }
+  }
+
+  const slugName = collectionName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'photos';
+  const selectedPhotos = photos.filter(p => selectedIds.has(p.id));
 
   return (
     <>
@@ -96,13 +125,13 @@ export function GalleryClient({
               >
                 Select
               </button>
-              <a
-                href={downloadAllUrl}
-                download
-                className="text-[#666] text-xs hover:text-[#888] transition-colors"
+              <button
+                onClick={() => downloadPhotos(photos, slugName)}
+                disabled={downloading}
+                className="text-[#666] text-xs hover:text-[#888] transition-colors disabled:opacity-50"
               >
-                ↓ All
-              </a>
+                {downloading ? 'Zipping…' : '↓ All'}
+              </button>
             </>
           )}
         </div>
@@ -129,17 +158,16 @@ export function GalleryClient({
       {selectionMode && (
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#111]/95 backdrop-blur-sm border-t border-[#222] px-5 py-4 flex items-center justify-between">
           <span className="text-[#777] text-sm">
-            {selectedCount === 0 ? 'Tap photos to select' : `${selectedCount} selected`}
+            {selectedIds.size === 0 ? 'Tap photos to select' : `${selectedIds.size} selected`}
           </span>
-          {selectedCount > 0 && (
-            <a
-              href={downloadSelectedUrl}
-              download
-              onClick={exitSelection}
-              className="text-[#0f0f0f] bg-[#bbb] text-xs font-medium rounded px-4 py-2 hover:bg-white transition-colors"
+          {selectedIds.size > 0 && (
+            <button
+              onClick={() => downloadPhotos(selectedPhotos, slugName)}
+              disabled={downloading}
+              className="text-[#0f0f0f] bg-[#bbb] text-xs font-medium rounded px-4 py-2 hover:bg-white transition-colors disabled:opacity-50"
             >
-              Download {selectedCount}
-            </a>
+              {downloading ? 'Zipping…' : `Download ${selectedIds.size}`}
+            </button>
           )}
         </div>
       )}

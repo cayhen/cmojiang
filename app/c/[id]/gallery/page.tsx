@@ -91,6 +91,7 @@ export default async function GalleryPage({ params }: { params: { id: string } }
       ) : (
         <GalleryClient
           collectionId={params.id}
+          collectionName={collection.name}
           photos={photosWithUrls}
           kudosCount={kudosCount ?? 0}
           hasKudos={hasKudos}
