@@ -42,7 +42,7 @@ export default async function LikedPhotosPage() {
     .filter(Boolean) as LikedPhoto[];
 
   // Get collection names for all referenced collections
-  const collectionIds = [...new Set(photos.map(p => p.collectionId))];
+  const collectionIds = Array.from(new Set(photos.map(p => p.collectionId)));
   const { data: collectionsData } = collectionIds.length > 0
     ? await supabaseAdmin.from('collections').select('id, name').in('id', collectionIds)
     : { data: [] };
