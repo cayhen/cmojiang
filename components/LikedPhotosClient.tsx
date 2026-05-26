@@ -59,13 +59,12 @@ export function LikedPhotosClient({ initialSections }: Props) {
     <div className="space-y-12">
       {sections.map(section => (
         <div key={section.collectionId}>
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-[#555] text-xs uppercase tracking-widest">{section.name}</p>
+          <div className="mb-4">
             <Link
               href={`/c/${section.collectionId}/gallery`}
-              className="text-[#444] text-xs hover:text-[#666] transition-colors"
+              className="text-[#555] text-xs uppercase tracking-widest hover:text-[#888] transition-colors"
             >
-              View all →
+              {section.name}
             </Link>
           </div>
           <MasonryGrid
