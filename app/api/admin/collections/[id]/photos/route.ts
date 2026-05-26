@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { deleteObject } from '@/lib/r2';
+import { invalidate } from '@/lib/redis';
 
 // Called after client uploads directly to R2 via presigned PUT URL.
 // Body: { uploads: [{ storagePath, filename }] }
@@ -39,6 +40,7 @@ export async function POST(
     })
   );
 
+  await invalidate(`gallery:${params.id}:photos`);
   return NextResponse.json(results, { status: 201 });
 }
 
@@ -66,5 +68,6 @@ export async function DELETE(
   const { error: dbError } = await supabaseAdmin.from('photos').delete().eq('id', photoId);
   if (dbError) return NextResponse.json({ error: 'DB delete failed' }, { status: 500 });
 
+  await invalidate(`gallery:${params.id}:photos`);
   return new NextResponse(null, { status: 204 });
 }

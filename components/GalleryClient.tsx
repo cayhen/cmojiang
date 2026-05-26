@@ -5,6 +5,7 @@ import { MasonryGrid } from './MasonryGrid';
 import { Lightbox } from './Lightbox';
 import { KudosButton } from './KudosButton';
 import { CommentSection } from './CommentSection';
+import { ScrollToTop } from './ScrollToTop';
 
 const BATCH_SIZE = 24;
 
@@ -232,6 +233,8 @@ export function GalleryClient({
           currentUsername={currentUsername}
         />
       </div>
+
+      <ScrollToTop />
     </>
   );
 }

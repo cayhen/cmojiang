@@ -7,9 +7,10 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { publicPhotoUrl, thumbPath } from '@/lib/r2';
 import { GalleryClient } from '@/components/GalleryClient';
 import { UserNav } from '@/components/UserNav';
+import { cachedFetch } from '@/lib/redis';
 import Link from 'next/link';
 
-export const revalidate = 0;
+export const revalidate = 60;
 
 export default async function GalleryPage({ params }: { params: { id: string } }) {
   const cookieStore = cookies();
@@ -30,21 +31,27 @@ export default async function GalleryPage({ params }: { params: { id: string } }
 
   if (!collection) notFound();
 
-  const { data: photos } = await supabaseAdmin
-    .from('photos')
-    .select('id, filename, storage_path, width, height, dominant_color')
-    .eq('collection_id', params.id)
-    .order('uploaded_at', { ascending: true });
+  const photosWithUrls = await cachedFetch(
+    `gallery:${params.id}:photos`,
+    300,
+    async () => {
+      const { data: photos } = await supabaseAdmin
+        .from('photos')
+        .select('id, filename, storage_path, width, height, dominant_color')
+        .eq('collection_id', params.id)
+        .order('uploaded_at', { ascending: true });
 
-  const photosWithUrls = (photos ?? []).map(photo => ({
-    id: photo.id,
-    filename: photo.filename,
-    url: publicPhotoUrl(thumbPath(photo.storage_path)),
-    originalUrl: publicPhotoUrl(photo.storage_path),
-    width: photo.width ?? undefined,
-    height: photo.height ?? undefined,
-    dominantColor: photo.dominant_color ?? undefined,
-  }));
+      return (photos ?? []).map(photo => ({
+        id: photo.id,
+        filename: photo.filename,
+        url: publicPhotoUrl(thumbPath(photo.storage_path)),
+        originalUrl: publicPhotoUrl(photo.storage_path),
+        width: photo.width ?? undefined,
+        height: photo.height ?? undefined,
+        dominantColor: photo.dominant_color ?? undefined,
+      }));
+    }
+  );
 
   const userSession = await getUserSession();
 

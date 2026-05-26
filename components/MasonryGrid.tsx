@@ -90,6 +90,7 @@ export function MasonryGrid({ photos, selectionMode, selectedIds, onTap }: Props
                     width={hasDims ? photo.width : undefined}
                     height={hasDims ? photo.height : undefined}
                     loading="eager"
+                    decoding="async"
                     fetchPriority={priority ? 'high' : 'auto'}
                     onLoad={() => markLoaded(photo.id)}
                     onError={e => {
