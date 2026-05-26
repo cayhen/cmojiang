@@ -55,7 +55,12 @@ export function MasonryGrid({ photos, selectionMode, selectedIds, onTap }: Props
             <button
               key={photo.id}
               className="break-inside-avoid mb-1.5 w-full block focus:outline-none focus:ring-1 focus:ring-[#333] rounded-sm relative overflow-hidden"
-              style={{ backgroundColor: photo.dominantColor ?? '#1a1a1a' }}
+              style={{
+                backgroundColor: photo.dominantColor ?? '#1a1a1a',
+                aspectRatio: photo.width && photo.height
+                  ? `${photo.width}/${photo.height}`
+                  : '4/3',
+              }}
               onClick={() => handleClick(i)}
               aria-label={selectionMode
                 ? (selected ? `Deselect ${photo.filename}` : `Select ${photo.filename}`)
@@ -73,9 +78,9 @@ export function MasonryGrid({ photos, selectionMode, selectedIds, onTap }: Props
                   markLoaded(photo.id);
                   if (photo.originalUrl) e.currentTarget.src = photo.originalUrl;
                 }}
-                className={`w-full block rounded-sm transition-opacity duration-500 ${
-                  selected ? 'opacity-60' : (loaded ? 'opacity-100' : 'opacity-0')
-                }`}
+                className={`w-full block rounded-sm ${
+                  !priority ? 'transition-opacity duration-500' : ''
+                } ${selected ? 'opacity-60' : (loaded || priority ? 'opacity-100' : 'opacity-0')}`}
               />
               {selectionMode && (
                 <div
