@@ -32,7 +32,7 @@ export default async function GalleryPage({ params }: { params: { id: string } }
 
   const { data: photos } = await supabaseAdmin
     .from('photos')
-    .select('id, filename, storage_path')
+    .select('id, filename, storage_path, width, height, dominant_color')
     .eq('collection_id', params.id)
     .order('uploaded_at', { ascending: true });
 
@@ -41,6 +41,9 @@ export default async function GalleryPage({ params }: { params: { id: string } }
     filename: photo.filename,
     url: publicPhotoUrl(thumbPath(photo.storage_path)),
     originalUrl: publicPhotoUrl(photo.storage_path),
+    width: photo.width ?? undefined,
+    height: photo.height ?? undefined,
+    dominantColor: photo.dominant_color ?? undefined,
   }));
 
   const userSession = await getUserSession();
@@ -76,6 +79,9 @@ export default async function GalleryPage({ params }: { params: { id: string } }
 
   return (
     <main className="min-h-screen p-6">
+      {photosWithUrls.slice(0, 8).map(p => (
+        <link key={p.id} rel="preload" as="image" href={p.url} />
+      ))}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
           <Link href="/" className="text-[#666] text-xs hover:text-[#777] transition-colors">

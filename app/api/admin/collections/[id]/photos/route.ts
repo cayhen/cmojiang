@@ -9,7 +9,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   const { uploads } = await req.json() as {
-    uploads: { storagePath: string; filename: string }[];
+    uploads: { storagePath: string; filename: string; width?: number; height?: number; dominantColor?: string }[];
   };
 
   if (!uploads?.length) {
@@ -17,10 +17,17 @@ export async function POST(
   }
 
   const results = await Promise.all(
-    uploads.map(async ({ storagePath, filename }) => {
+    uploads.map(async ({ storagePath, filename, width, height, dominantColor }) => {
       const { error: dbError } = await supabaseAdmin
         .from('photos')
-        .insert({ collection_id: params.id, storage_path: storagePath, filename });
+        .insert({
+          collection_id: params.id,
+          storage_path: storagePath,
+          filename,
+          ...(width != null && { width }),
+          ...(height != null && { height }),
+          ...(dominantColor != null && { dominant_color: dominantColor }),
+        });
 
       if (dbError) {
         // Clean up the orphaned R2 object

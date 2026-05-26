@@ -3,19 +3,26 @@
 import { useState } from 'react';
 import { Lightbox } from './Lightbox';
 
-interface Photo { id: string; filename: string; url: string; originalUrl?: string; }
+interface Photo {
+  id: string;
+  filename: string;
+  url: string;
+  originalUrl?: string;
+  width?: number;
+  height?: number;
+  dominantColor?: string;
+}
 
 interface Props {
   photos: Photo[];
-  /** When provided, selection UI is shown */
   selectionMode?: boolean;
   selectedIds?: Set<string>;
-  /** When provided, tap calls this instead of opening lightbox */
   onTap?: (index: number) => void;
 }
 
 export function MasonryGrid({ photos, selectionMode, selectedIds, onTap }: Props) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [loadedIds, setLoadedIds] = useState<Set<string>>(new Set());
 
   function handleClick(i: number) {
     if (onTap) {
@@ -25,24 +32,50 @@ export function MasonryGrid({ photos, selectionMode, selectedIds, onTap }: Props
     }
   }
 
+  function markLoaded(id: string) {
+    setLoadedIds(prev => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }
+
   return (
     <>
       <div className="columns-2 sm:columns-3 lg:columns-4 gap-1.5">
         {photos.map((photo, i) => {
           const selected = selectedIds?.has(photo.id) ?? false;
+          const loaded = loadedIds.has(photo.id);
+          const hasDims = photo.width != null && photo.height != null;
+          // Above-the-fold: first 8 load eagerly with high priority
+          const priority = i < 8;
+
           return (
             <button
               key={photo.id}
-              className="break-inside-avoid mb-1.5 w-full block focus:outline-none focus:ring-1 focus:ring-[#333] rounded-sm relative"
+              className="break-inside-avoid mb-1.5 w-full block focus:outline-none focus:ring-1 focus:ring-[#333] rounded-sm relative overflow-hidden"
+              style={{ backgroundColor: photo.dominantColor ?? '#1a1a1a' }}
               onClick={() => handleClick(i)}
-              aria-label={selectionMode ? (selected ? `Deselect ${photo.filename}` : `Select ${photo.filename}`) : `Open ${photo.filename}`}
+              aria-label={selectionMode
+                ? (selected ? `Deselect ${photo.filename}` : `Select ${photo.filename}`)
+                : `Open ${photo.filename}`}
             >
               <img
                 src={photo.url}
                 alt={photo.filename}
-                loading="lazy"
-                onError={e => { if (photo.originalUrl) e.currentTarget.src = photo.originalUrl; }}
-                className={`w-full block rounded-sm transition-opacity ${selected ? 'opacity-60' : 'opacity-100'}`}
+                width={hasDims ? photo.width : undefined}
+                height={hasDims ? photo.height : undefined}
+                loading={priority ? 'eager' : 'lazy'}
+                fetchPriority={priority ? 'high' : 'auto'}
+                onLoad={() => markLoaded(photo.id)}
+                onError={e => {
+                  markLoaded(photo.id);
+                  if (photo.originalUrl) e.currentTarget.src = photo.originalUrl;
+                }}
+                className={`w-full block rounded-sm transition-opacity duration-500 ${
+                  selected ? 'opacity-60' : (loaded ? 'opacity-100' : 'opacity-0')
+                }`}
               />
               {selectionMode && (
                 <div
@@ -62,7 +95,6 @@ export function MasonryGrid({ photos, selectionMode, selectedIds, onTap }: Props
         })}
       </div>
 
-      {/* Only render lightbox when onTap not provided (standalone use) */}
       {!onTap && lightboxIndex !== null && (
         <Lightbox
           photos={photos}
