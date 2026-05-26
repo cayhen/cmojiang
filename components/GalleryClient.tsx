@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { MasonryGrid } from './MasonryGrid';
 import { Lightbox } from './Lightbox';
 import { KudosButton } from './KudosButton';
 import { CommentSection } from './CommentSection';
+
+const BATCH_SIZE = 24;
 
 export interface GalleryPhoto {
   id: string;
@@ -49,6 +51,26 @@ export function GalleryClient({
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [zipProgress, setZipProgress] = useState(0); // 0–1
+  const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  const hasMore = visibleCount < photos.length;
+  const visiblePhotos = photos.slice(0, visibleCount);
+
+  const loadMore = useCallback(() => {
+    setVisibleCount(prev => Math.min(prev + BATCH_SIZE, photos.length));
+  }, [photos.length]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !hasMore) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) loadMore(); },
+      { rootMargin: '300px' }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, loadMore]);
 
   function toggleSelect(id: string) {
     setSelectedIds(prev => {
@@ -168,11 +190,12 @@ export function GalleryClient({
 
       {/* Grid */}
       <MasonryGrid
-        photos={photos}
+        photos={visiblePhotos}
         selectionMode={selectionMode}
         selectedIds={selectedIds}
         onTap={handleTap}
       />
+      {hasMore && <div ref={sentinelRef} />}
 
       {/* Lightbox */}
       {lightboxIndex !== null && (
