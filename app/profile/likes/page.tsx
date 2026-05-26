@@ -14,14 +14,20 @@ export default async function LikedPhotosPage() {
 
   const { data: likes } = await supabaseAdmin
     .from('photo_likes')
-    .select('photos(id, filename, storage_path, width, height, dominant_color)')
+    .select('created_at, photos(id, filename, storage_path, width, height, dominant_color, collection_id)')
     .eq('user_id', session.userId)
     .order('created_at', { ascending: false });
 
-  const photos = (likes ?? [])
+  // Build photo list with URLs
+  type LikedPhoto = {
+    id: string; filename: string; url: string; originalUrl: string;
+    width?: number; height?: number; dominantColor?: string; collectionId: string;
+  };
+
+  const photos: LikedPhoto[] = (likes ?? [])
     .map(l => {
       const p = l.photos as unknown as {
-        id: string; filename: string; storage_path: string;
+        id: string; filename: string; storage_path: string; collection_id: string;
         width: number | null; height: number | null; dominant_color: string | null;
       } | null;
       if (!p) return null;
@@ -35,12 +41,34 @@ export default async function LikedPhotosPage() {
         width: p.width ?? undefined,
         height: p.height ?? undefined,
         dominantColor: p.dominant_color ?? undefined,
+        collectionId: p.collection_id,
       };
     })
-    .filter(Boolean) as {
-      id: string; filename: string; url: string; originalUrl: string;
-      width?: number; height?: number; dominantColor?: string;
-    }[];
+    .filter(Boolean) as LikedPhoto[];
+
+  // Get collection names for all referenced collections
+  const collectionIds = [...new Set(photos.map(p => p.collectionId))];
+  const { data: collectionsData } = collectionIds.length > 0
+    ? await supabaseAdmin.from('collections').select('id, name').in('id', collectionIds)
+    : { data: [] };
+
+  const collectionNames = new Map((collectionsData ?? []).map(c => [c.id, c.name]));
+
+  // Group photos by collection, preserving the order collections first appear
+  const sections: { collectionId: string; name: string; photos: LikedPhoto[] }[] = [];
+  const seen = new Map<string, number>();
+
+  for (const photo of photos) {
+    if (!seen.has(photo.collectionId)) {
+      seen.set(photo.collectionId, sections.length);
+      sections.push({
+        collectionId: photo.collectionId,
+        name: collectionNames.get(photo.collectionId) ?? 'Unknown',
+        photos: [],
+      });
+    }
+    sections[seen.get(photo.collectionId)!].photos.push(photo);
+  }
 
   return (
     <main className="min-h-screen p-6">
@@ -52,10 +80,25 @@ export default async function LikedPhotosPage() {
         <UserNav />
       </div>
 
-      {photos.length === 0 ? (
+      {sections.length === 0 ? (
         <p className="text-[#444] text-sm font-light">No liked photos yet. Double-tap any photo to like it.</p>
       ) : (
-        <MasonryGrid photos={photos} />
+        <div className="space-y-12">
+          {sections.map(section => (
+            <div key={section.collectionId}>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-[#555] text-xs uppercase tracking-widest">{section.name}</p>
+                <Link
+                  href={`/c/${section.collectionId}/gallery`}
+                  className="text-[#444] text-xs hover:text-[#666] transition-colors"
+                >
+                  View all →
+                </Link>
+              </div>
+              <MasonryGrid photos={section.photos} />
+            </div>
+          ))}
+        </div>
       )}
     </main>
   );
