@@ -89,16 +89,16 @@ export function MasonryGrid({ photos, selectionMode, selectedIds, onTap }: Props
                     alt={photo.filename}
                     width={hasDims ? photo.width : undefined}
                     height={hasDims ? photo.height : undefined}
-                    loading={priority ? 'eager' : 'lazy'}
+                    loading="eager"
                     fetchPriority={priority ? 'high' : 'auto'}
                     onLoad={() => markLoaded(photo.id)}
                     onError={e => {
                       markLoaded(photo.id);
                       if (photo.originalUrl) e.currentTarget.src = photo.originalUrl;
                     }}
-                    className={`w-full block rounded-sm ${
-                      !priority ? 'transition-opacity duration-500' : ''
-                    } ${selected ? 'opacity-60' : (loaded || priority ? 'opacity-100' : 'opacity-0')}`}
+                    className={`w-full block rounded-sm transition-opacity duration-300 ${
+                      selected ? 'opacity-60' : (loaded ? 'opacity-100' : 'opacity-0')
+                    }`}
                   />
                   {selectionMode && (
                     <div

@@ -66,7 +66,7 @@ export function GalleryClient({
     if (!sentinel || !hasMore) return;
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) loadMore(); },
-      { rootMargin: '300px' }
+      { rootMargin: '600px' }
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
