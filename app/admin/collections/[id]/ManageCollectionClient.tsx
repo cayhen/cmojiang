@@ -25,19 +25,42 @@ export function ManageCollectionClient({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
-  async function compressThumbnail(file: File): Promise<Blob> {
+  interface ThumbnailResult {
+    blob: Blob;
+    width: number;
+    height: number;
+    dominantColor: string;
+  }
+
+  async function compressThumbnail(file: File): Promise<ThumbnailResult> {
     return new Promise((resolve, reject) => {
       const img = new Image();
       const objectUrl = URL.createObjectURL(file);
       img.onload = () => {
         URL.revokeObjectURL(objectUrl);
-        const scale = Math.min(1, 1200 / img.width);
+        const scale = Math.min(1, 600 / img.width);
         const canvas = document.createElement('canvas');
         canvas.width = Math.round(img.width * scale);
         canvas.height = Math.round(img.height * scale);
-        canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        // Sample a 5×5 grid to compute an average representative color
+        let r = 0, g = 0, b = 0;
+        for (let sy = 0; sy < 5; sy++) {
+          for (let sx = 0; sx < 5; sx++) {
+            const x = Math.round((sx / 4) * (canvas.width - 1));
+            const y = Math.round((sy / 4) * (canvas.height - 1));
+            const px = ctx.getImageData(x, y, 1, 1).data;
+            r += px[0]; g += px[1]; b += px[2];
+          }
+        }
+        r = Math.round(r / 25); g = Math.round(g / 25); b = Math.round(b / 25);
+        const dominantColor = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+
+        const { width, height } = canvas;
         canvas.toBlob(
-          blob => blob ? resolve(blob) : reject(new Error('toBlob failed')),
+          blob => blob ? resolve({ blob, width, height, dominantColor }) : reject(new Error('toBlob failed')),
           'image/jpeg',
           0.8
         );
@@ -97,14 +120,14 @@ export function ManageCollectionClient({
 
       // Step 2: upload each file directly to R2 (bypasses Vercel size limit)
       const uploadErrors: string[] = [];
-      const confirmed: { storagePath: string; filename: string }[] = [];
+      const confirmed: { storagePath: string; filename: string; width: number; height: number; dominantColor: string }[] = [];
       let completedUploads = 0;
       const totalFiles = urlResults.length;
 
       await Promise.all(
         urlResults.map(async ({ filename, storagePath, signedUrl, thumbSignedUrl }) => {
           const file = fileList.find(f => f.name === filename)!;
-          const thumbBlob = await compressThumbnail(file);
+          const { blob: thumbBlob, width, height, dominantColor } = await compressThumbnail(file);
           const [res, thumbRes] = await Promise.all([
             fetch(signedUrl!, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } }),
             fetch(thumbSignedUrl!, { method: 'PUT', body: thumbBlob, headers: { 'Content-Type': 'image/jpeg' } }),
@@ -113,7 +136,7 @@ export function ManageCollectionClient({
             uploadErrors.push(`${filename}: storage upload failed (${res.status})`);
           } else {
             if (!thumbRes.ok) console.warn(`${filename}: thumbnail upload failed (${thumbRes.status})`);
-            confirmed.push({ storagePath: storagePath!, filename });
+            confirmed.push({ storagePath: storagePath!, filename, width, height, dominantColor });
           }
           completedUploads++;
           setUploadProgress(completedUploads / totalFiles);

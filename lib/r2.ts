@@ -22,6 +22,7 @@ export async function getUploadUrl(key: string, contentType: string): Promise<st
     Bucket: R2_BUCKET_NAME,
     Key: key,
     ContentType: contentType,
+    CacheControl: 'public, max-age=31536000, immutable',
   });
   return getSignedUrl(r2, command, { expiresIn: 3600 });
 }
