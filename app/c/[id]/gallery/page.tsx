@@ -41,15 +41,19 @@ export default async function GalleryPage({ params }: { params: { id: string } }
         .eq('collection_id', params.id)
         .order('uploaded_at', { ascending: true });
 
-      return (photos ?? []).map(photo => ({
-        id: photo.id,
-        filename: photo.filename,
-        url: publicPhotoUrl(thumbPath(photo.storage_path)),
-        originalUrl: publicPhotoUrl(photo.storage_path),
-        width: photo.width ?? undefined,
-        height: photo.height ?? undefined,
-        dominantColor: photo.dominant_color ?? undefined,
-      }));
+      return (photos ?? []).map(photo => {
+        const hasThumb = photo.width != null;
+        const originalUrl = publicPhotoUrl(photo.storage_path);
+        return {
+          id: photo.id,
+          filename: photo.filename,
+          url: hasThumb ? publicPhotoUrl(thumbPath(photo.storage_path)) : originalUrl,
+          originalUrl,
+          width: photo.width ?? undefined,
+          height: photo.height ?? undefined,
+          dominantColor: photo.dominant_color ?? undefined,
+        };
+      });
     }
   );
 
