@@ -36,7 +36,12 @@ export default async function ProfilePage() {
         <UserNav />
       </div>
 
-      <p className="text-[#555] text-xs uppercase tracking-widest mb-4">Unlocked Collections</p>
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-[#555] text-xs uppercase tracking-widest">Unlocked Collections</p>
+        <Link href="/profile/likes" className="text-[#555] text-xs hover:text-[#777] transition-colors">
+          ♥ Liked photos
+        </Link>
+      </div>
 
       {collections.length === 0 ? (
         <p className="text-[#444] text-sm font-light">No collections unlocked yet.</p>

@@ -200,7 +200,7 @@ export function GalleryClient({
                 disabled={downloading}
                 className="text-[#666] text-xs hover:text-[#888] transition-colors disabled:opacity-50"
               >
-                {downloading ? 'Zipping…' : '↓ All'}
+                {downloading ? 'Zipping…' : 'Download all'}
               </button>
             </>
           )}
