@@ -77,7 +77,7 @@ export function MasonryGrid({ photos, selectionMode, selectedIds, onTap }: Props
               return (
                 <button
                   key={photo.id}
-                  className="w-full block focus:outline-none focus:ring-1 focus:ring-[#333] rounded-sm relative overflow-hidden"
+                  className="group w-full block focus:outline-none focus:ring-1 focus:ring-[#333] rounded-sm relative overflow-hidden"
                   style={{ backgroundColor: photo.dominantColor ?? '#1a1a1a' }}
                   onClick={() => handleClick(i)}
                   aria-label={selectionMode
@@ -101,6 +101,19 @@ export function MasonryGrid({ photos, selectionMode, selectedIds, onTap }: Props
                       selected ? 'opacity-60' : (loaded ? 'opacity-100' : 'opacity-0')
                     }`}
                   />
+                  {!selectionMode && (
+                    <a
+                      href={`/api/photo/${photo.id}`}
+                      download={photo.filename}
+                      onClick={e => e.stopPropagation()}
+                      aria-label={`Download ${photo.filename}`}
+                      className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 bg-black/50 hover:bg-black/70 rounded p-1.5"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
+                        <path d="M6 1v7M3 6l3 3 3-3M1 10h10" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </a>
+                  )}
                   {selectionMode && (
                     <div
                       className={`absolute top-2 right-2 w-5 h-5 rounded-full border border-white/80 flex items-center justify-center transition-colors ${
