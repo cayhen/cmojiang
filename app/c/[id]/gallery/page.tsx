@@ -55,6 +55,16 @@ export default async function GalleryPage({ params }: { params: { id: string } }
 
   const userSession = await getUserSession();
 
+  let likedPhotoIds: string[] = [];
+  if (userSession && photosWithUrls.length > 0) {
+    const { data: likes } = await supabaseAdmin
+      .from('photo_likes')
+      .select('photo_id')
+      .eq('user_id', userSession.userId)
+      .in('photo_id', photosWithUrls.map(p => p.id));
+    likedPhotoIds = (likes ?? []).map((l: { photo_id: string }) => l.photo_id);
+  }
+
   const { count: kudosCount } = await supabaseAdmin
     .from('kudos')
     .select('*', { count: 'exact', head: true })
@@ -111,6 +121,7 @@ export default async function GalleryPage({ params }: { params: { id: string } }
           loggedIn={!!userSession}
           comments={comments}
           currentUsername={userSession?.username ?? null}
+          likedPhotoIds={likedPhotoIds}
         />
       )}
     </main>

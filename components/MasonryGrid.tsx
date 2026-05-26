@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Lightbox } from './Lightbox';
 
 interface Photo {
@@ -18,11 +18,16 @@ interface Props {
   selectionMode?: boolean;
   selectedIds?: Set<string>;
   onTap?: (index: number) => void;
+  onDoubleTap?: (index: number) => void;
+  likedIds?: Set<string>;
 }
 
-export function MasonryGrid({ photos, selectionMode, selectedIds, onTap }: Props) {
+export function MasonryGrid({ photos, selectionMode, selectedIds, onTap, onDoubleTap, likedIds }: Props) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [loadedIds, setLoadedIds] = useState<Set<string>>(new Set());
+  const [animatingIds, setAnimatingIds] = useState<Set<string>>(new Set());
+  const lastClickRef = useRef<{ time: number; index: number } | null>(null);
+  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [numCols, setNumCols] = useState(() => {
     if (typeof window === 'undefined') return 4;
     const w = window.innerWidth;
@@ -38,12 +43,41 @@ export function MasonryGrid({ photos, selectionMode, selectedIds, onTap }: Props
     return () => window.removeEventListener('resize', update);
   }, []);
 
+  function triggerHeartAnimation(photoId: string) {
+    setAnimatingIds(prev => { const n = new Set(prev); n.add(photoId); return n; });
+    setTimeout(() => {
+      setAnimatingIds(prev => { const n = new Set(prev); n.delete(photoId); return n; });
+    }, 700);
+  }
+
   function handleClick(i: number) {
-    if (onTap) {
-      onTap(i);
-    } else {
-      setLightboxIndex(i);
+    const now = Date.now();
+    const last = lastClickRef.current;
+
+    if (last && last.index === i && now - last.time < 300) {
+      // Double-click detected
+      if (clickTimerRef.current) { clearTimeout(clickTimerRef.current); clickTimerRef.current = null; }
+      lastClickRef.current = null;
+      if (!selectionMode && onDoubleTap) {
+        triggerHeartAnimation(photos[i].id);
+        onDoubleTap(i);
+      }
+      return;
     }
+
+    lastClickRef.current = { time: now, index: i };
+
+    if (selectionMode) {
+      onTap?.(i);
+      return;
+    }
+
+    if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
+    clickTimerRef.current = setTimeout(() => {
+      clickTimerRef.current = null;
+      if (onTap) onTap(i);
+      else setLightboxIndex(i);
+    }, 300);
   }
 
   function markLoaded(id: string) {
@@ -73,6 +107,8 @@ export function MasonryGrid({ photos, selectionMode, selectedIds, onTap }: Props
               const loaded = loadedIds.has(photo.id);
               const hasDims = photo.width != null && photo.height != null;
               const priority = i < 8;
+              const liked = likedIds?.has(photo.id) ?? false;
+              const animating = animatingIds.has(photo.id);
 
               return (
                 <button
@@ -101,6 +137,26 @@ export function MasonryGrid({ photos, selectionMode, selectedIds, onTap }: Props
                       selected ? 'opacity-60' : (loaded ? 'opacity-100' : 'opacity-0')
                     }`}
                   />
+
+                  {/* Heart burst animation on double-click */}
+                  {animating && (
+                    <div aria-hidden className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <svg className="animate-heart-burst" width="56" height="56" viewBox="0 0 24 24" fill="#ff4d6d">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                      </svg>
+                    </div>
+                  )}
+
+                  {/* Persistent liked indicator */}
+                  {liked && !selectionMode && (
+                    <div aria-hidden className="absolute top-2 left-2 pointer-events-none">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="#ff4d6d">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                      </svg>
+                    </div>
+                  )}
+
+                  {/* Per-photo download button */}
                   {!selectionMode && (
                     <a
                       href={`/api/photo/${photo.id}`}
@@ -114,6 +170,8 @@ export function MasonryGrid({ photos, selectionMode, selectedIds, onTap }: Props
                       </svg>
                     </a>
                   )}
+
+                  {/* Selection mode checkbox */}
                   {selectionMode && (
                     <div
                       className={`absolute top-2 right-2 w-5 h-5 rounded-full border border-white/80 flex items-center justify-center transition-colors ${

@@ -35,6 +35,7 @@ interface Props {
   loggedIn: boolean;
   comments: Comment[];
   currentUsername: string | null;
+  likedPhotoIds?: string[];
 }
 
 export function GalleryClient({
@@ -46,9 +47,11 @@ export function GalleryClient({
   loggedIn,
   comments,
   currentUsername,
+  likedPhotoIds,
 }: Props) {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [likedIds, setLikedIds] = useState<Set<string>>(() => new Set(likedPhotoIds ?? []));
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [zipProgress, setZipProgress] = useState(0); // 0–1
@@ -91,6 +94,27 @@ export function GalleryClient({
       toggleSelect(photos[index].id);
     } else {
       setLightboxIndex(index);
+    }
+  }
+
+  async function handleDoubleTap(index: number) {
+    if (!loggedIn) return;
+    const photo = photos[index];
+    const wasLiked = likedIds.has(photo.id);
+    setLikedIds(prev => {
+      const next = new Set(prev);
+      if (wasLiked) next.delete(photo.id); else next.add(photo.id);
+      return next;
+    });
+    try {
+      const res = await fetch(`/api/photos/${photo.id}/like`, { method: 'POST' });
+      if (!res.ok) throw new Error('Like failed');
+    } catch {
+      setLikedIds(prev => {
+        const next = new Set(prev);
+        if (wasLiked) next.add(photo.id); else next.delete(photo.id);
+        return next;
+      });
     }
   }
 
@@ -195,6 +219,8 @@ export function GalleryClient({
         selectionMode={selectionMode}
         selectedIds={selectedIds}
         onTap={handleTap}
+        onDoubleTap={loggedIn ? handleDoubleTap : undefined}
+        likedIds={likedIds}
       />
       {hasMore && <div ref={sentinelRef} />}
 
