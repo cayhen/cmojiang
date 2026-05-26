@@ -73,6 +73,13 @@ export function Lightbox({ photos, initialIndex, onClose }: Props) {
         </div>
         <button
           onClick={onClose}
+          aria-label="Back to gallery"
+          className="absolute top-4 left-4 text-[#777] hover:text-[#bbb] text-sm transition-colors"
+        >
+          ← Back
+        </button>
+        <button
+          onClick={onClose}
           aria-label="Close lightbox"
           className="absolute top-4 right-4 text-[#777] hover:text-[#bbb] text-2xl leading-none transition-colors"
         >
