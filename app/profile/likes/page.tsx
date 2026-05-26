@@ -3,7 +3,7 @@ import { getUserSession } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
 import { publicPhotoUrl, thumbPath } from '@/lib/r2';
 import { UserNav } from '@/components/UserNav';
-import { MasonryGrid } from '@/components/MasonryGrid';
+import { LikedPhotosClient, type LikedPhoto, type LikedSection } from '@/components/LikedPhotosClient';
 import Link from 'next/link';
 
 export const revalidate = 0;
@@ -19,11 +19,6 @@ export default async function LikedPhotosPage() {
     .order('created_at', { ascending: false });
 
   // Build photo list with URLs
-  type LikedPhoto = {
-    id: string; filename: string; url: string; originalUrl: string;
-    width?: number; height?: number; dominantColor?: string; collectionId: string;
-  };
-
   const photos: LikedPhoto[] = (likes ?? [])
     .map(l => {
       const p = l.photos as unknown as {
@@ -55,7 +50,7 @@ export default async function LikedPhotosPage() {
   const collectionNames = new Map((collectionsData ?? []).map(c => [c.id, c.name]));
 
   // Group photos by collection, preserving the order collections first appear
-  const sections: { collectionId: string; name: string; photos: LikedPhoto[] }[] = [];
+  const sections: LikedSection[] = [];
   const seen = new Map<string, number>();
 
   for (const photo of photos) {
@@ -80,26 +75,7 @@ export default async function LikedPhotosPage() {
         <UserNav />
       </div>
 
-      {sections.length === 0 ? (
-        <p className="text-[#444] text-sm font-light">No liked photos yet. Double-tap any photo to like it.</p>
-      ) : (
-        <div className="space-y-12">
-          {sections.map(section => (
-            <div key={section.collectionId}>
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-[#555] text-xs uppercase tracking-widest">{section.name}</p>
-                <Link
-                  href={`/c/${section.collectionId}/gallery`}
-                  className="text-[#444] text-xs hover:text-[#666] transition-colors"
-                >
-                  View all →
-                </Link>
-              </div>
-              <MasonryGrid photos={section.photos} />
-            </div>
-          ))}
-        </div>
-      )}
+      <LikedPhotosClient initialSections={sections} />
     </main>
   );
 }
