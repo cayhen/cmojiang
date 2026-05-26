@@ -15,7 +15,9 @@ export function UserNavClient({ username }: { username: string | null }) {
   if (username) {
     return (
       <div className="flex items-center gap-3">
-        <span className="text-[#666] text-xs font-light">{username}</span>
+        <Link href="/profile" className="text-[#666] text-xs font-light hover:text-[#888] transition-colors">
+          {username}
+        </Link>
         <button
           onClick={handleLogout}
           className="text-[#555] text-xs hover:text-[#777] transition-colors"
