@@ -55,12 +55,7 @@ export function MasonryGrid({ photos, selectionMode, selectedIds, onTap }: Props
             <button
               key={photo.id}
               className="break-inside-avoid mb-1.5 w-full block focus:outline-none focus:ring-1 focus:ring-[#333] rounded-sm relative overflow-hidden"
-              style={{
-                backgroundColor: photo.dominantColor ?? '#1a1a1a',
-                aspectRatio: photo.width && photo.height
-                  ? `${photo.width}/${photo.height}`
-                  : '4/3',
-              }}
+              style={{ backgroundColor: photo.dominantColor ?? '#1a1a1a' }}
               onClick={() => handleClick(i)}
               aria-label={selectionMode
                 ? (selected ? `Deselect ${photo.filename}` : `Select ${photo.filename}`)
