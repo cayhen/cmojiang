@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Lightbox } from './Lightbox';
 
 interface Photo {
@@ -23,6 +23,20 @@ interface Props {
 export function MasonryGrid({ photos, selectionMode, selectedIds, onTap }: Props) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [loadedIds, setLoadedIds] = useState<Set<string>>(new Set());
+  const [numCols, setNumCols] = useState(() => {
+    if (typeof window === 'undefined') return 4;
+    const w = window.innerWidth;
+    return w < 640 ? 2 : w < 1024 ? 3 : 4;
+  });
+
+  useEffect(() => {
+    function update() {
+      const w = window.innerWidth;
+      setNumCols(w < 640 ? 2 : w < 1024 ? 3 : 4);
+    }
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
   function handleClick(i: number) {
     if (onTap) {
@@ -41,58 +55,69 @@ export function MasonryGrid({ photos, selectionMode, selectedIds, onTap }: Props
     });
   }
 
+  // Each photo is permanently assigned to column (i % numCols).
+  // Appending new photos never redistributes existing ones.
+  const columns = Array.from({ length: numCols }, (_, ci) =>
+    photos
+      .map((photo, i) => ({ photo, originalIndex: i }))
+      .filter(({ originalIndex: i }) => i % numCols === ci)
+  );
+
   return (
     <>
-      <div className="columns-2 sm:columns-3 lg:columns-4 gap-1.5">
-        {photos.map((photo, i) => {
-          const selected = selectedIds?.has(photo.id) ?? false;
-          const loaded = loadedIds.has(photo.id);
-          const hasDims = photo.width != null && photo.height != null;
-          // Above-the-fold: first 8 load eagerly with high priority
-          const priority = i < 8;
+      <div className="flex gap-1.5">
+        {columns.map((colItems, ci) => (
+          <div key={ci} className="flex-1 flex flex-col gap-1.5">
+            {colItems.map(({ photo, originalIndex: i }) => {
+              const selected = selectedIds?.has(photo.id) ?? false;
+              const loaded = loadedIds.has(photo.id);
+              const hasDims = photo.width != null && photo.height != null;
+              const priority = i < 8;
 
-          return (
-            <button
-              key={photo.id}
-              className="break-inside-avoid mb-1.5 w-full block focus:outline-none focus:ring-1 focus:ring-[#333] rounded-sm relative overflow-hidden"
-              style={{ backgroundColor: photo.dominantColor ?? '#1a1a1a' }}
-              onClick={() => handleClick(i)}
-              aria-label={selectionMode
-                ? (selected ? `Deselect ${photo.filename}` : `Select ${photo.filename}`)
-                : `Open ${photo.filename}`}
-            >
-              <img
-                src={photo.url}
-                alt={photo.filename}
-                width={hasDims ? photo.width : undefined}
-                height={hasDims ? photo.height : undefined}
-                loading={priority ? 'eager' : 'lazy'}
-                fetchPriority={priority ? 'high' : 'auto'}
-                onLoad={() => markLoaded(photo.id)}
-                onError={e => {
-                  markLoaded(photo.id);
-                  if (photo.originalUrl) e.currentTarget.src = photo.originalUrl;
-                }}
-                className={`w-full block rounded-sm ${
-                  !priority ? 'transition-opacity duration-500' : ''
-                } ${selected ? 'opacity-60' : (loaded || priority ? 'opacity-100' : 'opacity-0')}`}
-              />
-              {selectionMode && (
-                <div
-                  className={`absolute top-2 right-2 w-5 h-5 rounded-full border border-white/80 flex items-center justify-center transition-colors ${
-                    selected ? 'bg-white' : 'bg-black/40'
-                  }`}
+              return (
+                <button
+                  key={photo.id}
+                  className="w-full block focus:outline-none focus:ring-1 focus:ring-[#333] rounded-sm relative overflow-hidden"
+                  style={{ backgroundColor: photo.dominantColor ?? '#1a1a1a' }}
+                  onClick={() => handleClick(i)}
+                  aria-label={selectionMode
+                    ? (selected ? `Deselect ${photo.filename}` : `Select ${photo.filename}`)
+                    : `Open ${photo.filename}`}
                 >
-                  {selected && (
-                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                      <path d="M1 4l3 3 5-6" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+                  <img
+                    src={photo.url}
+                    alt={photo.filename}
+                    width={hasDims ? photo.width : undefined}
+                    height={hasDims ? photo.height : undefined}
+                    loading={priority ? 'eager' : 'lazy'}
+                    fetchPriority={priority ? 'high' : 'auto'}
+                    onLoad={() => markLoaded(photo.id)}
+                    onError={e => {
+                      markLoaded(photo.id);
+                      if (photo.originalUrl) e.currentTarget.src = photo.originalUrl;
+                    }}
+                    className={`w-full block rounded-sm ${
+                      !priority ? 'transition-opacity duration-500' : ''
+                    } ${selected ? 'opacity-60' : (loaded || priority ? 'opacity-100' : 'opacity-0')}`}
+                  />
+                  {selectionMode && (
+                    <div
+                      className={`absolute top-2 right-2 w-5 h-5 rounded-full border border-white/80 flex items-center justify-center transition-colors ${
+                        selected ? 'bg-white' : 'bg-black/40'
+                      }`}
+                    >
+                      {selected && (
+                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                          <path d="M1 4l3 3 5-6" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </div>
                   )}
-                </div>
-              )}
-            </button>
-          );
-        })}
+                </button>
+              );
+            })}
+          </div>
+        ))}
       </div>
 
       {!onTap && lightboxIndex !== null && (
