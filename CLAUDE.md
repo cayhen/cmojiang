@@ -36,6 +36,9 @@ R2_ACCESS_KEY_ID
 R2_SECRET_ACCESS_KEY
 R2_BUCKET_NAME          (default: cmojiang-photos)
 R2_PUBLIC_URL
+GOOGLE_CLIENT_ID        (Google OAuth 2.0 client ID)
+GOOGLE_CLIENT_SECRET    (Google OAuth 2.0 client secret)
+NEXT_PUBLIC_BASE_URL    (e.g. https://www.cmojiang.com — used for OAuth callback URL)
 ```
 
 All env vars fall back to `"placeholder"` strings if missing — no startup crash or validation.
@@ -52,17 +55,26 @@ photos              id, collection_id, filename, storage_path, uploaded_at,
 kudos               id, user_id, collection_id, created_at  [unique: user_id+collection_id]
 comments            id, user_id, collection_id, content, created_at
 user_collection_access  id, user_id, collection_id, accessed_at  [unique: user_id+collection_id]
+photo_likes         id, user_id, collection_id, created_at  [unique: user_id+photo_id]
 ```
 
 `*` `password_plain` stores the raw collection password alongside the bcrypt hash — a critical security flaw (see Known Issues).
 
-**Required DB migration** (run once in Supabase SQL editor — columns may not exist yet):
+**Required DB migrations** (run once in Supabase SQL editor — columns/tables may not exist yet):
 ```sql
 ALTER TABLE photos ADD COLUMN width INTEGER;
 ALTER TABLE photos ADD COLUMN height INTEGER;
 ALTER TABLE photos ADD COLUMN dominant_color TEXT;
+
+CREATE TABLE photo_likes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  photo_id UUID NOT NULL REFERENCES photos(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, photo_id)
+);
 ```
-Existing rows return null for these columns, which the app handles gracefully.
+Existing rows return null for optional columns, which the app handles gracefully.
 
 ---
 

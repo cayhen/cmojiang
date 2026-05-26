@@ -29,7 +29,7 @@ export default async function UnlockPage({ params }: { params: { id: string } })
         .eq('user_id', userSession.userId)
         .eq('collection_id', params.id)
         .single();
-      if (access) redirect(`/c/${params.id}/gallery`);
+      if (access) redirect(`/api/gallery-access?id=${params.id}`);
     }
   }
 

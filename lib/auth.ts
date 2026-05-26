@@ -8,7 +8,7 @@ function secret() {
 export async function signToken(collectionId: string): Promise<string> {
   return new SignJWT({ collectionId })
     .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime('7d')
+    .setExpirationTime('30d')
     .sign(secret());
 }
 
