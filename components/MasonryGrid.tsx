@@ -131,7 +131,16 @@ export function MasonryGrid({ photos, selectionMode, selectedIds, onTap, onDoubl
                     onLoad={() => markLoaded(photo.id)}
                     onError={e => {
                       markLoaded(photo.id);
-                      if (photo.originalUrl) e.currentTarget.src = photo.originalUrl;
+                      const el = e.currentTarget;
+                      if (!el.dataset.fallback) {
+                        // thumbnail failed → try original R2 URL
+                        el.dataset.fallback = '1';
+                        el.src = photo.originalUrl ?? `/api/photo/${photo.id}`;
+                      } else if (el.dataset.fallback === '1') {
+                        // original R2 also failed → try server proxy (has Supabase fallback)
+                        el.dataset.fallback = '2';
+                        el.src = `/api/photo/${photo.id}`;
+                      }
                     }}
                     className={`w-full block rounded-sm transition-opacity duration-300 ${
                       selected ? 'opacity-60' : (loaded ? 'opacity-100' : 'opacity-0')
