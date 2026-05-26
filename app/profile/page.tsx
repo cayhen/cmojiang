@@ -10,21 +10,37 @@ export default async function ProfilePage() {
   const session = await getUserSession();
   if (!session) redirect('/login');
 
-  const { data: rows } = await supabaseAdmin
+  // Step 1: get which collections the user has unlocked + when
+  const { data: accessRows } = await supabaseAdmin
     .from('user_collection_access')
-    .select('accessed_at, collections(id, name, photos(count))')
+    .select('collection_id, accessed_at')
     .eq('user_id', session.userId)
     .order('accessed_at', { ascending: false });
 
-  const collections = (rows ?? []).map(r => {
-    const c = r.collections as unknown as { id: string; name: string; photos: { count: number }[] } | null;
-    return {
-      id: c?.id ?? '',
-      name: c?.name ?? '',
-      photoCount: c?.photos?.[0]?.count ?? 0,
-      accessedAt: r.accessed_at as string,
-    };
-  }).filter(c => c.id);
+  const collectionIds = (accessRows ?? []).map(r => r.collection_id as string);
+
+  // Step 2: get collection names + photo counts (same pattern as home page)
+  const { data: collectionsData } = collectionIds.length > 0
+    ? await supabaseAdmin
+        .from('collections')
+        .select('id, name, photos(count)')
+        .in('id', collectionIds)
+    : { data: [] };
+
+  // Merge and preserve the accessed_at sort order
+  const collectionMap = new Map((collectionsData ?? []).map(c => [
+    c.id,
+    {
+      name: c.name,
+      photoCount: Array.isArray(c.photos) && typeof (c.photos[0] as { count?: number })?.count === 'number'
+        ? (c.photos[0] as { count: number }).count
+        : 0,
+    },
+  ]));
+
+  const collections = collectionIds
+    .map(id => ({ id, ...collectionMap.get(id) }))
+    .filter(c => c.name) as { id: string; name: string; photoCount: number }[];
 
   return (
     <main className="min-h-screen p-6 max-w-xl mx-auto">

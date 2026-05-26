@@ -42,7 +42,10 @@ export async function POST(req: NextRequest) {
     if (userSession) {
       await supabaseAdmin
         .from('user_collection_access')
-        .upsert({ user_id: userSession.userId, collection_id: collectionId }, { onConflict: 'user_id,collection_id' });
+        .upsert(
+          { user_id: userSession.userId, collection_id: collectionId, accessed_at: new Date().toISOString() },
+          { onConflict: 'user_id,collection_id' }
+        );
     }
   }
 
