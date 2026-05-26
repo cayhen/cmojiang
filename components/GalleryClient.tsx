@@ -57,6 +57,7 @@ export function GalleryClient({
   const [zipProgress, setZipProgress] = useState(0); // 0–1
   const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const hasMore = visibleCount < photos.length;
   const visiblePhotos = photos.slice(0, visibleCount);
@@ -118,7 +119,13 @@ export function GalleryClient({
     }
   }
 
+  function cancelDownload() {
+    abortRef.current?.abort();
+  }
+
   async function downloadPhotos(photoList: GalleryPhoto[], zipName: string) {
+    const controller = new AbortController();
+    abortRef.current = controller;
     setDownloading(true);
     setZipProgress(0);
     let completed = 0;
@@ -130,7 +137,7 @@ export function GalleryClient({
 
       await Promise.all(
         photoList.map(async photo => {
-          const res = await fetch(`/api/photo/${photo.id}`);
+          const res = await fetch(`/api/photo/${photo.id}`, { signal: controller.signal });
           if (res.ok) {
             const blob = await res.blob();
             zip.file(photo.filename, blob);
@@ -140,6 +147,8 @@ export function GalleryClient({
         })
       );
 
+      if (controller.signal.aborted) return;
+
       const blob = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -148,8 +157,9 @@ export function GalleryClient({
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Download failed', err);
+      if ((err as { name?: string }).name !== 'AbortError') console.error('Download failed', err);
     } finally {
+      abortRef.current = null;
       setDownloading(false);
       setZipProgress(0);
       exitSelection();
@@ -202,7 +212,12 @@ export function GalleryClient({
         <div className="mb-4 space-y-1">
           <div className="flex justify-between text-[#555] text-xs">
             <span>Zipping…</span>
-            <span>{Math.round(zipProgress * 100)}%</span>
+            <div className="flex items-center gap-3">
+              <span>{Math.round(zipProgress * 100)}%</span>
+              <button onClick={cancelDownload} className="text-[#444] hover:text-[#666] transition-colors">
+                Cancel
+              </button>
+            </div>
           </div>
           <div className="h-px bg-[#1e1e1e] rounded-full overflow-hidden">
             <div
