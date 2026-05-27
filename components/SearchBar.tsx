@@ -7,6 +7,7 @@ interface Collection {
   id: string;
   name: string;
   photo_count: number;
+  event_date?: string | null;
 }
 
 export function SearchBar({ collections }: { collections: Collection[] }) {

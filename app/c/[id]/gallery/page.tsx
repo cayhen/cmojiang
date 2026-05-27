@@ -107,7 +107,10 @@ export default async function GalleryPage({ params }: { params: { id: string } }
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
           <HomeLink />
-          <h1 className="text-[#bbb] font-light text-sm">{collection.name}</h1>
+          <div>
+            <h1 className="text-[#bbb] font-light text-sm leading-tight">{collection.name}</h1>
+            <p className="text-[#444] text-xs font-light leading-tight mt-0.5">{photosWithUrls.length} {photosWithUrls.length === 1 ? 'photo' : 'photos'}</p>
+          </div>
         </div>
         <UserNav />
       </div>

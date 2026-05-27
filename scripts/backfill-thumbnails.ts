@@ -4,12 +4,16 @@
  * it to the /t/ prefix, then updates width/height/dominant_color in the DB.
  *
  * Run from the project root:
- *   npx ts-node -r dotenv/config --project tsconfig.json scripts/backfill-thumbnails.ts
+ *   npx ts-node --project tsconfig.json scripts/backfill-thumbnails.ts
+ *
+ * Re-process all photos (e.g. to fix EXIF rotation):
+ *   npx ts-node --project tsconfig.json scripts/backfill-thumbnails.ts --all
  */
 
 import { config } from 'dotenv';
 config({ path: '.env.local' });
-config(); // fallback to .env
+config();
+
 import { createClient } from '@supabase/supabase-js';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import sharp from 'sharp';
@@ -30,6 +34,7 @@ const r2 = new S3Client({
 
 const BUCKET = process.env.R2_BUCKET_NAME ?? 'cmojiang-photos';
 const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL ?? 'https://photos.cmojiang.com';
+const forceAll = process.argv.includes('--all');
 
 function thumbPath(storagePath: string): string {
   const slash = storagePath.indexOf('/');
@@ -59,15 +64,15 @@ async function dominantColor(buffer: Buffer): Promise<string> {
 }
 
 async function main() {
-  const { data: photos, error } = await supabase
-    .from('photos')
-    .select('id, storage_path')
-    .is('width', null);
+  let query = supabase.from('photos').select('id, storage_path');
+  if (!forceAll) query = query.is('width', null);
+
+  const { data: photos, error } = await query;
 
   if (error) throw new Error(`DB error: ${error.message}`);
-  if (!photos?.length) { console.log('All photos already have thumbnails.'); return; }
+  if (!photos?.length) { console.log('No photos to process.'); return; }
 
-  console.log(`Found ${photos.length} photos without thumbnails.\n`);
+  console.log(`Found ${photos.length} photos to process${forceAll ? ' (--all mode)' : ''}.\n`);
 
   let done = 0, failed = 0;
 
@@ -77,15 +82,17 @@ async function main() {
     try {
       const original = await downloadFromR2(photo.storage_path);
 
-      const meta = await sharp(original).metadata();
-      const origWidth = meta.width!;
-      const scale = Math.min(1, 600 / origWidth);
-      const thumbW = Math.round(origWidth * scale);
+      // Rotate based on EXIF orientation before measuring or resizing
+      const rotated = await sharp(original).rotate().toBuffer();
+
+      const meta = await sharp(rotated).metadata();
+      const scale = Math.min(1, 600 / meta.width!);
+      const thumbW = Math.round(meta.width! * scale);
       const thumbH = Math.round(meta.height! * scale);
 
       const [thumbBuffer, color] = await Promise.all([
-        sharp(original).resize(thumbW, thumbH).jpeg({ quality: 80 }).toBuffer(),
-        dominantColor(original),
+        sharp(rotated).resize(thumbW, thumbH).jpeg({ quality: 80 }).toBuffer(),
+        dominantColor(rotated),
       ]);
 
       await r2.send(new PutObjectCommand({

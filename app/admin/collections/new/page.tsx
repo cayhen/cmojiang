@@ -4,9 +4,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+function today() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export default function NewCollectionPage() {
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
+  const [eventDate, setEventDate] = useState(today);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -20,7 +25,7 @@ export default function NewCollectionPage() {
       const res = await fetch('/api/admin/collections', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, password }),
+        body: JSON.stringify({ name, password, event_date: eventDate }),
       });
 
       if (res.ok) {
@@ -61,6 +66,16 @@ export default function NewCollectionPage() {
           required
           className="w-full bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2.5 text-[#bbb] text-sm placeholder:text-[#666] focus:outline-none focus:border-[#2a2a2a] font-light"
         />
+        <div>
+          <label className="text-[#555] text-xs uppercase tracking-widest block mb-1.5">Event date</label>
+          <input
+            type="date"
+            value={eventDate}
+            onChange={e => setEventDate(e.target.value)}
+            required
+            className="w-full bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2.5 text-[#bbb] text-sm focus:outline-none focus:border-[#2a2a2a] font-light"
+          />
+        </div>
         {error && <p className="text-red-500/70 text-xs">{error}</p>}
         <button
           type="submit"

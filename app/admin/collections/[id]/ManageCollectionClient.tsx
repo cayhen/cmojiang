@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 interface Photo { id: string; filename: string; url: string; }
-interface Collection { id: string; name: string; password_plain?: string; }
+interface Collection { id: string; name: string; password_plain?: string; event_date?: string | null; }
 
 export function ManageCollectionClient({
   collection,
@@ -22,6 +22,8 @@ export function ManageCollectionClient({
   const [uploadErrors, setUploadErrors] = useState<string[]>([]);
   const [newPassword, setNewPassword] = useState('');
   const [passwordMsg, setPasswordMsg] = useState('');
+  const [eventDate, setEventDate] = useState(collection.event_date ?? new Date().toISOString().slice(0, 10));
+  const [dateMsg, setDateMsg] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -189,6 +191,16 @@ export function ManageCollectionClient({
     setPhotos(ps => ps.filter(p => p.id !== photoId));
   }
 
+  async function handleDateUpdate(e: React.FormEvent) {
+    e.preventDefault();
+    const res = await fetch(`/api/admin/collections/${collection.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event_date: eventDate }),
+    });
+    setDateMsg(res.ok ? 'Date updated.' : 'Failed.');
+  }
+
   async function handlePasswordUpdate(e: React.FormEvent) {
     e.preventDefault();
     const res = await fetch(`/api/admin/collections/${collection.id}`, {
@@ -280,6 +292,27 @@ export function ManageCollectionClient({
             </div>
           ))}
         </div>
+      </section>
+
+      {/* Event date */}
+      <section className="mb-8">
+        <p className="text-[#666] text-xs uppercase tracking-widest mb-3">Event Date</p>
+        <form onSubmit={handleDateUpdate} className="flex gap-2">
+          <input
+            type="date"
+            value={eventDate}
+            onChange={e => setEventDate(e.target.value)}
+            required
+            className="flex-1 bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2 text-[#bbb] text-sm focus:outline-none focus:border-[#2a2a2a] font-light"
+          />
+          <button
+            type="submit"
+            className="bg-[#161616] border border-[#1a1a1a] text-[#888] text-sm px-4 rounded hover:border-[#2a2a2a] hover:text-[#bbb] transition-colors"
+          >
+            Update
+          </button>
+        </form>
+        {dateMsg && <p className="text-[#777] text-xs mt-1">{dateMsg}</p>}
       </section>
 
       {/* Change password */}

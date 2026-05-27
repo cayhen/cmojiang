@@ -5,7 +5,7 @@ import { ManageCollectionClient } from './ManageCollectionClient';
 
 export default async function ManageCollectionPage({ params }: { params: { id: string } }) {
   const [{ data: collection }, { data: photos }] = await Promise.all([
-    supabaseAdmin.from('collections').select('id, name, password_plain').eq('id', params.id).single(),
+    supabaseAdmin.from('collections').select('id, name, password_plain, event_date').eq('id', params.id).single(),
     supabaseAdmin
       .from('photos')
       .select('id, filename, storage_path')

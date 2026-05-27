@@ -14,7 +14,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const { name, password } = await req.json();
+  const { name, password, event_date } = await req.json();
 
   if (!name?.trim() || !password) {
     return NextResponse.json({ error: 'Name and password required' }, { status: 400 });
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await supabaseAdmin
     .from('collections')
-    .insert({ name: name.trim(), password_hash, password_plain: password })
+    .insert({ name: name.trim(), password_hash, password_plain: password, ...(event_date && { event_date }) })
     .select('id, name')
     .single();
 

@@ -95,14 +95,16 @@ async function main() {
       const ext = photo.storage_path.split('.').pop()?.toLowerCase() ?? 'jpg';
       const contentType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
 
-      const meta = await sharp(original).metadata();
+      const rotated = await sharp(original).rotate().toBuffer();
+
+      const meta = await sharp(rotated).metadata();
       const scale = Math.min(1, 600 / meta.width!);
       const thumbW = Math.round(meta.width! * scale);
       const thumbH = Math.round(meta.height! * scale);
 
       const [thumbBuffer, color] = await Promise.all([
-        sharp(original).resize(thumbW, thumbH).jpeg({ quality: 80 }).toBuffer(),
-        dominantColor(original),
+        sharp(rotated).resize(thumbW, thumbH).jpeg({ quality: 80 }).toBuffer(),
+        dominantColor(rotated),
       ]);
 
       await Promise.all([

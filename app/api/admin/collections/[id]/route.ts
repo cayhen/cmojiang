@@ -7,7 +7,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const { name, password } = await req.json();
+  const { name, password, event_date } = await req.json();
   const updates: Record<string, string> = {};
 
   if (name?.trim()) updates.name = name.trim();
@@ -15,6 +15,7 @@ export async function PATCH(
     updates.password_hash = await bcrypt.hash(password, 12);
     updates.password_plain = password;
   }
+  if (event_date) updates.event_date = event_date;
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: 'Nothing to update' }, { status: 400 });
