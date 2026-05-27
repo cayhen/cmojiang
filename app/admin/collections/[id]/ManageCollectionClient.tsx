@@ -120,7 +120,7 @@ export function ManageCollectionClient({
 
       // Step 2: upload each file directly to R2 (bypasses Vercel size limit)
       const uploadErrors: string[] = [];
-      const confirmed: { storagePath: string; filename: string; width: number; height: number; dominantColor: string }[] = [];
+      const confirmed: { storagePath: string; filename: string; width?: number; height?: number; dominantColor?: string }[] = [];
       let completedUploads = 0;
       const totalFiles = urlResults.length;
 
@@ -134,9 +134,10 @@ export function ManageCollectionClient({
           ]);
           if (!res.ok) {
             uploadErrors.push(`${filename}: storage upload failed (${res.status})`);
-          } else {
-            if (!thumbRes.ok) console.warn(`${filename}: thumbnail upload failed (${thumbRes.status})`);
+          } else if (thumbRes.ok) {
             confirmed.push({ storagePath: storagePath!, filename, width, height, dominantColor });
+          } else {
+            confirmed.push({ storagePath: storagePath!, filename });
           }
           completedUploads++;
           setUploadProgress(completedUploads / totalFiles);
