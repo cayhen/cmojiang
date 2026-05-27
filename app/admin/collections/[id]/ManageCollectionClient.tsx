@@ -279,7 +279,7 @@ export function ManageCollectionClient({
       <section className="mb-8">
         <button
           onClick={() => setPhotosOpen(o => !o)}
-          className="flex items-center justify-between w-full mb-3 group"
+          className="flex items-center gap-2 mb-3 group"
         >
           <p className="text-[#666] text-xs uppercase tracking-widest">Photos ({photos.length})</p>
           <span className="text-[#444] text-xs group-hover:text-[#666] transition-colors">{photosOpen ? '▲' : '▼'}</span>
