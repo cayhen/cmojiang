@@ -4,7 +4,6 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { UnlockForm } from '@/components/UnlockForm';
 import { verifyUserToken } from '@/lib/auth';
 import { USER_COOKIE_NAME } from '@/lib/session';
-import Link from 'next/link';
 import { HomeLink } from '@/components/HomeLink';
 
 export const revalidate = 0;

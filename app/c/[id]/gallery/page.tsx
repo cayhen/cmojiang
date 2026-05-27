@@ -8,7 +8,6 @@ import { publicPhotoUrl, thumbPath } from '@/lib/r2';
 import { GalleryClient } from '@/components/GalleryClient';
 import { UserNav } from '@/components/UserNav';
 import { cachedFetch } from '@/lib/redis';
-import Link from 'next/link';
 import { HomeLink } from '@/components/HomeLink';
 
 export const revalidate = 60;
