@@ -282,7 +282,7 @@ export function ManageCollectionClient({
           className="flex items-center gap-2 mb-3 group"
         >
           <p className="text-[#666] text-xs uppercase tracking-widest">Photos ({photos.length})</p>
-          <span className="text-[#444] text-xs group-hover:text-[#666] transition-colors">{photosOpen ? '▲' : '▼'}</span>
+          <span className="text-[#444] text-xs group-hover:text-[#666] transition-colors">{photosOpen ? '▼' : '▶'}</span>
         </button>
         {photosOpen && <div className="grid grid-cols-3 gap-2">
           {photos.map(photo => (
