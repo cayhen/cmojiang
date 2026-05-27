@@ -21,6 +21,8 @@ export function ManageCollectionClient({
   const [uploadStatus, setUploadStatus] = useState('');
   const [uploadErrors, setUploadErrors] = useState<string[]>([]);
   const [photosOpen, setPhotosOpen] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [nameMsg, setNameMsg] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [passwordMsg, setPasswordMsg] = useState('');
   const [eventDate, setEventDate] = useState(collection.event_date ?? new Date().toISOString().slice(0, 10));
@@ -192,6 +194,17 @@ export function ManageCollectionClient({
     setPhotos(ps => ps.filter(p => p.id !== photoId));
   }
 
+  async function handleNameUpdate(e: React.FormEvent) {
+    e.preventDefault();
+    const res = await fetch(`/api/admin/collections/${collection.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newName }),
+    });
+    setNameMsg(res.ok ? 'Name updated.' : 'Failed.');
+    setNewName('');
+  }
+
   async function handleDateUpdate(e: React.FormEvent) {
     e.preventDefault();
     const res = await fetch(`/api/admin/collections/${collection.id}`, {
@@ -297,6 +310,28 @@ export function ManageCollectionClient({
             </div>
           ))}
         </div>}
+      </section>
+
+      {/* Rename */}
+      <section className="mb-8">
+        <p className="text-[#666] text-xs uppercase tracking-widest mb-3">Rename</p>
+        <form onSubmit={handleNameUpdate} className="flex gap-2">
+          <input
+            type="text"
+            placeholder={collection.name}
+            value={newName}
+            onChange={e => setNewName(e.target.value)}
+            required
+            className="flex-1 bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2 text-[#bbb] text-sm placeholder:text-[#444] focus:outline-none focus:border-[#2a2a2a] font-light"
+          />
+          <button
+            type="submit"
+            className="bg-[#161616] border border-[#1a1a1a] text-[#888] text-sm px-4 rounded hover:border-[#2a2a2a] hover:text-[#bbb] transition-colors"
+          >
+            Update
+          </button>
+        </form>
+        {nameMsg && <p className="text-[#777] text-xs mt-1">{nameMsg}</p>}
       </section>
 
       {/* Event date */}
