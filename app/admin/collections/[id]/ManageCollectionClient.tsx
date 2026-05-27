@@ -20,6 +20,7 @@ export function ManageCollectionClient({
   const [uploadProgress, setUploadProgress] = useState(0); // 0–1
   const [uploadStatus, setUploadStatus] = useState('');
   const [uploadErrors, setUploadErrors] = useState<string[]>([]);
+  const [photosOpen, setPhotosOpen] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [passwordMsg, setPasswordMsg] = useState('');
   const [eventDate, setEventDate] = useState(collection.event_date ?? new Date().toISOString().slice(0, 10));
@@ -276,10 +277,14 @@ export function ManageCollectionClient({
 
       {/* Photos */}
       <section className="mb-8">
-        <p className="text-[#666] text-xs uppercase tracking-widest mb-3">
-          Photos ({photos.length})
-        </p>
-        <div className="grid grid-cols-3 gap-2">
+        <button
+          onClick={() => setPhotosOpen(o => !o)}
+          className="flex items-center justify-between w-full mb-3 group"
+        >
+          <p className="text-[#666] text-xs uppercase tracking-widest">Photos ({photos.length})</p>
+          <span className="text-[#444] text-xs group-hover:text-[#666] transition-colors">{photosOpen ? '▲' : '▼'}</span>
+        </button>
+        {photosOpen && <div className="grid grid-cols-3 gap-2">
           {photos.map(photo => (
             <div key={photo.id} className="relative group">
               <img src={photo.url} alt={photo.filename} className="w-full rounded-sm" />
@@ -291,7 +296,7 @@ export function ManageCollectionClient({
               </button>
             </div>
           ))}
-        </div>
+        </div>}
       </section>
 
       {/* Event date */}
