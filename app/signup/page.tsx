@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { HomeLink } from '@/components/HomeLink';
 
 export default function SignUpPage() {
   const [username, setUsername] = useState('');
@@ -45,9 +46,9 @@ export default function SignUpPage() {
   return (
     <main className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-xs">
-        <div className="flex items-center mb-8">
-          <Link href="/" className="text-[#555] text-xs hover:text-[#888] transition-colors">← Back</Link>
-          <p className="flex-1 text-[#666] text-xs tracking-widest uppercase text-center font-light">Create account</p>
+        <div className="relative flex items-center mb-8">
+          <HomeLink />
+          <p className="absolute inset-x-0 text-[#666] text-xs tracking-widest uppercase text-center font-light pointer-events-none">Create account</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
           <input

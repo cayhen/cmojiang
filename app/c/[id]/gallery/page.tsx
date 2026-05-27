@@ -9,6 +9,7 @@ import { GalleryClient } from '@/components/GalleryClient';
 import { UserNav } from '@/components/UserNav';
 import { cachedFetch } from '@/lib/redis';
 import Link from 'next/link';
+import { HomeLink } from '@/components/HomeLink';
 
 export const revalidate = 60;
 
@@ -105,9 +106,7 @@ export default async function GalleryPage({ params }: { params: { id: string } }
       ))}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <Link href="/" className="text-[#666] text-xs hover:text-[#777] transition-colors">
-            ← All
-          </Link>
+          <HomeLink />
           <h1 className="text-[#bbb] font-light text-sm">{collection.name}</h1>
         </div>
         <UserNav />

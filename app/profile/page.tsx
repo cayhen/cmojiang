@@ -3,6 +3,7 @@ import { getUserSession } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
 import { UserNav } from '@/components/UserNav';
 import Link from 'next/link';
+import { HomeLink } from '@/components/HomeLink';
 
 export const revalidate = 0;
 
@@ -46,7 +47,7 @@ export default async function ProfilePage() {
     <main className="min-h-screen p-6 max-w-xl mx-auto">
       <div className="flex justify-between items-center mb-10">
         <div className="flex items-center gap-4">
-          <Link href="/" className="text-[#666] text-xs hover:text-[#777] transition-colors">← All</Link>
+          <HomeLink />
           <span className="text-[#bbb] text-sm font-light">{session.username}</span>
         </div>
         <UserNav />

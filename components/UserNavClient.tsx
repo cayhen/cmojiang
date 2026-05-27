@@ -14,13 +14,16 @@ export function UserNavClient({ username }: { username: string | null }) {
 
   if (username) {
     return (
-      <div className="flex items-center gap-3">
-        <Link href="/profile" className="text-[#666] text-xs font-light hover:text-[#888] transition-colors">
+      <div className="inline-flex items-center gap-2">
+        <Link
+          href="/profile"
+          className="text-[#666] text-xs font-light hover:text-[#888] transition-colors leading-none inline-flex items-center"
+        >
           {username}
         </Link>
         <button
           onClick={handleLogout}
-          className="text-[#555] text-xs hover:text-[#777] transition-colors"
+          className="text-[11px] font-normal tracking-[0.06em] uppercase text-[#666] bg-[#161616] rounded px-2.5 py-1 hover:text-[#888] hover:bg-[#1c1c1c] transition-colors leading-none inline-flex items-center"
         >
           Sign out
         </button>
@@ -29,13 +32,11 @@ export function UserNavClient({ username }: { username: string | null }) {
   }
 
   return (
-    <div className="flex items-center gap-3">
-      <Link href="/login" className="text-[#666] text-xs hover:text-[#777] transition-colors">
-        Sign in
-      </Link>
-      <Link href="/signup" className="text-[#666] text-xs hover:text-[#777] transition-colors">
-        Create account
-      </Link>
-    </div>
+    <Link
+      href="/login"
+      className="text-[11px] font-normal tracking-[0.06em] uppercase text-[#777] bg-[#161616] rounded px-2.5 py-1 hover:text-[#999] hover:bg-[#1c1c1c] transition-colors leading-none inline-flex items-center"
+    >
+      Sign in
+    </Link>
   );
 }

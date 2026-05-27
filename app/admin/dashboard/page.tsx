@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { HomeLink } from '@/components/HomeLink';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const revalidate = 0;
@@ -13,7 +14,7 @@ export default async function AdminDashboard() {
     <main className="min-h-screen p-8 max-w-2xl mx-auto">
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-4">
-          <Link href="/" className="text-[#555] text-xs hover:text-[#777] transition-colors">← Site</Link>
+          <HomeLink />
           <p className="text-[#666] text-xs tracking-widest uppercase font-light">Collections</p>
         </div>
         <Link

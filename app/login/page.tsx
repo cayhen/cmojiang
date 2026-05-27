@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { HomeLink } from '@/components/HomeLink';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -44,9 +45,9 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-xs">
-        <div className="flex items-center mb-8">
-          <Link href="/" className="text-[#555] text-xs hover:text-[#888] transition-colors">← Back</Link>
-          <p className="flex-1 text-[#666] text-xs tracking-widest uppercase text-center font-light">Sign in</p>
+        <div className="relative flex items-center mb-8">
+          <HomeLink />
+          <p className="absolute inset-x-0 text-[#666] text-xs tracking-widest uppercase text-center font-light pointer-events-none">Sign in</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
@@ -97,9 +98,9 @@ export default function LoginPage() {
           Continue with Google
         </a>
 
-        <p className="text-[#666] text-xs text-center mt-5">
+        <p className="text-[#555] text-xs text-center mt-5">
           No account?{' '}
-          <Link href="/signup" className="hover:text-[#777] transition-colors">Create one</Link>
+          <Link href="/signup" className="text-[#888] hover:text-[#aaa] transition-colors">Create one</Link>
         </p>
       </div>
     </main>
