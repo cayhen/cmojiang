@@ -57,16 +57,20 @@ export function TextScramble({ text, className = '' }: TextScrambleProps) {
       className={`inline-block cursor-default select-none font-mono ${className}`}
       onMouseEnter={scramble}
     >
-      {displayText.split('').map((char, i) => (
-        <span
-          key={i}
-          className={`inline-block transition-opacity duration-100 ${
-            isScrambling && char !== text[i] ? 'opacity-30' : 'opacity-100'
-          }`}
-        >
-          {char}
-        </span>
-      ))}
+      {displayText.split('').map((char, i) =>
+        char === ' ' ? (
+          <span key={i} className="inline-block w-[0.45em]" />
+        ) : (
+          <span
+            key={i}
+            className={`inline-block transition-opacity duration-100 ${
+              isScrambling && char !== text[i] ? 'opacity-30' : 'opacity-100'
+            }`}
+          >
+            {char}
+          </span>
+        )
+      )}
     </span>
   )
 }
