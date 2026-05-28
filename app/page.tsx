@@ -23,20 +23,22 @@ export default async function HomePage() {
   }));
 
   return (
-    <main className="relative min-h-screen p-8 max-w-2xl mx-auto overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden">
       <FloatingPaths position={1} />
       <FloatingPaths position={-1} />
-      <header className="relative pt-16 pb-10">
-        <div className="flex justify-between items-center">
-          <TextScramble text="Caden Jiang — Photos" className="text-[#666] text-xs tracking-widest uppercase" />
-          <UserNav />
-        </div>
-      </header>
-      <SearchBar collections={collections} />
-      <footer className="mt-16 text-center">
-        <Link href="/admin" className="text-[#2a2a2a] text-xs hover:text-[#555] transition-colors">admin</Link>
-      </footer>
-    </main>
+      <main className="relative p-8 max-w-2xl mx-auto">
+        <header className="mb-8">
+          <div className="flex justify-between items-center">
+            <TextScramble text="Caden Jiang — Photos" className="text-[#888] text-sm tracking-widest uppercase" />
+            <UserNav />
+          </div>
+        </header>
+        <SearchBar collections={collections} />
+        <footer className="mt-16 text-center">
+          <Link href="/admin" className="text-[#2a2a2a] text-xs hover:text-[#555] transition-colors">admin</Link>
+        </footer>
+      </main>
+    </div>
   );
 }
 // hello from eric kim
