@@ -23,7 +23,7 @@ export function TextScramble({ text, className = '', autoPlay = false, fast = fa
     setIsScrambling(true)
     frameRef.current = 0
     const duration = fast ? Math.ceil(text.length * 1.5) : text.length * 3
-    const tick = fast ? 16 : 30
+    const tick = 30
 
     if (intervalRef.current) clearInterval(intervalRef.current)
 
