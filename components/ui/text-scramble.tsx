@@ -11,7 +11,6 @@ interface TextScrambleProps {
 
 export function TextScramble({ text, className = '' }: TextScrambleProps) {
   const [displayText, setDisplayText] = useState(text)
-  const [isHovering, setIsHovering] = useState(false)
   const [isScrambling, setIsScrambling] = useState(false)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const frameRef = useRef(0)
@@ -56,8 +55,7 @@ export function TextScramble({ text, className = '' }: TextScrambleProps) {
   return (
     <span
       className={`inline-block cursor-default select-none font-mono ${className}`}
-      onMouseEnter={() => { setIsHovering(true); scramble() }}
-      onMouseLeave={() => setIsHovering(false)}
+      onMouseEnter={scramble}
     >
       {displayText.split('').map((char, i) => (
         <span
