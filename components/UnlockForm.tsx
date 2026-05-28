@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { TextScramble } from '@/components/ui/text-scramble';
 
 type Phase = 'idle' | 'unlocking' | 'open' | 'done';
 
@@ -77,9 +78,16 @@ export function UnlockForm({ collectionId }: { collectionId: string }) {
       {phase !== 'idle' && (
         <div className={`fixed inset-0 bg-[#0f0f0f] z-50 flex flex-col items-center justify-center gap-4 transition-opacity duration-300 ${phase === 'done' ? 'opacity-0' : 'opacity-100'}`}>
           <LockIcon open={phase === 'open' || phase === 'done'} fading={phase === 'done'} />
-          <p className={`text-[#555] text-xs tracking-widest font-light transition-opacity duration-300 ${phase === 'open' ? 'opacity-100' : 'opacity-0'}`}>
-            unlocked
-          </p>
+          <div className={`transition-opacity duration-300 ${phase === 'open' ? 'opacity-100' : 'opacity-0'}`}>
+            {phase === 'open' && (
+              <TextScramble
+                text="UNLOCKED"
+                autoPlay
+                fast
+                className="text-white text-xs tracking-widest font-light"
+              />
+            )}
+          </div>
         </div>
       )}
 

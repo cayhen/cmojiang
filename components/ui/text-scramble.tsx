@@ -7,9 +7,13 @@ const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*'
 interface TextScrambleProps {
   text: string
   className?: string
+  /** Fire scramble on mount instead of on hover */
+  autoPlay?: boolean
+  /** Use a faster scramble (shorter duration, tighter interval) */
+  fast?: boolean
 }
 
-export function TextScramble({ text, className = '' }: TextScrambleProps) {
+export function TextScramble({ text, className = '', autoPlay = false, fast = false }: TextScrambleProps) {
   const [displayText, setDisplayText] = useState(text)
   const [isScrambling, setIsScrambling] = useState(false)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -18,7 +22,8 @@ export function TextScramble({ text, className = '' }: TextScrambleProps) {
   const scramble = useCallback(() => {
     setIsScrambling(true)
     frameRef.current = 0
-    const duration = text.length * 3
+    const duration = fast ? Math.ceil(text.length * 1.5) : text.length * 3
+    const tick = fast ? 16 : 30
 
     if (intervalRef.current) clearInterval(intervalRef.current)
 
@@ -43,19 +48,20 @@ export function TextScramble({ text, className = '' }: TextScrambleProps) {
         setDisplayText(text)
         setIsScrambling(false)
       }
-    }, 30)
-  }, [text])
+    }, tick)
+  }, [text, fast])
 
   useEffect(() => {
+    if (autoPlay) scramble()
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
-  }, [])
+  }, [autoPlay, scramble])
 
   return (
     <span
       className={`inline-block cursor-default select-none font-mono ${className}`}
-      onMouseEnter={scramble}
+      onMouseEnter={autoPlay ? undefined : scramble}
     >
       {displayText.split('').map((char, i) =>
         char === ' ' ? (
@@ -63,7 +69,7 @@ export function TextScramble({ text, className = '' }: TextScrambleProps) {
         ) : (
           <span
             key={i}
-            className={`inline-block transition-opacity duration-100 ${
+            className={`inline-block transition-opacity duration-75 ${
               isScrambling && char !== text[i] ? 'opacity-30' : 'opacity-100'
             }`}
           >
