@@ -5,7 +5,6 @@ import { UnlockForm } from '@/components/UnlockForm';
 import { verifyUserToken } from '@/lib/auth';
 import { USER_COOKIE_NAME } from '@/lib/session';
 import { HomeLink } from '@/components/HomeLink';
-import { AnimatedText } from '@/components/ui/animated-underline-text';
 
 export const revalidate = 0;
 
@@ -38,12 +37,9 @@ export default async function UnlockPage({ params }: { params: { id: string } })
     <main className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-xs">
         <div className="mb-8"><HomeLink /></div>
-        <AnimatedText
-          text={collection.name}
-          textClassName="text-lg"
-          underlineClassName="text-[#3a3a3a]"
-          className="mb-8"
-        />
+        <h1 className="text-[#bbb] font-light text-lg text-center mb-8">
+          {collection.name}
+        </h1>
         <UnlockForm collectionId={collection.id} />
       </div>
     </main>

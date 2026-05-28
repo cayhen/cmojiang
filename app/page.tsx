@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { SearchBar } from '@/components/SearchBar';
 import { UserNav } from '@/components/UserNav';
 import { TextScramble } from '@/components/ui/text-scramble';
+import { FloatingPaths } from '@/components/ui/background-paths';
 
 export const revalidate = 0;
 
@@ -22,8 +23,10 @@ export default async function HomePage() {
   }));
 
   return (
-    <main className="min-h-screen p-8 max-w-2xl mx-auto">
-      <header className="mb-8">
+    <main className="relative min-h-screen p-8 max-w-2xl mx-auto overflow-hidden">
+      <FloatingPaths position={1} />
+      <FloatingPaths position={-1} />
+      <header className="relative pt-16 pb-10">
         <div className="flex justify-between items-center">
           <TextScramble text="Caden Jiang — Photos" className="text-[#666] text-xs tracking-widest uppercase" />
           <UserNav />
