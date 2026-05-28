@@ -59,8 +59,8 @@ export function InfiniteGrid({ className }: { className?: string }) {
   }, [mouseX, mouseY])
 
   useAnimationFrame(() => {
-    gridOffsetX.set((gridOffsetX.get() + 0.4) % 40)
-    gridOffsetY.set((gridOffsetY.get() + 0.4) % 40)
+    gridOffsetX.set((gridOffsetX.get() + 0.2) % 40)
+    gridOffsetY.set((gridOffsetY.get() + 0.2) % 40)
   })
 
   const maskImage = useMotionTemplate`radial-gradient(220px circle at ${mouseX}px ${mouseY}px, black, transparent)`

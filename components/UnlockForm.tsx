@@ -60,8 +60,8 @@ export function UnlockForm({ collectionId }: { collectionId: string }) {
       if (res.ok) {
         setPhase('unlocking');
         setTimeout(() => setPhase('open'), 350);
-        setTimeout(() => setPhase('done'), 950);
-        setTimeout(() => router.push(`/c/${collectionId}/gallery`), 1250);
+        setTimeout(() => setPhase('done'), 1200);
+        setTimeout(() => router.push(`/c/${collectionId}/gallery`), 1500);
         return;
       }
 
