@@ -83,6 +83,7 @@ export function UnlockForm({ collectionId }: { collectionId: string }) {
               <TextScramble
                 text="UNLOCKED"
                 autoPlay
+                fast
                 className="text-white text-xs tracking-widest font-light"
               />
             )}
