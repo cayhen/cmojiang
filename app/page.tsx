@@ -29,7 +29,7 @@ export default async function HomePage() {
       <main className="relative p-8 max-w-2xl mx-auto">
         <header className="mb-8">
           <div className="flex justify-between items-center">
-            <TextScramble text="caden jiang - photos" className="text-[#888] text-sm tracking-widest" />
+            <TextScramble text="caden jiang - photos" className="text-[#888] text-sm tracking-widest uppercase" />
             <UserNav />
           </div>
         </header>
