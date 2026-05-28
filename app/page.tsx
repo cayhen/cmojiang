@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { supabaseAdmin } from '@/lib/supabase';
 import { SearchBar } from '@/components/SearchBar';
 import { UserNav } from '@/components/UserNav';
-import { FloatingPaths } from '@/components/ui/background-paths';
+import { InfiniteGrid } from '@/components/ui/infinite-grid';
 
 export const revalidate = 0;
 
@@ -23,8 +23,7 @@ export default async function HomePage() {
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      <FloatingPaths position={1} />
-      <FloatingPaths position={-1} />
+      <InfiniteGrid />
       <main className="relative p-8 max-w-2xl mx-auto">
         <header className="mb-8">
           <div className="flex justify-between items-center">

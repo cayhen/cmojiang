@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { HomeLink } from '@/components/HomeLink';
-import { FloatingPaths } from '@/components/ui/background-paths';
+import { InfiniteGrid } from '@/components/ui/infinite-grid';
 
 export default function SignUpPage() {
   const [username, setUsername] = useState('');
@@ -46,8 +46,7 @@ export default function SignUpPage() {
 
   return (
     <main className="relative min-h-screen flex items-center justify-center p-6 overflow-hidden">
-      <FloatingPaths position={1} />
-      <FloatingPaths position={-1} />
+      <InfiniteGrid />
       <div className="w-full max-w-xs">
         <div className="relative flex items-center mb-8">
           <HomeLink />
