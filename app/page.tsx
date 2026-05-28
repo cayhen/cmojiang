@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { supabaseAdmin } from '@/lib/supabase';
 import { SearchBar } from '@/components/SearchBar';
 import { UserNav } from '@/components/UserNav';
+import { TextScramble } from '@/components/ui/text-scramble';
 
 export const revalidate = 0;
 
@@ -24,7 +25,7 @@ export default async function HomePage() {
     <main className="min-h-screen p-8 max-w-2xl mx-auto">
       <header className="mb-8">
         <div className="flex justify-between items-center">
-          <p className="text-[#666] text-xs tracking-widest uppercase font-light">Caden Jiang — Photos</p>
+          <TextScramble text="Caden Jiang — Photos" className="text-[#666] text-xs tracking-widest uppercase" />
           <UserNav />
         </div>
       </header>
