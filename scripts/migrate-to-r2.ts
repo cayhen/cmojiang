@@ -3,10 +3,12 @@
  * DB records are unchanged (storage_path keys are the same format in both).
  *
  * Run from the project root:
- *   npx ts-node -r dotenv/config --project tsconfig.json scripts/migrate-to-r2.ts
+ *   npx ts-node --project tsconfig.json scripts/migrate-to-r2.ts
  */
 
-import 'dotenv/config';
+import { config } from 'dotenv';
+config({ path: '.env.local' });
+config();
 import { createClient } from '@supabase/supabase-js';
 import { S3Client, PutObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 

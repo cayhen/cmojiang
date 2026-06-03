@@ -3,12 +3,14 @@
  * exists in R2. Safe to run after migrate-to-r2.ts has completed successfully.
  *
  * Run from the project root:
- *   npx ts-node -r dotenv/config --project tsconfig.json scripts/empty-supabase-storage.ts
+ *   npx ts-node --project tsconfig.json scripts/empty-supabase-storage.ts
  *
  * Add --force to actually delete (default is dry-run).
  */
 
-import 'dotenv/config';
+import { config } from 'dotenv';
+config({ path: '.env.local' });
+config();
 import { createClient } from '@supabase/supabase-js';
 import { S3Client, HeadObjectCommand } from '@aws-sdk/client-s3';
 
