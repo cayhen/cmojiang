@@ -207,6 +207,9 @@ export function GalleryClient({
         </div>
       </div>
 
+      {/* Quality note */}
+      <p className="text-[#444] text-xs mb-4">Previews are compressed — downloads are full resolution.</p>
+
       {/* Zip progress bar */}
       {downloading && (
         <div className="mb-4 space-y-1">
