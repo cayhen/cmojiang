@@ -3,8 +3,21 @@ import bcrypt from 'bcryptjs';
 import { supabaseAdmin } from '@/lib/supabase';
 import { signToken, verifyUserToken } from '@/lib/auth';
 import { sessionCookieOptions, USER_COOKIE_NAME } from '@/lib/session';
+import { ratelimit } from '@/lib/ratelimit';
 
 export async function POST(req: NextRequest) {
+  // Rate limit check — runs before any expensive operations
+  if (ratelimit) {
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
+    const { success } = await ratelimit.limit(ip);
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Too many attempts. Try again in 15 minutes.' },
+        { status: 429, headers: { 'Retry-After': '900' } }
+      );
+    }
+  }
+
   let collectionId: string | undefined;
   let password: string | undefined;
   try {
