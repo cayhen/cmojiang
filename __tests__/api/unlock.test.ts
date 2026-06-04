@@ -15,27 +15,30 @@ jest.mock('@/lib/supabase', () => ({
 
 jest.mock('bcryptjs', () => ({ compare: jest.fn() }));
 
+let mockRatelimitInstance: { limit: jest.Mock } | null = { limit: jest.fn() };
+
 jest.mock('@/lib/ratelimit', () => ({
-  ratelimit: { limit: jest.fn() },
+  get ratelimit() {
+    return mockRatelimitInstance;
+  },
 }));
 
 import { POST } from '@/app/api/unlock/route';
 import { NextRequest } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { ratelimit } from '@/lib/ratelimit';
 
-function makeRequest(body: object) {
+function makeRequest(body: object, extraHeaders: Record<string, string> = {}) {
   return new NextRequest('http://localhost/api/unlock', {
     method: 'POST',
     body: JSON.stringify(body),
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...extraHeaders },
   });
 }
 
 describe('POST /api/unlock', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (ratelimit!.limit as jest.Mock).mockResolvedValue({ success: true });
+    mockRatelimitInstance = { limit: jest.fn().mockResolvedValue({ success: true }) };
   });
 
   it('returns 400 when fields are missing', async () => {
@@ -65,22 +68,41 @@ describe('POST /api/unlock', () => {
   });
 
   it('returns 429 when rate limit is exceeded', async () => {
-    (ratelimit!.limit as jest.Mock).mockResolvedValue({ success: false });
-    const res = await POST(makeRequest({ collectionId: 'c1', password: 'pw' }));
+    mockRatelimitInstance!.limit.mockResolvedValue({ success: false });
+    const res = await POST(
+      makeRequest({ collectionId: 'c1', password: 'pw' }, { 'x-forwarded-for': '1.2.3.4, 10.0.0.1' })
+    );
     expect(res.status).toBe(429);
     const data = await res.json();
     expect(data.error).toBe('Too many attempts. Try again in 15 minutes.');
   });
 
   it('includes Retry-After header on 429', async () => {
-    (ratelimit!.limit as jest.Mock).mockResolvedValue({ success: false });
-    const res = await POST(makeRequest({ collectionId: 'c1', password: 'pw' }));
+    mockRatelimitInstance!.limit.mockResolvedValue({ success: false });
+    const res = await POST(
+      makeRequest({ collectionId: 'c1', password: 'pw' }, { 'x-forwarded-for': '1.2.3.4, 10.0.0.1' })
+    );
     expect(res.headers.get('Retry-After')).toBe('900');
   });
 
-  it('skips rate limit check when ratelimit is null', async () => {
-    // Covered implicitly: existing tests pass without real Redis in CI
-    // This test verifies the route does NOT call limit when module returns null
-    jest.resetModules();
+  it('extracts first IP from x-forwarded-for with multiple proxies', async () => {
+    mockRatelimitInstance!.limit.mockResolvedValue({ success: false });
+    await POST(
+      makeRequest({ collectionId: 'c1', password: 'pw' }, { 'x-forwarded-for': '5.5.5.5, 10.0.0.1, 172.16.0.1' })
+    );
+    expect(mockRatelimitInstance!.limit).toHaveBeenCalledWith('5.5.5.5');
+  });
+
+  it('falls back to "unknown" when x-forwarded-for is absent', async () => {
+    mockRatelimitInstance!.limit.mockResolvedValue({ success: false });
+    await POST(makeRequest({ collectionId: 'c1', password: 'pw' }));
+    expect(mockRatelimitInstance!.limit).toHaveBeenCalledWith('unknown');
+  });
+
+  it('skips rate limit check and proceeds when ratelimit is null (fail-open)', async () => {
+    mockRatelimitInstance = null;
+    // With no rate limiter, a missing-fields request should reach body validation (400), not short-circuit to 429
+    const res = await POST(makeRequest({}));
+    expect(res.status).toBe(400);
   });
 });
