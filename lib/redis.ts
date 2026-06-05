@@ -1,0 +1,28 @@
+import { Redis } from '@upstash/redis';
+
+const url = process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
+const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
+
+export const redis = url && token
+  ? new Redis({ url, token })
+  : null;
+
+export async function cachedFetch<T>(
+  key: string,
+  ttlSeconds: number,
+  fetcher: () => Promise<T>
+): Promise<T> {
+  if (!redis) return fetcher();
+
+  const cached = await redis.get<T>(key);
+  if (cached !== null) return cached;
+
+  const data = await fetcher();
+  await redis.set(key, data, { ex: ttlSeconds });
+  return data;
+}
+
+export async function invalidate(key: string): Promise<void> {
+  if (!redis) return;
+  await redis.del(key);
+}
