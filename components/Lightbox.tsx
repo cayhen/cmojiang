@@ -13,7 +13,12 @@ interface Props {
 
 export function Lightbox({ photos, initialIndex, onClose }: Props) {
   const [index, setIndex] = useState(initialIndex);
+  const [loaded, setLoaded] = useState(false);
   const photo = photos[index];
+
+  useEffect(() => {
+    setLoaded(false);
+  }, [index]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -41,7 +46,8 @@ export function Lightbox({ photos, initialIndex, onClose }: Props) {
           <img
             src={photo.originalUrl ?? photo.url}
             alt={photo.filename}
-            className="max-h-[80vh] max-w-full object-contain"
+            onLoad={() => setLoaded(true)}
+            className={`max-h-[80vh] max-w-full object-contain transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
           />
           <div className="flex justify-between items-center w-full mt-4 px-2">
             <div className="flex gap-4">
