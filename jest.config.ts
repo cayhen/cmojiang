@@ -11,6 +11,8 @@ const config: Config = {
     '^server-only$': '<rootDir>/__mocks__/server-only.ts',
   },
   testMatch: ['**/__tests__/**/*.test.ts'],
+  testPathIgnorePatterns: ['/node_modules/', '/.worktrees/'],
+  modulePathIgnorePatterns: ['/.worktrees/'],
   transformIgnorePatterns: [
     '/node_modules/(?!(jose)/)',
   ],

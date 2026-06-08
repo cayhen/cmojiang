@@ -7,6 +7,13 @@ export const redis = url && token
   ? new Redis({ url, token })
   : null;
 
+/**
+ * Canonical Redis key for a collection's cached photo rows.
+ * Single source of truth — the gallery page reads it, photo mutations bust it.
+ * Versioned (`v2`) so a payload-shape change doesn't read stale entries.
+ */
+export const galleryPhotosKey = (collectionId: string) => `gallery:v2:${collectionId}:photos`;
+
 export async function cachedFetch<T>(
   key: string,
   ttlSeconds: number,
