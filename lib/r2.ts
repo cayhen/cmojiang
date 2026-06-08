@@ -55,7 +55,7 @@ export async function signViewUrl(key: string, expiresIn = PHOTO_URL_TTL): Promi
 
 /** Presigned GET URL that forces a browser download with the given filename. */
 export async function signDownloadUrl(key: string, filename: string, expiresIn = PHOTO_URL_TTL): Promise<string> {
-  const safe = filename.replace(/["\\\r\n]/g, '_');
+  const safe = filename.replace(/["\\\r\n\t]/g, '_');
   const command = new GetObjectCommand({
     Bucket: R2_BUCKET_NAME,
     Key: key,

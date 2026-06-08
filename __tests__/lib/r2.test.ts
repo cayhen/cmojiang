@@ -29,4 +29,9 @@ describe('r2 presigning', () => {
     const url = await signDownloadUrl('col1/p.jpg', 'a"b\nc.jpg');
     expect(decodeURIComponent(url)).toContain('attachment; filename="a_b_c.jpg"');
   });
+
+  it('signDownloadUrl strips tabs from the filename', async () => {
+    const url = await signDownloadUrl('col1/p.jpg', 'file\tname.jpg');
+    expect(decodeURIComponent(url)).toContain('attachment; filename="file_name.jpg"');
+  });
 });
