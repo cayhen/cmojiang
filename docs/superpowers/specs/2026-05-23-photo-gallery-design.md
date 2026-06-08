@@ -9,7 +9,7 @@
 
 A private photo gallery website where Caden organizes edited photos into event-based collections. Visitors browse the homepage, find their collection, enter a password to unlock it, then browse and download photos. No visitor accounts in Phase 1.
 
-Hosted on Vercel at `cadenjiang-photos.vercel.app`. Standalone Next.js app — no relation to other projects in the workspace.
+Hosted on Vercel at `cmojiang.vercel.app`. Standalone Next.js app — no relation to other projects in the workspace.
 
 ---
 
