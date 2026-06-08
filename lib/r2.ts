@@ -44,6 +44,26 @@ export async function getDownloadUrl(key: string, expiresIn = 3600): Promise<str
   return getSignedUrl(r2, command, { expiresIn });
 }
 
+/** Default lifetime for presigned photo URLs (24 hours). */
+export const PHOTO_URL_TTL = 60 * 60 * 24;
+
+/** Presigned GET URL for inline display (no forced download). */
+export async function signViewUrl(key: string, expiresIn = PHOTO_URL_TTL): Promise<string> {
+  const command = new GetObjectCommand({ Bucket: R2_BUCKET_NAME, Key: key });
+  return getSignedUrl(r2, command, { expiresIn });
+}
+
+/** Presigned GET URL that forces a browser download with the given filename. */
+export async function signDownloadUrl(key: string, filename: string, expiresIn = PHOTO_URL_TTL): Promise<string> {
+  const safe = filename.replace(/["\\\r\n]/g, '_');
+  const command = new GetObjectCommand({
+    Bucket: R2_BUCKET_NAME,
+    Key: key,
+    ResponseContentDisposition: `attachment; filename="${safe}"`,
+  });
+  return getSignedUrl(r2, command, { expiresIn });
+}
+
 /** Delete a single object from R2 */
 export async function deleteObject(key: string): Promise<void> {
   await r2.send(new DeleteObjectCommand({ Bucket: R2_BUCKET_NAME, Key: key }));
