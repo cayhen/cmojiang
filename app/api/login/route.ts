@@ -3,8 +3,12 @@ import bcrypt from 'bcryptjs';
 import { supabaseAdmin } from '@/lib/supabase';
 import { signUserToken } from '@/lib/auth';
 import { userCookieOptions, USER_COOKIE_NAME } from '@/lib/session';
+import { loginRatelimit, enforceRateLimit } from '@/lib/ratelimit';
 
 export async function POST(req: NextRequest) {
+  const limited = await enforceRateLimit(req, loginRatelimit);
+  if (limited) return limited;
+
   let body: { username?: string; password?: string };
   try {
     body = await req.json();
