@@ -99,25 +99,28 @@ export function GalleryClient({
     }
   }
 
-  async function handleDoubleTap(index: number) {
+  async function handleToggleLike(photoId: string) {
     if (!loggedIn) return;
-    const photo = photos[index];
-    const wasLiked = likedIds.has(photo.id);
+    const wasLiked = likedIds.has(photoId);
     setLikedIds(prev => {
       const next = new Set(prev);
-      if (wasLiked) next.delete(photo.id); else next.add(photo.id);
+      if (wasLiked) next.delete(photoId); else next.add(photoId);
       return next;
     });
     try {
-      const res = await fetch(`/api/photos/${photo.id}/like`, { method: 'POST' });
+      const res = await fetch(`/api/photos/${photoId}/like`, { method: 'POST' });
       if (!res.ok) throw new Error('Like failed');
     } catch {
       setLikedIds(prev => {
         const next = new Set(prev);
-        if (wasLiked) next.add(photo.id); else next.delete(photo.id);
+        if (wasLiked) next.add(photoId); else next.delete(photoId);
         return next;
       });
     }
+  }
+
+  function handleDoubleTap(index: number) {
+    handleToggleLike(photos[index].id);
   }
 
   function cancelDownload() {
@@ -237,6 +240,7 @@ export function GalleryClient({
         onTap={handleTap}
         onDoubleTap={loggedIn ? handleDoubleTap : undefined}
         likedIds={likedIds}
+        onToggleLike={loggedIn ? handleToggleLike : undefined}
       />
       {hasMore && <div ref={sentinelRef} />}
 

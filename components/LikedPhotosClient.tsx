@@ -52,7 +52,7 @@ export function LikedPhotosClient({ initialSections }: Props) {
 
   if (sections.length === 0) {
     return (
-      <p className="text-[#444] text-sm font-light">No liked photos yet. Double-tap any photo to like it.</p>
+      <p className="text-[#444] text-sm font-light">No liked photos yet. Hover a photo and tap the heart to like it.</p>
     );
   }
 
@@ -71,7 +71,7 @@ export function LikedPhotosClient({ initialSections }: Props) {
           <MasonryGrid
             photos={section.photos}
             likedIds={likedIds}
-            onUnlike={handleUnlike}
+            onToggleLike={handleUnlike}
           />
         </div>
       ))}
