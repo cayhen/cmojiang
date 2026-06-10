@@ -60,26 +60,35 @@ export default async function GalleryPage({ params }: { params: { id: string } }
 
   // Presigned URLs (24h) generated outside the row cache so we never cache an
   // expiring signature. Direct browser→R2 access; Vercel is not in the path.
-  const photosWithUrls = await Promise.all(
-    rawPhotos.map(async photo => {
-      const hasThumb = photo.width != null;
-      const [originalUrl, thumbUrl, downloadUrl] = await Promise.all([
-        signViewUrl(photo.storage_path),
-        hasThumb ? signViewUrl(thumbPath(photo.storage_path)) : Promise.resolve(null),
-        signDownloadUrl(photo.storage_path, photo.filename),
-      ]);
-      return {
-        id: photo.id,
-        filename: photo.filename,
-        url: thumbUrl ?? originalUrl,
-        originalUrl,
-        downloadUrl,
-        width: photo.width ?? undefined,
-        height: photo.height ?? undefined,
-        dominantColor: photo.dominant_color ?? undefined,
-      };
-    })
-  );
+  let photosWithUrls: {
+    id: string; filename: string; url: string; originalUrl: string;
+    downloadUrl: string; width?: number; height?: number; dominantColor?: string;
+  }[] = [];
+  let signingError = false;
+  try {
+    photosWithUrls = await Promise.all(
+      rawPhotos.map(async photo => {
+        const hasThumb = photo.width != null;
+        const [originalUrl, thumbUrl, downloadUrl] = await Promise.all([
+          signViewUrl(photo.storage_path),
+          hasThumb ? signViewUrl(thumbPath(photo.storage_path)) : Promise.resolve(null),
+          signDownloadUrl(photo.storage_path, photo.filename),
+        ]);
+        return {
+          id: photo.id,
+          filename: photo.filename,
+          url: thumbUrl ?? originalUrl,
+          originalUrl,
+          downloadUrl,
+          width: photo.width ?? undefined,
+          height: photo.height ?? undefined,
+          dominantColor: photo.dominant_color ?? undefined,
+        };
+      })
+    );
+  } catch {
+    signingError = true;
+  }
 
   // User-specific reads depend on userSession (and photo IDs) — second batch.
   let likedPhotoIds: string[] = [];
@@ -128,7 +137,9 @@ export default async function GalleryPage({ params }: { params: { id: string } }
         <UserNav />
       </div>
 
-      {photosWithUrls.length === 0 ? (
+      {signingError ? (
+        <p className="text-[#666] text-sm">Photos are temporarily unavailable. Please try again in a moment.</p>
+      ) : photosWithUrls.length === 0 ? (
         <p className="text-[#666] text-sm">No photos yet.</p>
       ) : (
         <GalleryClient

@@ -26,27 +26,33 @@ export default async function LikedPhotosPage() {
     } | null)
     .filter((p): p is NonNullable<typeof p> => p != null);
 
-  const photos: LikedPhoto[] = await Promise.all(
-    photoRows.map(async p => {
-      const hasThumb = p.width != null;
-      const [originalUrl, thumbUrl, downloadUrl] = await Promise.all([
-        signViewUrl(p.storage_path),
-        hasThumb ? signViewUrl(thumbPath(p.storage_path)) : Promise.resolve(null),
-        signDownloadUrl(p.storage_path, p.filename),
-      ]);
-      return {
-        id: p.id,
-        filename: p.filename,
-        url: thumbUrl ?? originalUrl,
-        originalUrl,
-        downloadUrl,
-        width: p.width ?? undefined,
-        height: p.height ?? undefined,
-        dominantColor: p.dominant_color ?? undefined,
-        collectionId: p.collection_id,
-      };
-    })
-  );
+  let photos: LikedPhoto[] = [];
+  let signingError = false;
+  try {
+    photos = await Promise.all(
+      photoRows.map(async p => {
+        const hasThumb = p.width != null;
+        const [originalUrl, thumbUrl, downloadUrl] = await Promise.all([
+          signViewUrl(p.storage_path),
+          hasThumb ? signViewUrl(thumbPath(p.storage_path)) : Promise.resolve(null),
+          signDownloadUrl(p.storage_path, p.filename),
+        ]);
+        return {
+          id: p.id,
+          filename: p.filename,
+          url: thumbUrl ?? originalUrl,
+          originalUrl,
+          downloadUrl,
+          width: p.width ?? undefined,
+          height: p.height ?? undefined,
+          dominantColor: p.dominant_color ?? undefined,
+          collectionId: p.collection_id,
+        };
+      })
+    );
+  } catch {
+    signingError = true;
+  }
 
   // Get collection names for all referenced collections
   const collectionIds = Array.from(new Set(photos.map(p => p.collectionId)));
@@ -82,7 +88,11 @@ export default async function LikedPhotosPage() {
         <UserNav />
       </div>
 
-      <LikedPhotosClient initialSections={sections} />
+      {signingError ? (
+        <p className="text-[#666] text-sm">Photos are temporarily unavailable. Please try again in a moment.</p>
+      ) : (
+        <LikedPhotosClient initialSections={sections} />
+      )}
     </main>
   );
 }
