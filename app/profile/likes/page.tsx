@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getUserSession } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
-import { publicPhotoUrl, thumbPath } from '@/lib/r2';
+import { signViewUrl, signDownloadUrl, thumbPath } from '@/lib/r2';
 import { UserNav } from '@/components/UserNav';
 import { LikedPhotosClient, type LikedPhoto, type LikedSection } from '@/components/LikedPhotosClient';
 import Link from 'next/link';
@@ -18,28 +18,35 @@ export default async function LikedPhotosPage() {
     .eq('user_id', session.userId)
     .order('created_at', { ascending: false });
 
-  // Build photo list with URLs
-  const photos: LikedPhoto[] = (likes ?? [])
-    .map(l => {
-      const p = l.photos as unknown as {
-        id: string; filename: string; storage_path: string; collection_id: string;
-        width: number | null; height: number | null; dominant_color: string | null;
-      } | null;
-      if (!p) return null;
+  // Build photo list with presigned URLs
+  const photoRows = (likes ?? [])
+    .map(l => l.photos as unknown as {
+      id: string; filename: string; storage_path: string; collection_id: string;
+      width: number | null; height: number | null; dominant_color: string | null;
+    } | null)
+    .filter((p): p is NonNullable<typeof p> => p != null);
+
+  const photos: LikedPhoto[] = await Promise.all(
+    photoRows.map(async p => {
       const hasThumb = p.width != null;
-      const originalUrl = publicPhotoUrl(p.storage_path);
+      const [originalUrl, thumbUrl, downloadUrl] = await Promise.all([
+        signViewUrl(p.storage_path),
+        hasThumb ? signViewUrl(thumbPath(p.storage_path)) : Promise.resolve(null),
+        signDownloadUrl(p.storage_path, p.filename),
+      ]);
       return {
         id: p.id,
         filename: p.filename,
-        url: hasThumb ? publicPhotoUrl(thumbPath(p.storage_path)) : originalUrl,
+        url: thumbUrl ?? originalUrl,
         originalUrl,
+        downloadUrl,
         width: p.width ?? undefined,
         height: p.height ?? undefined,
         dominantColor: p.dominant_color ?? undefined,
         collectionId: p.collection_id,
       };
     })
-    .filter(Boolean) as LikedPhoto[];
+  );
 
   // Get collection names for all referenced collections
   const collectionIds = Array.from(new Set(photos.map(p => p.collectionId)));
