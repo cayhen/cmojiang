@@ -14,6 +14,7 @@ export interface GalleryPhoto {
   filename: string;
   url: string;            // thumbnail — for masonry grid
   originalUrl: string;    // full quality — for lightbox
+  downloadUrl: string;    // presigned, forces attachment download
   width?: number;         // thumbnail pixel width (stored at upload time)
   height?: number;        // thumbnail pixel height (stored at upload time)
   dominantColor?: string; // average color sampled at upload time, e.g. "#a3b4c5"

@@ -8,6 +8,7 @@ interface Photo {
   filename: string;
   url: string;
   originalUrl?: string;
+  downloadUrl?: string;
   width?: number;
   height?: number;
   dominantColor?: string;

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import FocusTrap from 'focus-trap-react';
 
-interface Photo { id: string; filename: string; url: string; originalUrl?: string; collectionId?: string; }
+interface Photo { id: string; filename: string; url: string; originalUrl?: string; downloadUrl?: string; collectionId?: string; }
 
 interface Props {
   photos: Photo[];
