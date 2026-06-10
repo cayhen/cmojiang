@@ -138,7 +138,7 @@ export function GalleryClient({
 
       await Promise.all(
         photoList.map(async photo => {
-          const res = await fetch(`/api/photo/${photo.id}`, { signal: controller.signal });
+          const res = await fetch(photo.downloadUrl, { signal: controller.signal });
           if (res.ok) {
             const blob = await res.blob();
             zip.file(photo.filename, blob);
