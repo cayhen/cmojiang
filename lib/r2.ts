@@ -5,7 +5,6 @@ const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID ?? 'placeholder';
 const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID ?? 'placeholder';
 const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY ?? 'placeholder';
 export const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME ?? 'cmojiang-photos';
-const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL ?? '';
 
 export const r2 = new S3Client({
   region: 'auto',
@@ -25,23 +24,6 @@ export async function getUploadUrl(key: string, contentType: string): Promise<st
     CacheControl: 'public, max-age=31536000, immutable',
   });
   return getSignedUrl(r2, command, { expiresIn: 3600 });
-}
-
-/**
- * Return a stable public URL for a photo stored in R2.
- * Requires the bucket to have public access enabled and R2_PUBLIC_URL set.
- */
-export function publicPhotoUrl(key: string): string {
-  return `${R2_PUBLIC_URL}/${key}`;
-}
-
-/** Generate a presigned URL for viewing/downloading a photo (expires given seconds) */
-export async function getDownloadUrl(key: string, expiresIn = 3600): Promise<string> {
-  const command = new GetObjectCommand({
-    Bucket: R2_BUCKET_NAME,
-    Key: key,
-  });
-  return getSignedUrl(r2, command, { expiresIn });
 }
 
 /** Default lifetime for presigned photo URLs (24 hours). */
