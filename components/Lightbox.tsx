@@ -68,13 +68,15 @@ export function Lightbox({ photos, initialIndex, onClose }: Props) {
                 Next →
               </button>
             </div>
-            <a
-              href={`/api/photo/${photo.id}`}
-              download={photo.filename}
-              className="text-[#777] hover:text-[#bbb] text-sm transition-colors"
-            >
-              Download
-            </a>
+            {photo.downloadUrl && (
+              <a
+                href={photo.downloadUrl}
+                download={photo.filename}
+                className="text-[#777] hover:text-[#bbb] text-sm transition-colors"
+              >
+                Download
+              </a>
+            )}
           </div>
         </div>
         <button
