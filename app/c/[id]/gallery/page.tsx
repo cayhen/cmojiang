@@ -4,13 +4,12 @@ import { verifyToken } from '@/lib/auth';
 import { COOKIE_NAME } from '@/lib/session';
 import { getUserSession } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
-import { publicPhotoUrl, thumbPath } from '@/lib/r2';
+import { signViewUrl, signDownloadUrl, thumbPath } from '@/lib/r2';
 import { GalleryClient } from '@/components/GalleryClient';
 import { UserNav } from '@/components/UserNav';
 import { cachedFetch, galleryPhotosKey } from '@/lib/redis';
 import { HomeLink } from '@/components/HomeLink';
 
-export const revalidate = 60;
 
 type PhotoRow = {
   id: string;
@@ -59,21 +58,28 @@ export default async function GalleryPage({ params }: { params: { id: string } }
 
   const kudosCount = kudosRes.count;
 
-  // Seam for privatization: to gate photo bytes, swap publicPhotoUrl for an
-  // async presigned getDownloadUrl here and wrap this in Promise.all.
-  const photosWithUrls = rawPhotos.map(photo => {
-    const hasThumb = photo.width != null;
-    const originalUrl = publicPhotoUrl(photo.storage_path);
-    return {
-      id: photo.id,
-      filename: photo.filename,
-      url: hasThumb ? publicPhotoUrl(thumbPath(photo.storage_path)) : originalUrl,
-      originalUrl,
-      width: photo.width ?? undefined,
-      height: photo.height ?? undefined,
-      dominantColor: photo.dominant_color ?? undefined,
-    };
-  });
+  // Presigned URLs (24h) generated outside the row cache so we never cache an
+  // expiring signature. Direct browser→R2 access; Vercel is not in the path.
+  const photosWithUrls = await Promise.all(
+    rawPhotos.map(async photo => {
+      const hasThumb = photo.width != null;
+      const [originalUrl, thumbUrl, downloadUrl] = await Promise.all([
+        signViewUrl(photo.storage_path),
+        hasThumb ? signViewUrl(thumbPath(photo.storage_path)) : Promise.resolve(null),
+        signDownloadUrl(photo.storage_path, photo.filename),
+      ]);
+      return {
+        id: photo.id,
+        filename: photo.filename,
+        url: thumbUrl ?? originalUrl,
+        originalUrl,
+        downloadUrl,
+        width: photo.width ?? undefined,
+        height: photo.height ?? undefined,
+        dominantColor: photo.dominant_color ?? undefined,
+      };
+    })
+  );
 
   // User-specific reads depend on userSession (and photo IDs) — second batch.
   let likedPhotoIds: string[] = [];
