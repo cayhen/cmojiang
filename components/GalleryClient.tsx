@@ -14,6 +14,7 @@ export interface GalleryPhoto {
   filename: string;
   url: string;            // thumbnail — for masonry grid
   originalUrl: string;    // full quality — for lightbox
+  downloadUrl: string;    // presigned, forces attachment download
   width?: number;         // thumbnail pixel width (stored at upload time)
   height?: number;        // thumbnail pixel height (stored at upload time)
   dominantColor?: string; // average color sampled at upload time, e.g. "#a3b4c5"
@@ -137,7 +138,7 @@ export function GalleryClient({
 
       await Promise.all(
         photoList.map(async photo => {
-          const res = await fetch(`/api/photo/${photo.id}`, { signal: controller.signal });
+          const res = await fetch(photo.downloadUrl, { signal: controller.signal });
           if (res.ok) {
             const blob = await res.blob();
             zip.file(photo.filename, blob);

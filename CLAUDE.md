@@ -35,7 +35,6 @@ R2_ACCOUNT_ID
 R2_ACCESS_KEY_ID
 R2_SECRET_ACCESS_KEY
 R2_BUCKET_NAME          (default: cmojiang-photos)
-R2_PUBLIC_URL
 GOOGLE_CLIENT_ID        (Google OAuth 2.0 client ID)
 GOOGLE_CLIENT_SECRET    (Google OAuth 2.0 client secret)
 NEXT_PUBLIC_BASE_URL    (e.g. https://www.cmojiang.com — used for OAuth callback URL)
@@ -85,12 +84,12 @@ Existing rows return null for optional columns, which the app handles gracefully
 {collectionId}/t/{photoId}.{ext}      ← thumbnail (max 600px wide, JPEG 0.8)
 ```
 
-The bucket has **public read access**. `publicPhotoUrl(key)` returns `${R2_PUBLIC_URL}/${key}` — no signing, no auth. Anyone with a key path can fetch the bytes directly.
+Photos are served via **presigned R2 URLs** (24-hour TTL). The bucket's public-read access can be disabled in the Cloudflare dashboard (Task 10 in the privatization plan) to make access genuinely private. Until public-read is disabled, a raw storage path is still accessible to anyone who knows it.
 
 Key functions in `lib/r2.ts`:
 - `getUploadUrl(key, contentType)` — presigned PUT URL (1-hour expiry, `Cache-Control: public, max-age=31536000, immutable`)
-- `getDownloadUrl(key, expiresIn)` — presigned GET URL (default 1-hour expiry)
-- `publicPhotoUrl(key)` — direct public URL (no signing)
+- `signViewUrl(key, expiresIn?)` — presigned GET URL for display (default 24-hour expiry)
+- `signDownloadUrl(key, filename, expiresIn?)` — presigned GET URL with `Content-Disposition: attachment` for downloads (default 24-hour expiry)
 - `thumbPath(storagePath)` — inserts `/t/` after the first path segment to derive thumbnail path
 - `deleteObject(key)` — delete one R2 object
 - `deleteObjects(keys)` — bulk delete via `DeleteObjectsCommand`
@@ -136,14 +135,16 @@ Middleware (`middleware.ts`) protects `/admin/:path+` and `/api/admin/((?!login)
 ### Gallery (`/c/[id]/gallery`)
 - Server component. Verifies `gallery_session` cookie (must match `collectionId`).
 - Fetches all photos from Supabase, selecting `id, filename, storage_path, width, height, dominant_color`.
-- Generates **public R2 URLs** for thumbnails and originals — no presigning, no session gate on bytes:
+- Generates **presigned R2 URLs** (24h TTL) for thumbnails, originals, and downloads — URL generation happens outside any Redis cache boundary:
   ```ts
-  url:         publicPhotoUrl(thumbPath(photo.storage_path))  // thumbnail
-  originalUrl: publicPhotoUrl(photo.storage_path)             // full-res
+  url:         await signViewUrl(thumbPath(photo.storage_path))     // thumbnail
+  originalUrl: await signViewUrl(photo.storage_path)                // full-res view
+  downloadUrl: await signDownloadUrl(photo.storage_path, filename)  // forced download
   ```
 - Injects `<link rel="preload" as="image">` for the first 8 thumbnails in the HTML head.
 - Fetches kudos count, whether current user has given kudos, and all comments server-side.
 - Passes everything to `GalleryClient` as props — no client-side API calls on initial load.
+- On signing errors, falls back to an empty string and logs; the photo card renders as "temporarily unavailable".
 
 ### Admin Login (`/admin`)
 - Simple password form that POSTs to `/api/admin/login`.
@@ -168,14 +169,14 @@ CSS `columns-2 sm:columns-3 lg:columns-4` masonry layout. Per-image state:
 
 ### `GalleryClient`
 Manages selection mode, lightbox, and download:
-- "↓ All" button and selection download call `downloadPhotos()`: fetches originals via `/api/photo/{id}` in parallel, accumulates blobs in memory, generates zip client-side with `jszip`.
+- "↓ All" button and selection download call `downloadPhotos()`: fetches originals via `photo.downloadUrl` (presigned R2 URL, direct — no Vercel proxy) in parallel, accumulates blobs in memory, generates zip client-side with `jszip`.
 - Zip progress bar fills to 100% during fetch phase; zip generation phase has no progress.
 - Bottom bar appears in selection mode with "Download N" button.
 
 ### `Lightbox`
-- Displays `photo.originalUrl ?? photo.url` (direct public R2 URL — no API call).
+- Displays `photo.originalUrl ?? photo.url` (presigned R2 URL — no API call).
 - Arrow key navigation, Escape to close, `focus-trap-react` for accessibility.
-- Download button links to `/api/photo/{id}` (proxied, forced download).
+- Download button is an `<a href={photo.downloadUrl}>` pointing to the presigned download URL (direct R2, no Vercel proxy).
 
 ### `KudosButton`
 - Optimistic update with revert on failure. `loading` guard prevents double-submission.
@@ -243,7 +244,6 @@ Three steps in `ManageCollectionClient.tsx`:
 | `POST /api/login` | none | Validate user password, set `user_session` |
 | `POST /api/signup` | none | Create user account |
 | `POST /api/logout` | none | Clear `user_session` cookie |
-| `GET /api/photo/[id]` | `gallery_session` | Presigned R2 download, proxied with `Content-Disposition: attachment`; R2 first, Supabase Storage fallback |
 | `GET /api/collections/[id]/photos` | `gallery_session` | Presigned download URLs for all photos **(dead code — never called)** |
 | `GET /api/collections/[id]/zip` | `gallery_session` | Server-side zip via `archiver` **(dead code — never called; client uses jszip instead)** |
 | `GET/POST /api/collections/[id]/kudos` | GET: none, POST: `user_session` | Read kudos count + toggle |
@@ -277,6 +277,11 @@ Supabase and bcrypt are mocked in tests. No E2E or integration tests exist.
 npx ts-node -r dotenv/config --project tsconfig.json scripts/migrate-to-r2.ts
 ```
 
+`scripts/set-r2-cors.ts` — applies the R2 bucket CORS policy (allows GET/HEAD from production origins). Run once before deploying the presigned-URL feature:
+```
+npx ts-node -r dotenv/config --project tsconfig.json scripts/set-r2-cors.ts
+```
+
 ---
 
 ## Known Issues
@@ -285,7 +290,7 @@ npx ts-node -r dotenv/config --project tsconfig.json scripts/migrate-to-r2.ts
 
 - **Plaintext password stored and displayed** — `collections.password_plain` stores the raw password alongside the bcrypt hash. Written on create (`app/api/admin/collections/route.ts:27`) and update (`app/api/admin/collections/[id]/route.ts:16`). Queried and displayed in admin dashboard (`app/admin/dashboard/page.tsx:9,36-37`) and manage page (`ManageCollectionClient.tsx:219`). A DB leak exposes all collection passwords in plaintext.
 
-- **Photos publicly accessible without auth** — `originalUrl` and thumbnail `url` are direct public R2 URLs. `gallery_session` only controls which paths you learn; it does not gate access to the bytes. Anyone who knows or guesses a storage path can fetch a photo.
+- **Photos still reachable if bucket stays public** — photos are now served via 24h presigned R2 URLs. `gallery_session` controls which signed URLs you receive. However, until public-read access is disabled on the R2 bucket in Cloudflare (Task 10 in the privatization plan), a raw storage path is still accessible to anyone who knows or guesses it. Disabling public-read completes the privacy guarantee.
 
 ### High
 

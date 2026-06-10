@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { supabaseAdmin } from '@/lib/supabase';
-import { deleteObjects } from '@/lib/r2';
+import { deleteObjects, thumbPath } from '@/lib/r2';
+import { galleryPhotosKey, invalidate } from '@/lib/redis';
 
 export async function PATCH(
   req: NextRequest,
@@ -42,9 +43,10 @@ export async function DELETE(
     .select('storage_path')
     .eq('collection_id', params.id);
 
-  // Delete all objects from R2
+  // Delete all objects from R2 — originals and their thumbnails.
   if (photos?.length) {
-    await deleteObjects(photos.map(p => p.storage_path));
+    const originals = photos.map(p => p.storage_path);
+    await deleteObjects([...originals, ...originals.map(thumbPath)]);
   }
 
   const { error } = await supabaseAdmin
@@ -53,5 +55,7 @@ export async function DELETE(
     .eq('id', params.id);
 
   if (error) return NextResponse.json({ error: 'Failed to delete' }, { status: 500 });
+
+  await invalidate(galleryPhotosKey(params.id));
   return new NextResponse(null, { status: 204 });
 }

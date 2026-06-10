@@ -4,13 +4,21 @@ import { verifyToken } from '@/lib/auth';
 import { COOKIE_NAME } from '@/lib/session';
 import { getUserSession } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
-import { publicPhotoUrl, thumbPath } from '@/lib/r2';
+import { signViewUrl, signDownloadUrl, thumbPath } from '@/lib/r2';
 import { GalleryClient } from '@/components/GalleryClient';
 import { UserNav } from '@/components/UserNav';
-import { cachedFetch } from '@/lib/redis';
+import { cachedFetch, galleryPhotosKey } from '@/lib/redis';
 import { HomeLink } from '@/components/HomeLink';
 
-export const revalidate = 60;
+
+type PhotoRow = {
+  id: string;
+  filename: string;
+  storage_path: string;
+  width: number | null;
+  height: number | null;
+  dominant_color: string | null;
+};
 
 export default async function GalleryPage({ params }: { params: { id: string } }) {
   const cookieStore = cookies();
@@ -23,75 +31,90 @@ export default async function GalleryPage({ params }: { params: { id: string } }
     redirect(`/c/${params.id}`);
   }
 
-  const { data: collection } = await supabaseAdmin
-    .from('collections')
-    .select('name')
-    .eq('id', params.id)
-    .single();
-
-  if (!collection) notFound();
-
-  const photosWithUrls = await cachedFetch(
-    `gallery:${params.id}:photos`,
-    300,
-    async () => {
-      const { data: photos } = await supabaseAdmin
+  // Collection-wide reads are independent — fetch them in one round trip.
+  // The photo cache holds raw rows (not URLs) so we never cache an expiring
+  // signed URL; URL generation happens below, outside the cache boundary.
+  const [collectionRes, rawPhotos, kudosRes, commentsRes, userSession] = await Promise.all([
+    supabaseAdmin.from('collections').select('name').eq('id', params.id).single(),
+    cachedFetch<PhotoRow[]>(galleryPhotosKey(params.id), 300, async () => {
+      const { data } = await supabaseAdmin
         .from('photos')
         .select('id, filename, storage_path, width, height, dominant_color')
         .eq('collection_id', params.id)
         .order('uploaded_at', { ascending: true });
+      return (data ?? []) as PhotoRow[];
+    }),
+    supabaseAdmin.from('kudos').select('*', { count: 'exact', head: true }).eq('collection_id', params.id),
+    supabaseAdmin
+      .from('comments')
+      .select('id, content, created_at, users(username)')
+      .eq('collection_id', params.id)
+      .order('created_at', { ascending: true }),
+    getUserSession(),
+  ]);
 
-      return (photos ?? []).map(photo => {
+  const collection = collectionRes.data;
+  if (!collection) notFound();
+
+  const kudosCount = kudosRes.count;
+
+  // Presigned URLs (24h) generated outside the row cache so we never cache an
+  // expiring signature. Direct browser→R2 access; Vercel is not in the path.
+  let photosWithUrls: {
+    id: string; filename: string; url: string; originalUrl: string;
+    downloadUrl: string; width?: number; height?: number; dominantColor?: string;
+  }[] = [];
+  let signingError = false;
+  try {
+    photosWithUrls = await Promise.all(
+      rawPhotos.map(async photo => {
         const hasThumb = photo.width != null;
-        const originalUrl = publicPhotoUrl(photo.storage_path);
+        const [originalUrl, thumbUrl, downloadUrl] = await Promise.all([
+          signViewUrl(photo.storage_path),
+          hasThumb ? signViewUrl(thumbPath(photo.storage_path)) : Promise.resolve(null),
+          signDownloadUrl(photo.storage_path, photo.filename),
+        ]);
         return {
           id: photo.id,
           filename: photo.filename,
-          url: hasThumb ? publicPhotoUrl(thumbPath(photo.storage_path)) : originalUrl,
+          url: thumbUrl ?? originalUrl,
           originalUrl,
+          downloadUrl,
           width: photo.width ?? undefined,
           height: photo.height ?? undefined,
           dominantColor: photo.dominant_color ?? undefined,
         };
-      });
-    }
-  );
-
-  const userSession = await getUserSession();
-
-  let likedPhotoIds: string[] = [];
-  if (userSession && photosWithUrls.length > 0) {
-    const { data: likes } = await supabaseAdmin
-      .from('photo_likes')
-      .select('photo_id')
-      .eq('user_id', userSession.userId)
-      .in('photo_id', photosWithUrls.map(p => p.id));
-    likedPhotoIds = (likes ?? []).map((l: { photo_id: string }) => l.photo_id);
+      })
+    );
+  } catch {
+    signingError = true;
   }
 
-  const { count: kudosCount } = await supabaseAdmin
-    .from('kudos')
-    .select('*', { count: 'exact', head: true })
-    .eq('collection_id', params.id);
-
+  // User-specific reads depend on userSession (and photo IDs) — second batch.
+  let likedPhotoIds: string[] = [];
   let hasKudos = false;
   if (userSession) {
-    const { data: myKudos } = await supabaseAdmin
-      .from('kudos')
-      .select('user_id')
-      .eq('user_id', userSession.userId)
-      .eq('collection_id', params.id)
-      .single();
-    hasKudos = !!myKudos;
+    const photoIds = photosWithUrls.map(p => p.id);
+    const [likesRes, myKudosRes] = await Promise.all([
+      photoIds.length > 0
+        ? supabaseAdmin
+            .from('photo_likes')
+            .select('photo_id')
+            .eq('user_id', userSession.userId)
+            .in('photo_id', photoIds)
+        : Promise.resolve({ data: [] as { photo_id: string }[] }),
+      supabaseAdmin
+        .from('kudos')
+        .select('user_id')
+        .eq('user_id', userSession.userId)
+        .eq('collection_id', params.id)
+        .maybeSingle(),
+    ]);
+    likedPhotoIds = (likesRes.data ?? []).map((l: { photo_id: string }) => l.photo_id);
+    hasKudos = !!myKudosRes.data;
   }
 
-  const { data: commentsRaw } = await supabaseAdmin
-    .from('comments')
-    .select('id, content, created_at, users(username)')
-    .eq('collection_id', params.id)
-    .order('created_at', { ascending: true });
-
-  const comments = (commentsRaw ?? []).map(c => ({
+  const comments = (commentsRes.data ?? []).map(c => ({
     id: c.id,
     content: c.content,
     created_at: c.created_at,
@@ -114,7 +137,9 @@ export default async function GalleryPage({ params }: { params: { id: string } }
         <UserNav />
       </div>
 
-      {photosWithUrls.length === 0 ? (
+      {signingError ? (
+        <p className="text-[#666] text-sm">Photos are temporarily unavailable. Please try again in a moment.</p>
+      ) : photosWithUrls.length === 0 ? (
         <p className="text-[#666] text-sm">No photos yet.</p>
       ) : (
         <GalleryClient

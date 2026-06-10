@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { deleteObject } from '@/lib/r2';
-import { invalidate } from '@/lib/redis';
+import { deleteObject, thumbPath } from '@/lib/r2';
+import { galleryPhotosKey, invalidate } from '@/lib/redis';
 
 // Called after client uploads directly to R2 via presigned PUT URL.
 // Body: { uploads: [{ storagePath, filename }] }
@@ -40,7 +40,7 @@ export async function POST(
     })
   );
 
-  await invalidate(`gallery:${params.id}:photos`);
+  await invalidate(galleryPhotosKey(params.id));
   return NextResponse.json(results, { status: 201 });
 }
 
@@ -59,8 +59,13 @@ export async function DELETE(
 
   if (!photo) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
+  // Delete the original and its thumbnail. R2 delete is idempotent, so a
+  // missing thumbnail (legacy photos without one) is a harmless no-op.
   try {
-    await deleteObject(photo.storage_path);
+    await Promise.all([
+      deleteObject(photo.storage_path),
+      deleteObject(thumbPath(photo.storage_path)),
+    ]);
   } catch {
     return NextResponse.json({ error: 'Storage delete failed' }, { status: 500 });
   }
@@ -68,6 +73,6 @@ export async function DELETE(
   const { error: dbError } = await supabaseAdmin.from('photos').delete().eq('id', photoId);
   if (dbError) return NextResponse.json({ error: 'DB delete failed' }, { status: 500 });
 
-  await invalidate(`gallery:${params.id}:photos`);
+  await invalidate(galleryPhotosKey(params.id));
   return new NextResponse(null, { status: 204 });
 }
