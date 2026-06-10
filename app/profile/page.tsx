@@ -53,12 +53,22 @@ export default async function ProfilePage() {
         <UserNav />
       </div>
 
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-[#555] text-xs uppercase tracking-widest">Unlocked Collections</p>
-        <Link href="/profile/likes" className="text-[#555] text-xs hover:text-[#777] transition-colors">
-          ♥ Liked photos
-        </Link>
-      </div>
+      <Link
+        href="/profile/likes"
+        className="flex items-center justify-between py-3 mb-8 border border-[#1e1e1e] hover:border-[#2a2a2a] rounded px-4 transition-colors group"
+      >
+        <div className="flex items-center gap-2.5">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="#ff4d6d" aria-hidden>
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+          </svg>
+          <span className="text-[#bbb] text-sm font-light group-hover:text-white transition-colors">Liked Photos</span>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#444] group-hover:text-[#777] transition-colors" aria-hidden>
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+      </Link>
+
+      <p className="text-[#555] text-xs uppercase tracking-widest mb-4">Unlocked Collections</p>
 
       {collections.length === 0 ? (
         <p className="text-[#444] text-sm font-light">No collections unlocked yet.</p>
