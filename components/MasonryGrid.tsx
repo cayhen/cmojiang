@@ -135,13 +135,9 @@ export function MasonryGrid({ photos, selectionMode, selectedIds, onTap, onDoubl
                       markLoaded(photo.id);
                       const el = e.currentTarget;
                       if (!el.dataset.fallback) {
-                        // thumbnail failed → try original R2 URL
+                        // thumbnail failed → fall back to the (presigned) original once
                         el.dataset.fallback = '1';
-                        el.src = photo.originalUrl ?? `/api/photo/${photo.id}`;
-                      } else if (el.dataset.fallback === '1') {
-                        // original R2 also failed → try server proxy (has Supabase fallback)
-                        el.dataset.fallback = '2';
-                        el.src = `/api/photo/${photo.id}`;
+                        if (photo.originalUrl) el.src = photo.originalUrl;
                       }
                     }}
                     className={`w-full block rounded-sm transition-opacity duration-300 ${
@@ -185,9 +181,9 @@ export function MasonryGrid({ photos, selectionMode, selectedIds, onTap, onDoubl
                   )}
 
                   {/* Per-photo download button */}
-                  {!selectionMode && (
+                  {!selectionMode && photo.downloadUrl && (
                     <a
-                      href={`/api/photo/${photo.id}`}
+                      href={photo.downloadUrl}
                       download={photo.filename}
                       onClick={e => e.stopPropagation()}
                       aria-label={`Download ${photo.filename}`}
