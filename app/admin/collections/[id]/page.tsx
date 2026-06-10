@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { supabaseAdmin } from '@/lib/supabase';
-import { publicPhotoUrl, thumbPath } from '@/lib/r2';
+import { signViewUrl, thumbPath } from '@/lib/r2';
 import { ManageCollectionClient } from './ManageCollectionClient';
 
 export default async function ManageCollectionPage({ params }: { params: { id: string } }) {
@@ -15,12 +15,13 @@ export default async function ManageCollectionPage({ params }: { params: { id: s
 
   if (!collection) notFound();
 
-  const photosWithUrls = (photos ?? []).map(photo => ({
-    id: photo.id,
-    filename: photo.filename,
-    url: publicPhotoUrl(thumbPath(photo.storage_path)),
-    originalUrl: publicPhotoUrl(photo.storage_path),
-  }));
+  const photosWithUrls = await Promise.all(
+    (photos ?? []).map(async photo => ({
+      id: photo.id,
+      filename: photo.filename,
+      url: await signViewUrl(thumbPath(photo.storage_path)),
+    }))
+  );
 
   return (
     <ManageCollectionClient
