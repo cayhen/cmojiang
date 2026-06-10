@@ -4,11 +4,11 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { TextScramble } from '@/components/ui/text-scramble';
 
-type Phase = 'idle' | 'unlocking' | 'open' | 'done';
+type Phase = 'idle' | 'unlocking' | 'open';
 
-function LockIcon({ open, fading }: { open: boolean; fading: boolean }) {
+function LockIcon({ open }: { open: boolean }) {
   return (
-    <div className={`transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}>
+    <div>
       <svg
         width="48"
         height="48"
@@ -60,8 +60,7 @@ export function UnlockForm({ collectionId }: { collectionId: string }) {
       if (res.ok) {
         setPhase('unlocking');
         setTimeout(() => setPhase('open'), 350);
-        setTimeout(() => setPhase('done'), 1200);
-        setTimeout(() => router.push(`/c/${collectionId}/gallery`), 1500);
+        setTimeout(() => router.push(`/c/${collectionId}/gallery`), 1200);
         return;
       }
 
@@ -76,8 +75,8 @@ export function UnlockForm({ collectionId }: { collectionId: string }) {
     <>
       {/* Unlock animation overlay */}
       {phase !== 'idle' && (
-        <div className={`fixed inset-0 bg-[#0f0f0f] z-50 flex flex-col items-center justify-center gap-4 transition-opacity duration-300 ${phase === 'done' ? 'opacity-0' : 'opacity-100'}`}>
-          <LockIcon open={phase === 'open' || phase === 'done'} fading={phase === 'done'} />
+        <div className="fixed inset-0 bg-[#0f0f0f] z-50 flex flex-col items-center justify-center gap-4">
+          <LockIcon open={phase === 'open'} />
           <div className={`transition-opacity duration-300 ${phase === 'open' ? 'opacity-100' : 'opacity-0'}`}>
             {phase === 'open' && (
               <TextScramble
