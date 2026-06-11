@@ -13,10 +13,16 @@ interface Props {
   collectionId: string;
   initialComments: Comment[];
   currentUsername: string | null;
+  onCountChange?: (count: number) => void;
 }
 
-export function CommentSection({ collectionId, initialComments, currentUsername }: Props) {
+export function CommentSection({ collectionId, initialComments, currentUsername, onCountChange }: Props) {
   const [comments, setComments] = useState(initialComments);
+
+  function updateComments(next: Comment[]) {
+    setComments(next);
+    onCountChange?.(next.length);
+  }
   const [newComment, setNewComment] = useState('');
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState('');
@@ -36,7 +42,7 @@ export function CommentSection({ collectionId, initialComments, currentUsername 
 
       if (res.ok) {
         const comment = await res.json();
-        setComments(cs => [...cs, comment]);
+        updateComments([...comments, comment]);
         setNewComment('');
       } else {
         const data = await res.json();
@@ -52,13 +58,13 @@ export function CommentSection({ collectionId, initialComments, currentUsername 
   async function handleDelete(commentId: string) {
     const res = await fetch(`/api/comments/${commentId}`, { method: 'DELETE' });
     if (res.ok) {
-      setComments(cs => cs.filter(c => c.id !== commentId));
+      updateComments(comments.filter(c => c.id !== commentId));
     }
   }
 
   return (
-    <section className="mt-12 pb-12 max-w-lg">
-      <p className="text-[#666] text-xs uppercase tracking-widest mb-4">Comments</p>
+    <section className="py-5 border-b border-[#1a1a1a] mb-6">
+
 
       {comments.length === 0 && (
         <p className="text-[#666] text-sm font-light mb-4">No comments yet.</p>

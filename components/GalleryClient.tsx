@@ -54,6 +54,8 @@ export function GalleryClient({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [likedIds, setLikedIds] = useState<Set<string>>(() => new Set(likedPhotoIds ?? []));
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [commentCount, setCommentCount] = useState(comments.length);
   const [downloading, setDownloading] = useState(false);
   const [zipProgress, setZipProgress] = useState(0); // 0–1
   const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
@@ -177,12 +179,27 @@ export function GalleryClient({
     <>
       {/* Action row */}
       <div className="flex items-center justify-between mb-6">
-        <KudosButton
-          collectionId={collectionId}
-          initialCount={kudosCount}
-          initialHasKudos={hasKudos}
-          loggedIn={loggedIn}
-        />
+        <div className="flex items-center gap-4">
+          <KudosButton
+            collectionId={collectionId}
+            initialCount={kudosCount}
+            initialHasKudos={hasKudos}
+            loggedIn={loggedIn}
+          />
+          <button
+            onClick={() => setCommentsOpen(o => !o)}
+            className="flex items-center gap-1.5 group transition-colors"
+            aria-label="Toggle comments"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+              className={`transition-colors duration-150 ${commentsOpen ? 'stroke-[#bbb]' : 'stroke-[#666] group-hover:stroke-[#888]'}`}>
+              <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+            </svg>
+            <span className={`text-xs font-light transition-colors ${commentsOpen ? 'text-[#bbb]' : 'text-[#666] group-hover:text-[#888]'}`}>
+              {commentCount}
+            </span>
+          </button>
+        </div>
         <div className="flex items-center gap-4">
           {selectionMode ? (
             <button
@@ -232,6 +249,16 @@ export function GalleryClient({
         </div>
       )}
 
+      {/* Comments — expands above grid */}
+      {commentsOpen && (
+        <CommentSection
+          collectionId={collectionId}
+          initialComments={comments}
+          currentUsername={currentUsername}
+          onCountChange={setCommentCount}
+        />
+      )}
+
       {/* Grid */}
       <MasonryGrid
         photos={visiblePhotos}
@@ -270,15 +297,6 @@ export function GalleryClient({
           )}
         </div>
       )}
-
-      {/* Comment section — extra bottom padding when bottom bar visible */}
-      <div className={selectionMode ? 'pb-24' : ''}>
-        <CommentSection
-          collectionId={collectionId}
-          initialComments={comments}
-          currentUsername={currentUsername}
-        />
-      </div>
 
       <ScrollToTop />
     </>
