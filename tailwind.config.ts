@@ -6,6 +6,7 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ['var(--font-dm-sans)', 'system-ui', 'sans-serif'],
+        heading: ['Rogeta', 'system-ui', 'sans-serif'],
       },
     },
   },

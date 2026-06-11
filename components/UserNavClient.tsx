@@ -32,11 +32,9 @@ export function UserNavClient({ username }: { username: string | null }) {
   }
 
   return (
-    <Link
-      href="/login"
-      className="text-[11px] font-normal tracking-[0.06em] uppercase text-[#777] bg-[#161616] rounded px-2.5 py-1 hover:text-[#999] hover:bg-[#1c1c1c] transition-colors leading-none inline-flex items-center"
-    >
-      Sign in
-    </Link>
+    <p className="text-[11px] font-light tracking-[0.04em] text-[#555] leading-none pb-[3px]">
+      <Link href="/login" className="text-[#999] hover:text-[#bbb] transition-colors">sign in</Link>
+      {' '}to like and collect photos
+    </p>
   );
 }

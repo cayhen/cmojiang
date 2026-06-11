@@ -8,6 +8,7 @@ const dmSans = DM_Sans({
   variable: '--font-dm-sans',
 });
 
+
 export const metadata: Metadata = {
   title: 'Caden Jiang — Photos',
 };
