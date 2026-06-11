@@ -17,9 +17,9 @@ export function UserNavClient({ username }: { username: string | null }) {
       <div className="inline-flex items-center gap-2">
         <Link
           href="/profile"
-          className="text-[#666] text-xs font-light hover:text-[#888] transition-colors leading-none inline-flex items-center"
+          className="text-[#666] text-[11px] font-normal tracking-[0.06em] uppercase hover:text-[#888] transition-colors leading-none inline-flex items-center"
         >
-          {username}
+          My Profile
         </Link>
         <button
           onClick={handleLogout}
