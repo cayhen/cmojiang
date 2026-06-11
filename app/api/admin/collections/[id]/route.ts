@@ -8,8 +8,8 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const { name, password, event_date } = await req.json();
-  const updates: Record<string, string> = {};
+  const { name, password, event_date, is_private } = await req.json();
+  const updates: Record<string, unknown> = {};
 
   if (name?.trim()) updates.name = name.trim();
   if (password) {
@@ -17,6 +17,7 @@ export async function PATCH(
     updates.password_plain = password;
   }
   if (event_date) updates.event_date = event_date;
+  if (typeof is_private === 'boolean') updates.is_private = is_private;
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: 'Nothing to update' }, { status: 400 });

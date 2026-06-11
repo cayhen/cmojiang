@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 interface Photo { id: string; filename: string; url: string; }
-interface Collection { id: string; name: string; password_plain?: string; event_date?: string | null; }
+interface Collection { id: string; name: string; password_plain?: string; event_date?: string | null; is_private?: boolean; }
 
 export function ManageCollectionClient({
   collection,
@@ -27,6 +27,8 @@ export function ManageCollectionClient({
   const [passwordMsg, setPasswordMsg] = useState('');
   const [eventDate, setEventDate] = useState(collection.event_date ?? new Date().toISOString().slice(0, 10));
   const [dateMsg, setDateMsg] = useState('');
+  const [isPrivate, setIsPrivate] = useState(collection.is_private ?? false);
+  const [privacyMsg, setPrivacyMsg] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -226,6 +228,21 @@ export function ManageCollectionClient({
     setNewPassword('');
   }
 
+  async function handlePrivacyToggle() {
+    const next = !isPrivate;
+    const res = await fetch(`/api/admin/collections/${collection.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_private: next }),
+    });
+    if (res.ok) {
+      setIsPrivate(next);
+      setPrivacyMsg(next ? 'Collection hidden from home.' : 'Collection visible on home.');
+    } else {
+      setPrivacyMsg('Failed to update.');
+    }
+  }
+
   async function handleDeleteCollection() {
     if (!confirm(`Delete "${collection.name}" and all its photos? This cannot be undone.`)) return;
     const res = await fetch(`/api/admin/collections/${collection.id}`, { method: 'DELETE' });
@@ -375,6 +392,27 @@ export function ManageCollectionClient({
           </button>
         </form>
         {passwordMsg && <p className="text-[#777] text-xs mt-1">{passwordMsg}</p>}
+      </section>
+
+      {/* Visibility */}
+      <section className="mb-8">
+        <p className="text-[#666] text-xs uppercase tracking-widest mb-3">Visibility</p>
+        <div className="flex items-center justify-between">
+          <p className="text-[#777] text-sm font-light">
+            {isPrivate ? 'Hidden — not shown on home page' : 'Public — visible on home page'}
+          </p>
+          <button
+            onClick={handlePrivacyToggle}
+            className={`text-xs px-3 py-1.5 rounded border transition-colors ${
+              isPrivate
+                ? 'border-[#2a2a2a] text-[#888] hover:text-[#bbb] hover:border-[#3a3a3a]'
+                : 'border-[#2a2a2a] text-[#888] hover:text-[#bbb] hover:border-[#3a3a3a]'
+            }`}
+          >
+            {isPrivate ? 'Make public' : 'Make private'}
+          </button>
+        </div>
+        {privacyMsg && <p className="text-[#777] text-xs mt-2">{privacyMsg}</p>}
       </section>
 
       {/* Delete collection */}

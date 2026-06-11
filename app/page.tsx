@@ -9,6 +9,7 @@ export default async function HomePage() {
   const { data } = await supabaseAdmin
     .from('collections')
     .select('id, name, event_date, photos(count)')
+    .eq('is_private', false)
     .order('created_at', { ascending: false });
 
   const collections = (data ?? []).map(c => ({
