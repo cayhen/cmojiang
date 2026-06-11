@@ -255,14 +255,22 @@ export function ManageCollectionClient({
 
   return (
     <main className="min-h-screen p-8 max-w-2xl mx-auto">
-      <div className="flex items-center gap-4 mb-8">
-        <Link href="/admin/dashboard" className="text-[#666] text-xs hover:text-[#777]">← Back</Link>
-        <div>
-          <p className="text-[#bbb] text-sm font-light">{collection.name}</p>
-          {collection.password_plain && (
-            <p className="text-[#555] text-xs mt-0.5">password: {collection.password_plain}</p>
-          )}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <Link href="/admin/dashboard" className="text-[#666] text-xs hover:text-[#777]">← Back</Link>
+          <div>
+            <p className="text-[#bbb] text-sm font-light">{collection.name}</p>
+            {collection.password_plain && (
+              <p className="text-[#555] text-xs mt-0.5">password: {collection.password_plain}</p>
+            )}
+          </div>
         </div>
+        <Link
+          href={`/c/${collection.id}/gallery`}
+          className="text-[#555] text-xs hover:text-[#888] transition-colors"
+        >
+          View gallery →
+        </Link>
       </div>
 
       {/* Upload */}

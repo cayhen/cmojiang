@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect, notFound } from 'next/navigation';
-import { verifyToken } from '@/lib/auth';
+import { verifyToken, verifyAdminToken } from '@/lib/auth';
 import { COOKIE_NAME } from '@/lib/session';
 import { getUserSession } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
@@ -22,13 +22,18 @@ type PhotoRow = {
 
 export default async function GalleryPage({ params }: { params: { id: string } }) {
   const cookieStore = cookies();
-  const token = cookieStore.get(COOKIE_NAME)?.value;
 
-  if (!token) redirect(`/c/${params.id}`);
+  // Admin can view any gallery without a gallery_session
+  const adminToken = cookieStore.get('admin_session')?.value;
+  const isAdmin = adminToken ? await verifyAdminToken(adminToken) : false;
 
-  const payload = await verifyToken(token);
-  if (!payload || payload.collectionId !== params.id) {
-    redirect(`/c/${params.id}`);
+  if (!isAdmin) {
+    const token = cookieStore.get(COOKIE_NAME)?.value;
+    if (!token) redirect(`/c/${params.id}`);
+    const payload = await verifyToken(token);
+    if (!payload || payload.collectionId !== params.id) {
+      redirect(`/c/${params.id}`);
+    }
   }
 
   // Collection-wide reads are independent — fetch them in one round trip.
