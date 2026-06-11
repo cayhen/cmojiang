@@ -1,14 +1,9 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-
 export function SignOutButton() {
-  const router = useRouter();
-
   async function handleSignOut() {
     await fetch('/api/logout', { method: 'POST' });
-    router.push('/');
-    router.refresh();
+    window.location.href = '/';
   }
 
   return (

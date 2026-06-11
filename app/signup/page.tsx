@@ -31,7 +31,7 @@ export default function SignUpPage() {
       });
 
       if (res.ok) {
-        router.push('/');
+        window.location.href = '/';
       } else {
         const data = await res.json();
         setError(data.error ?? 'Failed to create account');
