@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { supabaseAdmin } from '@/lib/supabase';
 import { SearchBar } from '@/components/SearchBar';
 import { UserNav } from '@/components/UserNav';
+import { LogoTitle } from '@/components/LogoTitle';
 
 export const revalidate = 0;
 
@@ -24,11 +25,7 @@ export default async function HomePage() {
   return (
     <main className="p-8 max-w-2xl mx-auto">
         <header className="mb-4 flex items-baseline justify-between">
-          <h1 className="text-[120px] leading-none uppercase tracking-[0.02em] whitespace-nowrap" style={{ fontFamily: 'Rogeta, system-ui, sans-serif' }}>
-            {'cmojiang'.split('').map((letter, i) => (
-              <span key={i} className="logo-letter">{letter}</span>
-            ))}
-          </h1>
+          <LogoTitle />
           <UserNav />
         </header>
         <SearchBar collections={collections} />

@@ -38,17 +38,6 @@ body::after {
   background-size: 256px 256px;
 }
 
-.logo-letter {
-  color: #c1c1bf;
-  transition: color 0.2s ease;
-  display: inline-block;
-  line-height: 0.78;
-  vertical-align: baseline;
-}
-
-.logo-letter:hover {
-  color: #777;
-}
 
 @keyframes heart-burst {
   0%   { transform: scale(0.3); opacity: 1; }
