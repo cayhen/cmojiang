@@ -1,33 +1,20 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 export function UserNavClient({ username }: { username: string | null }) {
-  const router = useRouter();
-
-  async function handleLogout() {
-    await fetch('/api/logout', { method: 'POST' });
-    router.push('/');
-    router.refresh();
-  }
-
   if (username) {
     return (
-      <div className="inline-flex items-center gap-2">
-        <Link
-          href="/profile"
-          className="text-[#666] text-[11px] font-normal tracking-[0.06em] uppercase hover:text-[#888] transition-colors leading-none inline-flex items-center"
-        >
-          My Profile
-        </Link>
-        <button
-          onClick={handleLogout}
-          className="text-[11px] font-normal tracking-[0.06em] uppercase text-[#666] bg-[#161616] rounded px-2.5 py-1 hover:text-[#888] hover:bg-[#1c1c1c] transition-colors leading-none inline-flex items-center"
-        >
-          Sign out
-        </button>
-      </div>
+      <Link
+        href="/profile"
+        aria-label="My profile"
+        className="text-[#555] hover:text-[#888] transition-colors"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <circle cx="12" cy="8" r="4" />
+          <path d="M4 20c0-3.866 3.582-7 8-7s8 3.134 8 7" />
+        </svg>
+      </Link>
     );
   }
 

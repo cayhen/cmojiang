@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getUserSession } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
-import { UserNav } from '@/components/UserNav';
+import { SignOutButton } from '@/components/SignOutButton';
 import Link from 'next/link';
 import { HomeLink } from '@/components/HomeLink';
 
@@ -50,7 +50,7 @@ export default async function ProfilePage() {
           <HomeLink />
           <span className="text-[#bbb] text-sm font-light">{session.username}</span>
         </div>
-        <UserNav />
+        <SignOutButton />
       </div>
 
       <Link
