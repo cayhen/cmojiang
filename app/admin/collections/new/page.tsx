@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 function today() {
@@ -14,8 +13,6 @@ export default function NewCollectionPage() {
   const [eventDate, setEventDate] = useState(today);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -29,7 +26,7 @@ export default function NewCollectionPage() {
       });
 
       if (res.ok) {
-        router.push('/admin/dashboard');
+        window.location.href = '/admin/dashboard';
       } else {
         const data = await res.json();
         setError(data.error ?? 'Failed to create');

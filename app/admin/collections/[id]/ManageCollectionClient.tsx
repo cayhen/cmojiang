@@ -250,7 +250,7 @@ export function ManageCollectionClient({
       alert('Failed to delete collection.');
       return;
     }
-    router.push('/admin/dashboard');
+    window.location.href = '/admin/dashboard';
   }
 
   return (
