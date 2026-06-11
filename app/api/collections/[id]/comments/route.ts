@@ -1,20 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { verifyToken, verifyUserToken } from '@/lib/auth';
+import { verifyToken, verifyUserToken, verifyAdminToken } from '@/lib/auth';
 import { COOKIE_NAME, USER_COOKIE_NAME } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
+
+async function hasCollectionAccess(cookieStore: ReturnType<typeof cookies>, collectionId: string): Promise<boolean> {
+  const adminToken = cookieStore.get('admin_session')?.value;
+  if (adminToken && await verifyAdminToken(adminToken)) return true;
+  const galleryToken = cookieStore.get(COOKIE_NAME)?.value;
+  if (!galleryToken) return false;
+  const payload = await verifyToken(galleryToken);
+  return !!(payload && payload.collectionId === collectionId);
+}
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  // Verify gallery session (must have unlocked collection)
   const cookieStore = cookies();
-  const galleryToken = cookieStore.get(COOKIE_NAME)?.value;
-  if (!galleryToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const galleryPayload = await verifyToken(galleryToken);
-  if (!galleryPayload || galleryPayload.collectionId !== params.id) {
+  if (!await hasCollectionAccess(cookieStore, params.id)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -49,12 +53,9 @@ export async function POST(
   const userSession = await verifyUserToken(userToken);
   if (!userSession) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  // Must have unlocked the collection
-  const galleryToken = cookieStore.get(COOKIE_NAME)?.value;
-  if (!galleryToken) return NextResponse.json({ error: 'Unlock collection first' }, { status: 401 });
-  const galleryPayload = await verifyToken(galleryToken);
-  if (!galleryPayload || galleryPayload.collectionId !== params.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Must have unlocked the collection (or be admin)
+  if (!await hasCollectionAccess(cookieStore, params.id)) {
+    return NextResponse.json({ error: 'Unlock collection first' }, { status: 401 });
   }
 
   let body: { content?: string };
