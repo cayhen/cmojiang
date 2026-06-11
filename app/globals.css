@@ -40,12 +40,14 @@ body::after {
 
 .logo-letter {
   color: #c1c1bf;
-  transition: color 0.25s ease;
+  transition: color 0.2s ease;
   display: inline-block;
+  line-height: 0.78;
+  vertical-align: baseline;
 }
 
 .logo-letter:hover {
-  color: #444;
+  color: #777;
 }
 
 @keyframes heart-burst {
