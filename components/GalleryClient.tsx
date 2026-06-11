@@ -260,16 +260,22 @@ export function GalleryClient({
       )}
 
       {/* Grid */}
-      <MasonryGrid
-        photos={visiblePhotos}
-        selectionMode={selectionMode}
-        selectedIds={selectedIds}
-        onTap={handleTap}
-        onDoubleTap={loggedIn ? handleDoubleTap : undefined}
-        likedIds={likedIds}
-        onToggleLike={loggedIn ? handleToggleLike : undefined}
-      />
-      {hasMore && <div ref={sentinelRef} />}
+      {photos.length === 0 ? (
+        <p className="text-[#555] text-sm font-light mt-4">No photos yet.</p>
+      ) : (
+        <>
+          <MasonryGrid
+            photos={visiblePhotos}
+            selectionMode={selectionMode}
+            selectedIds={selectedIds}
+            onTap={handleTap}
+            onDoubleTap={loggedIn ? handleDoubleTap : undefined}
+            likedIds={likedIds}
+            onToggleLike={loggedIn ? handleToggleLike : undefined}
+          />
+          {hasMore && <div ref={sentinelRef} />}
+        </>
+      )}
 
       {/* Lightbox */}
       {lightboxIndex !== null && (

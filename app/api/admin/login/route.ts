@@ -12,9 +12,6 @@ function safeEqual(a: string, b: string): boolean {
 }
 
 export async function POST(req: NextRequest) {
-  const limited = await enforceRateLimit(req, adminLoginRatelimit);
-  if (limited) return limited;
-
   let password: string | undefined;
   try {
     ({ password } = await req.json());
@@ -28,6 +25,9 @@ export async function POST(req: NextRequest) {
 
   const expected = process.env.ADMIN_PASSWORD ?? '';
   if (!expected || !safeEqual(password, expected)) {
+    // Only count failed attempts against the rate limit
+    const limited = await enforceRateLimit(req, adminLoginRatelimit);
+    if (limited) return limited;
     return NextResponse.json({ error: 'Incorrect password' }, { status: 401 });
   }
 

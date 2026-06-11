@@ -144,8 +144,6 @@ export default async function GalleryPage({ params }: { params: { id: string } }
 
       {signingError ? (
         <p className="text-[#666] text-sm">Photos are temporarily unavailable. Please try again in a moment.</p>
-      ) : photosWithUrls.length === 0 ? (
-        <p className="text-[#666] text-sm">No photos yet.</p>
       ) : (
         <GalleryClient
           collectionId={params.id}

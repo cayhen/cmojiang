@@ -1,13 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function AdminSignIn() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -22,9 +21,10 @@ export default function AdminSignIn() {
       });
 
       if (res.ok) {
-        router.push('/admin/dashboard');
+        window.location.href = '/admin/dashboard';
       } else {
-        setError('Incorrect password.');
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? 'Incorrect password.');
       }
     } catch {
       setError('Network error. Please try again.');
@@ -36,7 +36,10 @@ export default function AdminSignIn() {
   return (
     <main className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-xs">
-        <p className="text-[#666] text-xs tracking-widest uppercase mb-8 text-center font-light">Admin</p>
+        <div className="relative flex items-center mb-8">
+          <Link href="/" className="text-[#555] text-xs hover:text-[#777] transition-colors">← Home</Link>
+          <p className="absolute inset-x-0 text-[#666] text-xs tracking-widest uppercase text-center font-light pointer-events-none">Admin</p>
+        </div>
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
             type="password"
