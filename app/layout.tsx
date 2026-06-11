@@ -17,7 +17,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={dmSans.variable}>
       <body className="font-sans bg-[#080808] text-[#bbb] antialiased">
-        {children}
+        <div className="relative z-[2]">
+          {children}
+        </div>
       </body>
     </html>
   );
