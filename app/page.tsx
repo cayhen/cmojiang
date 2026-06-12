@@ -23,7 +23,7 @@ export default async function HomePage() {
   }));
 
   return (
-    <main className="p-8 max-w-2xl mx-auto">
+    <main className="p-10 max-w-4xl mx-auto">
         <header className="flex items-baseline justify-between">
           <LogoTitle />
           <UserNav />

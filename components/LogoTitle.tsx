@@ -25,7 +25,7 @@ interface Burst    { key: number; x: number; y: number; icon: LetterData['icon']
 
 function MailIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <rect x="2" y="4" width="20" height="16" rx="3"/>
       <polyline points="2,7 12,13 22,7"/>
     </svg>
@@ -34,7 +34,7 @@ function MailIcon() {
 
 function InstagramIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <rect x="2" y="2" width="20" height="20" rx="5"/>
       <circle cx="12" cy="12" r="5"/>
       <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
@@ -44,7 +44,7 @@ function InstagramIcon() {
 
 function PersonIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="8" r="4"/>
       <path d="M4 20c0-3.866 3.582-7 8-7s8 3.134 8 7"/>
     </svg>
@@ -71,11 +71,11 @@ export function LogoTitle() {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
-      ctx.font = '120px Rogeta, system-ui, sans-serif';
+      ctx.font = '150px Rogeta, system-ui, sans-serif';
       setInkBounds(
         LETTERS.map(l => {
           const m = ctx.measureText(l.toUpperCase());
-          return { ascent: m.actualBoundingBoxAscent || 84, descent: m.actualBoundingBoxDescent || 4 };
+          return { ascent: m.actualBoundingBoxAscent || 105, descent: m.actualBoundingBoxDescent || 5 };
         })
       );
     });
@@ -122,7 +122,7 @@ export function LogoTitle() {
   return (
     <div>
       <h1
-        className="text-[120px] leading-none uppercase tracking-[0.02em] whitespace-nowrap"
+        className="text-[150px] leading-none uppercase tracking-[0.02em] whitespace-nowrap"
         style={{ fontFamily: 'Rogeta, system-ui, sans-serif' }}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
@@ -143,7 +143,7 @@ export function LogoTitle() {
         <span ref={baselineRef} aria-hidden="true" style={{ fontSize: 0, display: 'inline', verticalAlign: 'baseline' }} />
       </h1>
 
-      <div className="h-[20px] flex items-center mt-[-20px]">
+      <div className="h-[25px] flex items-center mt-[-25px]">
         <div style={{
           opacity: activeData ? 1 : 0,
           transform: activeData ? 'translateY(0)' : 'translateY(3px)',
