@@ -146,7 +146,7 @@ export function LogoTitle() {
       {/* Info text — floats in the gap below the heading, no added height */}
       <div style={{
         position: 'absolute',
-        top: 'calc(100% + 2px)',
+        top: 'calc(100% + 8px)',
         left: 0,
         opacity: activeData ? 1 : 0,
         transform: activeData ? 'translateY(0)' : 'translateY(3px)',
