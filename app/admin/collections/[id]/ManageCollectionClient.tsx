@@ -254,7 +254,7 @@ export function ManageCollectionClient({
   }
 
   return (
-    <main className="min-h-screen p-8 max-w-2xl mx-auto">
+    <main className="min-h-screen p-10 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
           <Link href="/admin/dashboard" className="text-[#666] text-xs hover:text-[#777]">← Back</Link>

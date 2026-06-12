@@ -11,7 +11,7 @@ export default async function AdminDashboard() {
     .order('created_at', { ascending: false });
 
   return (
-    <main className="min-h-screen p-8 max-w-2xl mx-auto">
+    <main className="min-h-screen p-10 max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-4">
           <HomeLink />

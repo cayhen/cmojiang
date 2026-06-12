@@ -44,7 +44,7 @@ export default async function ProfilePage() {
     .filter(c => c.name) as { id: string; name: string; photoCount: number }[];
 
   return (
-    <main className="min-h-screen p-6 max-w-xl mx-auto">
+    <main className="min-h-screen p-10 max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-10">
         <div className="flex items-center gap-4">
           <HomeLink />
