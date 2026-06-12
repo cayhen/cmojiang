@@ -120,7 +120,7 @@ export function LogoTitle() {
   const activeData = activeIdx !== null ? LETTER_DATA[activeIdx] ?? null : null;
 
   return (
-    <div className="relative">
+    <div>
       <h1
         className="text-[120px] leading-none uppercase tracking-[0.02em] whitespace-nowrap"
         style={{ fontFamily: 'Rogeta, system-ui, sans-serif' }}
@@ -143,28 +143,27 @@ export function LogoTitle() {
         <span ref={baselineRef} aria-hidden="true" style={{ fontSize: 0, display: 'inline', verticalAlign: 'baseline' }} />
       </h1>
 
-      {/* Info text — floats in the gap below the heading, no added height */}
-      <div style={{
-        position: 'absolute',
-        top: 'calc(100% + 8px)',
-        left: 0,
-        opacity: activeData ? 1 : 0,
-        transform: activeData ? 'translateY(0)' : 'translateY(3px)',
-        transition: 'opacity 0.15s ease, transform 0.15s ease',
-        pointerEvents: activeData ? 'auto' : 'none',
-      }}>
-        {activeData?.href ? (
-          <a
-            href={activeData.href}
-            target={activeData.href.startsWith('http') ? '_blank' : undefined}
-            rel={activeData.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-            className="text-[#555] text-xs tracking-[0.04em] hover:text-[#777] transition-colors whitespace-nowrap"
-          >
-            {activeData.value}
-          </a>
-        ) : (
-          <span className="text-[#555] text-xs tracking-[0.04em] whitespace-nowrap">{activeData?.value}</span>
-        )}
+      {/* Fixed-height row — acts as the gap between CMOJIANG and SearchBar, text centered within it */}
+      <div className="h-7 flex items-center">
+        <div style={{
+          opacity: activeData ? 1 : 0,
+          transform: activeData ? 'translateY(0)' : 'translateY(3px)',
+          transition: 'opacity 0.15s ease, transform 0.15s ease',
+          pointerEvents: activeData ? 'auto' : 'none',
+        }}>
+          {activeData?.href ? (
+            <a
+              href={activeData.href}
+              target={activeData.href.startsWith('http') ? '_blank' : undefined}
+              rel={activeData.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+              className="text-[#555] text-xs tracking-[0.04em] hover:text-[#777] transition-colors whitespace-nowrap"
+            >
+              {activeData.value}
+            </a>
+          ) : (
+            <span className="text-[#555] text-xs tracking-[0.04em] whitespace-nowrap">{activeData?.value}</span>
+          )}
+        </div>
       </div>
 
       {/* Icon burst — shoots upward from the letter and fades */}
