@@ -143,8 +143,7 @@ export function LogoTitle() {
         <span ref={baselineRef} aria-hidden="true" style={{ fontSize: 0, display: 'inline', verticalAlign: 'baseline' }} />
       </h1>
 
-      {/* Fixed-height row — acts as the gap between CMOJIANG and SearchBar, text centered within it */}
-      <div className="h-7 flex items-center">
+      <div className="h-[20px] flex items-center mt-[-20px]">
         <div style={{
           opacity: activeData ? 1 : 0,
           transform: activeData ? 'translateY(0)' : 'translateY(3px)',
