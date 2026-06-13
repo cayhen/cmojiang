@@ -102,59 +102,66 @@ export function ManageCollectionClient({
         }
       }
 
-      // Step 1: get signed upload URLs from the server
-      setUploadStatus('Preparing…');
-      const urlRes = await fetch(
-        `/api/admin/collections/${collection.id}/photos/upload-url`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ files: fileList.map(f => ({ filename: f.name })) }),
-        }
-      );
+      // Process in chunks to avoid overwhelming the server and browser with parallel requests
+      const CHUNK_SIZE = 10;
+      const chunks: File[][] = [];
+      for (let i = 0; i < fileList.length; i += CHUNK_SIZE) chunks.push(fileList.slice(i, i + CHUNK_SIZE));
 
-      if (!urlRes.ok) {
-        const text = await urlRes.text();
-        setUploadErrors([`Failed to get upload URLs (${urlRes.status}): ${text.slice(0, 200)}`]);
-        return;
-      }
-
-      const urlResults: { filename: string; storagePath?: string; signedUrl?: string; thumbSignedUrl?: string; error?: string }[] =
-        await urlRes.json();
-
-      const urlErrors = urlResults.filter(r => r.error).map(r => `${r.filename}: ${r.error}`);
-      if (urlErrors.length) { setUploadErrors(urlErrors); return; }
-
-      // Step 2: upload each file directly to R2 (bypasses Vercel size limit)
       const uploadErrors: string[] = [];
       const confirmed: { storagePath: string; filename: string; width?: number; height?: number; dominantColor?: string }[] = [];
       let completedUploads = 0;
-      const totalFiles = urlResults.length;
+      const totalFiles = fileList.length;
 
-      await Promise.all(
-        urlResults.map(async ({ filename, storagePath, signedUrl, thumbSignedUrl }) => {
-          const file = fileList.find(f => f.name === filename)!;
-          const { blob: thumbBlob, width, height, dominantColor } = await compressThumbnail(file);
-          const [res, thumbRes] = await Promise.all([
-            fetch(signedUrl!, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } }),
-            fetch(thumbSignedUrl!, { method: 'PUT', body: thumbBlob, headers: { 'Content-Type': 'image/jpeg' } }),
-          ]);
-          if (!res.ok) {
-            uploadErrors.push(`${filename}: storage upload failed (${res.status})`);
-          } else if (thumbRes.ok) {
-            confirmed.push({ storagePath: storagePath!, filename, width, height, dominantColor });
-          } else {
-            confirmed.push({ storagePath: storagePath!, filename });
+      for (const chunk of chunks) {
+        // Step 1: get signed upload URLs for this chunk
+        setUploadStatus(`Preparing ${completedUploads + 1}–${Math.min(completedUploads + chunk.length, totalFiles)}/${totalFiles}…`);
+        const urlRes = await fetch(
+          `/api/admin/collections/${collection.id}/photos/upload-url`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ files: chunk.map(f => ({ filename: f.name })) }),
           }
-          completedUploads++;
-          setUploadProgress(completedUploads / totalFiles);
-          setUploadStatus(`Uploading ${completedUploads}/${totalFiles}`);
-        })
-      );
+        );
 
-      if (uploadErrors.length) { setUploadErrors(uploadErrors); return; }
+        if (!urlRes.ok) {
+          const text = await urlRes.text();
+          setUploadErrors([`Failed to get upload URLs (${urlRes.status}): ${text.slice(0, 200)}`]);
+          return;
+        }
 
-      // Step 3: save metadata to database
+        const urlResults: { filename: string; storagePath?: string; signedUrl?: string; thumbSignedUrl?: string; error?: string }[] =
+          await urlRes.json();
+
+        const urlErrors = urlResults.filter(r => r.error).map(r => `${r.filename}: ${r.error}`);
+        if (urlErrors.length) { setUploadErrors(urlErrors); return; }
+
+        // Step 2: upload this chunk to R2 in parallel
+        await Promise.all(
+          urlResults.map(async (urlResult, idx) => {
+            const file = chunk[idx];
+            const { blob: thumbBlob, width, height, dominantColor } = await compressThumbnail(file);
+            const [res, thumbRes] = await Promise.all([
+              fetch(urlResult.signedUrl!, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } }),
+              fetch(urlResult.thumbSignedUrl!, { method: 'PUT', body: thumbBlob, headers: { 'Content-Type': 'image/jpeg' } }),
+            ]);
+            if (!res.ok) {
+              uploadErrors.push(`${file.name}: storage upload failed (${res.status})`);
+            } else if (thumbRes.ok) {
+              confirmed.push({ storagePath: urlResult.storagePath!, filename: file.name, width, height, dominantColor });
+            } else {
+              confirmed.push({ storagePath: urlResult.storagePath!, filename: file.name });
+            }
+            completedUploads++;
+            setUploadProgress(completedUploads / totalFiles);
+            setUploadStatus(`Uploading ${completedUploads}/${totalFiles}`);
+          })
+        );
+
+        if (uploadErrors.length) { setUploadErrors(uploadErrors); return; }
+      }
+
+      // Step 3: save all metadata to database in one call
       const confirmRes = await fetch(`/api/admin/collections/${collection.id}/photos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
