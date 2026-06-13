@@ -102,86 +102,101 @@ export function ManageCollectionClient({
         }
       }
 
-      // Process in chunks to avoid overwhelming the server and browser with parallel requests
-      const CHUNK_SIZE = 10;
-      const chunks: File[][] = [];
-      for (let i = 0; i < fileList.length; i += CHUNK_SIZE) chunks.push(fileList.slice(i, i + CHUNK_SIZE));
-
-      const uploadErrors: string[] = [];
-      const confirmed: { storagePath: string; filename: string; width?: number; height?: number; dominantColor?: string }[] = [];
-      let completedUploads = 0;
-      const totalFiles = fileList.length;
-
-      for (const chunk of chunks) {
-        // Step 1: get signed upload URLs for this chunk
-        setUploadStatus(`Preparing ${completedUploads + 1}–${Math.min(completedUploads + chunk.length, totalFiles)}/${totalFiles}…`);
+      // Step 1: get all presigned URLs in one request
+      setUploadStatus('Preparing…');
+      let urlResults: { filename: string; storagePath?: string; signedUrl?: string; thumbSignedUrl?: string; error?: string }[];
+      try {
         const urlRes = await fetch(
           `/api/admin/collections/${collection.id}/photos/upload-url`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ files: chunk.map(f => ({ filename: f.name })) }),
+            body: JSON.stringify({ files: fileList.map(f => ({ filename: f.name })) }),
           }
         );
-
         if (!urlRes.ok) {
           const text = await urlRes.text();
-          setUploadErrors([`Failed to get upload URLs (${urlRes.status}): ${text.slice(0, 200)}`]);
+          setUploadErrors([`Failed to prepare upload (${urlRes.status}): ${text.slice(0, 200)}`]);
           return;
         }
-
-        const urlResults: { filename: string; storagePath?: string; signedUrl?: string; thumbSignedUrl?: string; error?: string }[] =
-          await urlRes.json();
-
-        const urlErrors = urlResults.filter(r => r.error).map(r => `${r.filename}: ${r.error}`);
-        if (urlErrors.length) { setUploadErrors(urlErrors); return; }
-
-        // Step 2: upload this chunk to R2 in parallel
-        await Promise.all(
-          urlResults.map(async (urlResult, idx) => {
-            const file = chunk[idx];
-            const { blob: thumbBlob, width, height, dominantColor } = await compressThumbnail(file);
-            const [res, thumbRes] = await Promise.all([
-              fetch(urlResult.signedUrl!, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } }),
-              fetch(urlResult.thumbSignedUrl!, { method: 'PUT', body: thumbBlob, headers: { 'Content-Type': 'image/jpeg' } }),
-            ]);
-            if (!res.ok) {
-              uploadErrors.push(`${file.name}: storage upload failed (${res.status})`);
-            } else if (thumbRes.ok) {
-              confirmed.push({ storagePath: urlResult.storagePath!, filename: file.name, width, height, dominantColor });
-            } else {
-              confirmed.push({ storagePath: urlResult.storagePath!, filename: file.name });
-            }
-            completedUploads++;
-            setUploadProgress(completedUploads / totalFiles);
-            setUploadStatus(`Uploading ${completedUploads}/${totalFiles}`);
-          })
-        );
-
-        if (uploadErrors.length) { setUploadErrors(uploadErrors); return; }
-      }
-
-      // Step 3: save all metadata to database in one call
-      const confirmRes = await fetch(`/api/admin/collections/${collection.id}/photos`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uploads: confirmed }),
-      });
-
-      if (!confirmRes.ok) {
-        const text = await confirmRes.text();
-        setUploadErrors([`Failed to save photos (${confirmRes.status}): ${text.slice(0, 200)}`]);
+        urlResults = await urlRes.json();
+      } catch {
+        setUploadErrors(['Could not reach the server. Check your connection and try again.']);
         return;
       }
 
-      const confirmResults = await confirmRes.json();
+      const urlErrors = urlResults.filter(r => r.error).map(r => `${r.filename}: ${r.error}`);
+      if (urlErrors.length) { setUploadErrors(urlErrors); return; }
+
+      // Step 2: upload to R2 with capped concurrency (20 at a time)
+      const CONCURRENCY = 20;
+      const uploadErrors: string[] = [];
+      const confirmed: { storagePath: string; filename: string; width?: number; height?: number; dominantColor?: string }[] = [];
+      let completedUploads = 0;
+      const totalFiles = fileList.length;
+
+      const uploadTasks = urlResults.map((urlResult, idx) => async () => {
+        const file = fileList[idx];
+        const { blob: thumbBlob, width, height, dominantColor } = await compressThumbnail(file);
+        let res: Response, thumbRes: Response;
+        try {
+          [res, thumbRes] = await Promise.all([
+            fetch(urlResult.signedUrl!, { method: 'PUT', body: file, headers: { 'Content-Type': file.type || 'image/jpeg' } }),
+            fetch(urlResult.thumbSignedUrl!, { method: 'PUT', body: thumbBlob, headers: { 'Content-Type': 'image/jpeg' } }),
+          ]);
+        } catch {
+          uploadErrors.push(`${file.name}: network error — check R2 CORS allows PUT from this origin`);
+          completedUploads++;
+          setUploadProgress(completedUploads / totalFiles);
+          return;
+        }
+        if (!res.ok) {
+          uploadErrors.push(`${file.name}: R2 rejected upload (${res.status})`);
+        } else if (thumbRes.ok) {
+          confirmed.push({ storagePath: urlResult.storagePath!, filename: file.name, width, height, dominantColor });
+        } else {
+          confirmed.push({ storagePath: urlResult.storagePath!, filename: file.name });
+        }
+        completedUploads++;
+        setUploadProgress(completedUploads / totalFiles);
+        setUploadStatus(`Uploading ${completedUploads}/${totalFiles}`);
+      });
+
+      // Run with concurrency limit
+      const queue = [...uploadTasks];
+      const workers = Array.from({ length: Math.min(CONCURRENCY, queue.length) }, async () => {
+        while (queue.length) await queue.shift()!();
+      });
+      await Promise.all(workers);
+
+      if (uploadErrors.length) { setUploadErrors(uploadErrors); return; }
+
+      // Step 3: save all metadata to database
+      let confirmResults: { filename: string; error?: string }[];
+      try {
+        const confirmRes = await fetch(`/api/admin/collections/${collection.id}/photos`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uploads: confirmed }),
+        });
+        if (!confirmRes.ok) {
+          const text = await confirmRes.text();
+          setUploadErrors([`Failed to save photos (${confirmRes.status}): ${text.slice(0, 200)}`]);
+          return;
+        }
+        confirmResults = await confirmRes.json();
+      } catch {
+        setUploadErrors(['Could not save photo metadata. Photos may have uploaded to storage but won\'t appear in the gallery.']);
+        return;
+      }
+
       const confirmErrors = confirmResults
-        .filter((r: { error?: string }) => r.error)
-        .map((r: { filename: string; error: string }) => `${r.filename}: ${r.error}`);
+        .filter(r => r.error)
+        .map(r => `${r.filename}: ${r.error}`);
       setUploadErrors(confirmErrors);
       if (!confirmErrors.length) router.refresh();
     } catch (err) {
-      setUploadErrors([`Upload failed: ${err instanceof Error ? err.message : String(err)}`]);
+      setUploadErrors([`Unexpected error: ${err instanceof Error ? err.message : String(err)}`]);
     } finally {
       setUploading(false);
       setUploadProgress(0);
