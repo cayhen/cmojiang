@@ -203,8 +203,8 @@ export function ManageCollectionClient({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: newName }),
     });
-    setNameMsg(res.ok ? 'Name updated.' : 'Failed.');
-    setNewName('');
+    if (res.ok) { setNameMsg('Name updated.'); setNewName(''); router.refresh(); }
+    else setNameMsg('Failed.');
   }
 
   async function handleDateUpdate(e: React.FormEvent) {
@@ -214,7 +214,8 @@ export function ManageCollectionClient({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ event_date: eventDate }),
     });
-    setDateMsg(res.ok ? 'Date updated.' : 'Failed.');
+    if (res.ok) { setDateMsg('Date updated.'); router.refresh(); }
+    else setDateMsg('Failed.');
   }
 
   async function handlePasswordUpdate(e: React.FormEvent) {
@@ -224,8 +225,8 @@ export function ManageCollectionClient({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password: newPassword }),
     });
-    setPasswordMsg(res.ok ? 'Password updated.' : 'Failed.');
-    setNewPassword('');
+    if (res.ok) { setPasswordMsg('Password updated.'); setNewPassword(''); router.refresh(); }
+    else setPasswordMsg('Failed.');
   }
 
   async function handlePrivacyToggle() {
