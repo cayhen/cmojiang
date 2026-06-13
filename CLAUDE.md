@@ -6,6 +6,25 @@ Deployed at: **https://www.cmojiang.com**
 
 ---
 
+## Cost Sensitivity — Flag Before Implementing
+
+This is a personal project on free tiers. **Before making any change that could increase Vercel or Supabase usage, flag it explicitly and get confirmation.** Do not implement silently.
+
+Changes that increase costs:
+- Removing `revalidate = 0` guards or adding server-side data fetching to high-traffic pages (more Vercel function invocations + Supabase queries)
+- Adding `revalidate = 0` to pages that were previously statically cached (forces dynamic rendering on every request)
+- Server-side work proportional to collection/photo count (e.g. signing N presigned URLs per page load)
+- New API routes called on every page view
+- Polling, background jobs, or scheduled fetches
+- Storing large data in Supabase (current free limit: 500MB storage, 2GB bandwidth/month)
+- Increasing Vercel function execution time or memory (current free limit: 100GB-hrs/month)
+
+Current known cost drivers:
+- Gallery page generates presigned R2 URLs for every photo on each load (180 AWS SDK calls for a 60-photo gallery)
+- `revalidate = 0` on home, admin dashboard, manage collection, and profile pages (dynamic render per request)
+
+---
+
 ## Tech Stack
 
 | Layer | Technology |
