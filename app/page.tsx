@@ -11,7 +11,7 @@ export default async function HomePage() {
     .from('collections')
     .select('id, name, event_date, photos(count)')
     .eq('is_private', false)
-    .order('created_at', { ascending: false });
+    .order('event_date', { ascending: false, nullsFirst: false });
 
   const collections = (data ?? []).map(c => ({
     id: c.id,
