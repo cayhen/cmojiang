@@ -3,9 +3,11 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { signViewUrl, thumbPath } from '@/lib/r2';
 import { ManageCollectionClient } from './ManageCollectionClient';
 
+export const revalidate = 0;
+
 export default async function ManageCollectionPage({ params }: { params: { id: string } }) {
   const [{ data: collection }, { data: photos }] = await Promise.all([
-    supabaseAdmin.from('collections').select('id, name, password_plain, event_date').eq('id', params.id).single(),
+    supabaseAdmin.from('collections').select('id, name, password_plain, event_date, is_private').eq('id', params.id).single(),
     supabaseAdmin
       .from('photos')
       .select('id, filename, storage_path')

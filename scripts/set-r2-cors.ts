@@ -25,7 +25,7 @@ async function main() {
       CORSConfiguration: {
         CORSRules: [
           {
-            AllowedMethods: ['GET', 'HEAD'],
+            AllowedMethods: ['GET', 'HEAD', 'PUT'],
             AllowedOrigins: origins,
             AllowedHeaders: ['*'],
             ExposeHeaders: ['Content-Length', 'Content-Type'],
