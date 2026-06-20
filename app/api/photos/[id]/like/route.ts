@@ -23,16 +23,18 @@ export async function POST(
     .single();
 
   if (existing) {
-    await supabaseAdmin
+    const { error } = await supabaseAdmin
       .from('photo_likes')
       .delete()
       .eq('user_id', userSession.userId)
       .eq('photo_id', params.id);
+    if (error) return NextResponse.json({ error: 'Failed to unlike' }, { status: 500 });
     return NextResponse.json({ liked: false });
   } else {
-    await supabaseAdmin
+    const { error } = await supabaseAdmin
       .from('photo_likes')
       .insert({ user_id: userSession.userId, photo_id: params.id });
+    if (error) return NextResponse.json({ error: 'Failed to like' }, { status: 500 });
     return NextResponse.json({ liked: true });
   }
 }

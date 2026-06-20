@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 const LETTERS = 'cmojiang'.split('');
-const BASE_COLOR = '#c1c1bf';
+const BASE_COLOR = '#d8d8d6';
 const DIM_COLOR  = '#777';
 const BURST_MS   = 750;
 
