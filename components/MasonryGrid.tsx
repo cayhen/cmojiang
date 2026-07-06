@@ -22,33 +22,45 @@ interface Props {
   onDoubleTap?: (index: number) => void;
   likedIds?: Set<string>;
   onToggleLike?: (photoId: string) => void;
+  /** Photo size 1 (smallest) – 4 (largest); maps to column count per breakpoint. Default 2 = pre-slider layout. */
+  sizeLevel?: number;
 }
 
-export function MasonryGrid({ photos, selectionMode, selectedIds, onTap, onDoubleTap, likedIds, onToggleLike }: Props) {
+type Breakpoint = 'sm' | 'md' | 'lg';
+
+// Columns per breakpoint, indexed by sizeLevel − 1 (bigger photos = fewer columns)
+const SIZE_COLUMNS: Record<Breakpoint, number[]> = {
+  sm: [3, 2, 1, 1],
+  md: [4, 3, 2, 2],
+  lg: [6, 4, 3, 2],
+};
+
+function breakpointFor(width: number): Breakpoint {
+  return width < 640 ? 'sm' : width < 1024 ? 'md' : 'lg';
+}
+
+export function MasonryGrid({ photos, selectionMode, selectedIds, onTap, onDoubleTap, likedIds, onToggleLike, sizeLevel = 2 }: Props) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [loadedIds, setLoadedIds] = useState<Set<string>>(new Set());
-  const [animatingIds, setAnimatingIds] = useState<Set<string>>(new Set());
+  const [hearts, setHearts] = useState<Map<string, 'like' | 'unlike'>>(new Map());
   const lastClickRef = useRef<{ time: number; index: number } | null>(null);
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [numCols, setNumCols] = useState(() => {
-    if (typeof window === 'undefined') return 4;
-    const w = window.innerWidth;
-    return w < 640 ? 2 : w < 1024 ? 3 : 4;
-  });
+  const [bp, setBp] = useState<Breakpoint>(() =>
+    typeof window === 'undefined' ? 'lg' : breakpointFor(window.innerWidth)
+  );
 
   useEffect(() => {
-    function update() {
-      const w = window.innerWidth;
-      setNumCols(w < 640 ? 2 : w < 1024 ? 3 : 4);
-    }
+    function update() { setBp(breakpointFor(window.innerWidth)); }
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
   }, []);
 
-  function triggerHeartAnimation(photoId: string) {
-    setAnimatingIds(prev => { const n = new Set(prev); n.add(photoId); return n; });
+  const numCols = SIZE_COLUMNS[bp][Math.min(Math.max(Math.round(sizeLevel), 1), 4) - 1];
+
+  function triggerHeartAnimation(photoId: string, kind: 'like' | 'unlike') {
+    setHearts(prev => new Map(prev).set(photoId, kind));
     setTimeout(() => {
-      setAnimatingIds(prev => { const n = new Set(prev); n.delete(photoId); return n; });
+      setHearts(prev => { const n = new Map(prev); n.delete(photoId); return n; });
     }, 700);
   }
 
@@ -61,7 +73,8 @@ export function MasonryGrid({ photos, selectionMode, selectedIds, onTap, onDoubl
       if (clickTimerRef.current) { clearTimeout(clickTimerRef.current); clickTimerRef.current = null; }
       lastClickRef.current = null;
       if (!selectionMode && onDoubleTap) {
-        triggerHeartAnimation(photos[i].id);
+        // Read liked state before onDoubleTap flips it optimistically
+        triggerHeartAnimation(photos[i].id, likedIds?.has(photos[i].id) ? 'unlike' : 'like');
         onDoubleTap(i);
       }
       return;
@@ -110,7 +123,7 @@ export function MasonryGrid({ photos, selectionMode, selectedIds, onTap, onDoubl
               const hasDims = photo.width != null && photo.height != null;
               const priority = i < 8;
               const liked = likedIds?.has(photo.id) ?? false;
-              const animating = animatingIds.has(photo.id);
+              const heart = hearts.get(photo.id);
 
               return (
                 <button
@@ -146,11 +159,18 @@ export function MasonryGrid({ photos, selectionMode, selectedIds, onTap, onDoubl
                     }`}
                   />
 
-                  {/* Heart burst animation on double-click */}
-                  {animating && (
+                  {/* Heart burst animation on double-click — pink for like, gray crossed-out for unlike */}
+                  {heart && (
                     <div aria-hidden className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <svg className="animate-heart-burst" width="56" height="56" viewBox="0 0 24 24" fill="#ff4d6d">
+                      <svg
+                        className="animate-heart-burst drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
+                        width="56" height="56" viewBox="0 0 24 24"
+                        fill={heart === 'like' ? '#ff4d6d' : '#8f8f8f'}
+                      >
                         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                        {heart === 'unlike' && (
+                          <line x1="3.5" y1="3.5" x2="20.5" y2="20.5" stroke="#1a1a1a" strokeWidth="2.4" strokeLinecap="round" />
+                        )}
                       </svg>
                     </div>
                   )}

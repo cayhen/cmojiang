@@ -206,7 +206,7 @@ Middleware (`middleware.ts`) protects `/admin/:path+` and `/api/admin/((?!login)
 ## Components
 
 ### `MasonryGrid`
-CSS `columns-2 sm:columns-3 lg:columns-4` masonry layout. Per-image state:
+Flex-column masonry layout. Column count comes from breakpoint × `sizeLevel` prop (1 smallest – 4 largest, default 2 ⇒ 2/3/4 columns on mobile/tablet/desktop). Double-tap heart burst is pink for like, gray + crossed out for unlike (liked state read before the optimistic toggle). Per-image state:
 - `loadedIds` — tracks which images have fired `onLoad` to drive opacity fade-in.
 - First 8 images: `loading="eager"` + `fetchPriority="high"`. Rest: `loading="lazy"`.
 - `width`/`height` attributes set when available to prevent CLS.
@@ -216,6 +216,7 @@ CSS `columns-2 sm:columns-3 lg:columns-4` masonry layout. Per-image state:
 ### `GalleryClient`
 Manages selection mode, lightbox, likes, infinite scroll, and download:
 - Renders photos in batches of 24 with an IntersectionObserver sentinel (600px rootMargin) for infinite scroll.
+- Magnifier bar (range slider in the action row) scales photo size by driving `MasonryGrid`'s `sizeLevel`; persisted in `localStorage['gallery-size']`, restored after mount to avoid SSR mismatch.
 - Double-tap (or heart button) toggles a photo like, optimistic with revert on failure.
 - "Download all" and selection download call `downloadPhotosAsZip()` in `lib/zip.ts`: fetches originals via `photo.downloadUrl` (presigned R2 URL, direct — no Vercel proxy) with **bounded concurrency (6 at a time)**, accumulates blobs in memory, generates zip client-side with `jszip`. Failed fetches are counted and surfaced ("N of M photos couldn't be downloaded"); blobs still all sit in memory until zip generation, so very large collections remain memory-heavy.
 - Zip progress bar fills to 100% during fetch phase; zip generation phase has no progress.

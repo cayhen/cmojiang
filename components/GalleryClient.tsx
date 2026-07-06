@@ -61,11 +61,23 @@ export function GalleryClient({
   const [zipProgress, setZipProgress] = useState(0); // 0–1
   const [downloadError, setDownloadError] = useState('');
   const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
+  const [sizeLevel, setSizeLevel] = useState(2); // photo size 1 (small) – 4 (large)
   const sentinelRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const hasMore = visibleCount < photos.length;
   const visiblePhotos = photos.slice(0, visibleCount);
+
+  // Restore photo size after mount (not in the initializer — SSR markup must match)
+  useEffect(() => {
+    const stored = Number(localStorage.getItem('gallery-size'));
+    if (stored >= 1 && stored <= 4) setSizeLevel(stored);
+  }, []);
+
+  function handleSizeChange(level: number) {
+    setSizeLevel(level);
+    localStorage.setItem('gallery-size', String(level));
+  }
 
   // Deep link: /c/[id]/gallery?photo=<id> opens the lightbox on that photo
   useEffect(() => {
@@ -214,6 +226,24 @@ export function GalleryClient({
             </button>
           ) : (
             <>
+              <div className="flex items-center gap-1.5" title="Photo size">
+                <svg width="9" height="9" viewBox="0 0 10 10" fill="none" aria-hidden>
+                  <rect x="1" y="1" width="8" height="8" rx="1.5" stroke="#555" />
+                </svg>
+                <input
+                  type="range"
+                  min={1}
+                  max={4}
+                  step={1}
+                  value={sizeLevel}
+                  onChange={e => handleSizeChange(Number(e.target.value))}
+                  aria-label="Photo size"
+                  className="w-14 sm:w-20 accent-[#888] cursor-pointer"
+                />
+                <svg width="14" height="14" viewBox="0 0 10 10" fill="none" aria-hidden>
+                  <rect x="1" y="1" width="8" height="8" rx="1.5" stroke="#555" />
+                </svg>
+              </div>
               <button
                 onClick={() => setSelectionMode(true)}
                 className="text-[#666] text-xs hover:text-[#888] transition-colors"
@@ -278,6 +308,7 @@ export function GalleryClient({
             onDoubleTap={loggedIn ? handleDoubleTap : undefined}
             likedIds={likedIds}
             onToggleLike={loggedIn ? handleToggleLike : undefined}
+            sizeLevel={sizeLevel}
           />
           {hasMore && <div ref={sentinelRef} />}
         </>
