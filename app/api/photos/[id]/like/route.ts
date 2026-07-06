@@ -34,7 +34,12 @@ export async function POST(
     const { error } = await supabaseAdmin
       .from('photo_likes')
       .insert({ user_id: userSession.userId, photo_id: params.id });
-    if (error) return NextResponse.json({ error: 'Failed to like' }, { status: 500 });
+    if (error) {
+      // Unique violation: a concurrent request (e.g. rapid double-tap) already
+      // inserted this like — the desired state holds, so report success
+      if (error.code === '23505') return NextResponse.json({ liked: true });
+      return NextResponse.json({ error: 'Failed to like' }, { status: 500 });
+    }
     return NextResponse.json({ liked: true });
   }
 }

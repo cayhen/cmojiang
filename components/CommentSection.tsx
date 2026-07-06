@@ -56,6 +56,7 @@ export function CommentSection({ collectionId, initialComments, currentUsername,
   }
 
   async function handleDelete(commentId: string) {
+    if (!window.confirm('Delete this comment?')) return;
     const res = await fetch(`/api/comments/${commentId}`, { method: 'DELETE' });
     if (res.ok) {
       updateComments(comments.filter(c => c.id !== commentId));

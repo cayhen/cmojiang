@@ -35,4 +35,3 @@ export default async function HomePage() {
       </main>
   );
 }
-// hello from eric kim

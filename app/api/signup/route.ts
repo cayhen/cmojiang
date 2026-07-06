@@ -57,6 +57,11 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error || !user) {
+    // Unique violation: another request claimed the username/email between
+    // the availability checks above and this insert
+    if (error?.code === '23505') {
+      return NextResponse.json({ error: 'Username or email already taken' }, { status: 409 });
+    }
     return NextResponse.json({ error: 'Failed to create account' }, { status: 500 });
   }
 

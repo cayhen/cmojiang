@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { MasonryGrid } from './MasonryGrid';
 import Link from 'next/link';
+import { downloadPhotosAsZip } from '@/lib/zip';
 
 export interface LikedPhoto {
   id: string;
@@ -32,6 +33,7 @@ export function LikedPhotosClient({ initialSections }: Props) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [downloading, setDownloading] = useState<string | null>(null); // collectionId being zipped, or null
   const [zipProgress, setZipProgress] = useState(0);
+  const [downloadError, setDownloadError] = useState('');
   const abortRef = useRef<AbortController | null>(null);
 
   async function handleUnlike(photoId: string) {
@@ -62,36 +64,22 @@ export function LikedPhotosClient({ initialSections }: Props) {
     abortRef.current = controller;
     setDownloading(collectionId);
     setZipProgress(0);
-    let completed = 0;
-    const total = photoList.length;
+    setDownloadError('');
 
     try {
-      const JSZip = (await import('jszip')).default;
-      const zip = new JSZip();
-
-      await Promise.all(
-        photoList.map(async photo => {
-          const res = await fetch(photo.downloadUrl, { signal: controller.signal });
-          if (res.ok) {
-            const blob = await res.blob();
-            zip.file(photo.filename, blob);
-          }
-          completed++;
-          setZipProgress(completed / total);
-        })
-      );
-
-      if (controller.signal.aborted) return;
-
-      const blob = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${zipName}.zip`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const failed = await downloadPhotosAsZip(photoList, zipName, controller.signal, setZipProgress);
+      if (failed > 0 && !controller.signal.aborted) {
+        setDownloadError(
+          failed === photoList.length
+            ? 'Download failed. Please try again.'
+            : `${failed} of ${photoList.length} photos couldn't be downloaded and were left out of the zip.`
+        );
+      }
     } catch (err) {
-      if ((err as { name?: string }).name !== 'AbortError') console.error('Download failed', err);
+      if ((err as { name?: string }).name !== 'AbortError') {
+        console.error('Download failed', err);
+        setDownloadError('Download failed. Please try again.');
+      }
     } finally {
       abortRef.current = null;
       setDownloading(null);
@@ -137,6 +125,8 @@ export function LikedPhotosClient({ initialSections }: Props) {
           </button>
         )}
       </div>
+
+      {downloadError && <p className="text-red-500/70 text-xs mb-4">{downloadError}</p>}
 
       <div className="space-y-12">
         {sections.map(section => {
