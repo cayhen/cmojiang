@@ -8,17 +8,8 @@ import { signViewUrl, signDownloadUrl, thumbPath } from '@/lib/r2';
 import { GalleryClient } from '@/components/GalleryClient';
 import { UserNav } from '@/components/UserNav';
 import { cachedFetch, galleryPhotosKey } from '@/lib/redis';
+import { fetchPhotosChronological, type PhotoRow } from '@/lib/photos';
 import { HomeLink } from '@/components/HomeLink';
-
-
-type PhotoRow = {
-  id: string;
-  filename: string;
-  storage_path: string;
-  width: number | null;
-  height: number | null;
-  dominant_color: string | null;
-};
 
 export default async function GalleryPage({ params }: { params: { id: string } }) {
   const cookieStore = cookies();
@@ -41,14 +32,9 @@ export default async function GalleryPage({ params }: { params: { id: string } }
   // signed URL; URL generation happens below, outside the cache boundary.
   const [collectionRes, rawPhotos, kudosRes, commentsRes, userSession] = await Promise.all([
     supabaseAdmin.from('collections').select('name').eq('id', params.id).single(),
-    cachedFetch<PhotoRow[]>(galleryPhotosKey(params.id), 300, async () => {
-      const { data } = await supabaseAdmin
-        .from('photos')
-        .select('id, filename, storage_path, width, height, dominant_color')
-        .eq('collection_id', params.id)
-        .order('uploaded_at', { ascending: true });
-      return (data ?? []) as PhotoRow[];
-    }),
+    cachedFetch<PhotoRow[]>(galleryPhotosKey(params.id), 300, () =>
+      fetchPhotosChronological(params.id)
+    ),
     supabaseAdmin.from('kudos').select('*', { count: 'exact', head: true }).eq('collection_id', params.id),
     supabaseAdmin
       .from('comments')

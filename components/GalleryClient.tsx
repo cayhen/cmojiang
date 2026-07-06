@@ -6,6 +6,7 @@ import { Lightbox } from './Lightbox';
 import { KudosButton } from './KudosButton';
 import { CommentSection } from './CommentSection';
 import { ScrollToTop } from './ScrollToTop';
+import { downloadPhotosAsZip } from '@/lib/zip';
 
 const BATCH_SIZE = 24;
 
@@ -58,12 +59,29 @@ export function GalleryClient({
   const [commentCount, setCommentCount] = useState(comments.length);
   const [downloading, setDownloading] = useState(false);
   const [zipProgress, setZipProgress] = useState(0); // 0–1
+  const [downloadError, setDownloadError] = useState('');
   const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const hasMore = visibleCount < photos.length;
   const visiblePhotos = photos.slice(0, visibleCount);
+
+  // Deep link: /c/[id]/gallery?photo=<id> opens the lightbox on that photo
+  useEffect(() => {
+    const photoId = new URLSearchParams(window.location.search).get('photo');
+    if (!photoId) return;
+    const idx = photos.findIndex(p => p.id === photoId);
+    if (idx >= 0) setLightboxIndex(idx);
+  }, [photos]);
+
+  // Keep ?photo= in sync with the lightbox without adding history entries
+  function syncPhotoParam(photoId: string | null) {
+    const url = new URL(window.location.href);
+    if (photoId) url.searchParams.set('photo', photoId);
+    else url.searchParams.delete('photo');
+    window.history.replaceState(null, '', url);
+  }
 
   const loadMore = useCallback(() => {
     setVisibleCount(prev => Math.min(prev + BATCH_SIZE, photos.length));
@@ -134,36 +152,22 @@ export function GalleryClient({
     abortRef.current = controller;
     setDownloading(true);
     setZipProgress(0);
-    let completed = 0;
-    const total = photoList.length;
+    setDownloadError('');
 
     try {
-      const JSZip = (await import('jszip')).default;
-      const zip = new JSZip();
-
-      await Promise.all(
-        photoList.map(async photo => {
-          const res = await fetch(photo.downloadUrl, { signal: controller.signal });
-          if (res.ok) {
-            const blob = await res.blob();
-            zip.file(photo.filename, blob);
-          }
-          completed++;
-          setZipProgress(completed / total);
-        })
-      );
-
-      if (controller.signal.aborted) return;
-
-      const blob = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${zipName}.zip`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const failed = await downloadPhotosAsZip(photoList, zipName, controller.signal, setZipProgress);
+      if (failed > 0 && !controller.signal.aborted) {
+        setDownloadError(
+          failed === photoList.length
+            ? 'Download failed. Please try again.'
+            : `${failed} of ${photoList.length} photos couldn't be downloaded and were left out of the zip.`
+        );
+      }
     } catch (err) {
-      if ((err as { name?: string }).name !== 'AbortError') console.error('Download failed', err);
+      if ((err as { name?: string }).name !== 'AbortError') {
+        console.error('Download failed', err);
+        setDownloadError('Download failed. Please try again.');
+      }
     } finally {
       abortRef.current = null;
       setDownloading(false);
@@ -249,6 +253,8 @@ export function GalleryClient({
         </div>
       )}
 
+      {downloadError && <p className="text-red-500/70 text-xs mb-4">{downloadError}</p>}
+
       {/* Comments — expands above grid */}
       {commentsOpen && (
         <CommentSection
@@ -282,7 +288,9 @@ export function GalleryClient({
         <Lightbox
           photos={photos}
           initialIndex={lightboxIndex}
-          onClose={() => setLightboxIndex(null)}
+          onClose={() => { setLightboxIndex(null); syncPhotoParam(null); }}
+          onIndexChange={i => syncPhotoParam(photos[i].id)}
+          showShare
         />
       )}
 

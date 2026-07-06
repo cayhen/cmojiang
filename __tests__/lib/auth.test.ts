@@ -1,6 +1,24 @@
 process.env.JWT_SECRET = 'test-secret-minimum-32-characters-long!!';
 
-import { signToken, verifyToken } from '@/lib/auth';
+import { signToken, verifyToken, signInviteToken, verifyInviteToken } from '@/lib/auth';
+
+describe('signInviteToken / verifyInviteToken', () => {
+  it('round-trips a collectionId', async () => {
+    const token = await signInviteToken('col-9');
+    const payload = await verifyInviteToken(token);
+    expect(payload?.collectionId).toBe('col-9');
+  });
+
+  it('rejects a gallery session token (missing invite claim)', async () => {
+    const token = await signToken('col-9');
+    expect(await verifyInviteToken(token)).toBeNull();
+  });
+
+  it('rejects a tampered token', async () => {
+    const token = await signInviteToken('col-9');
+    expect(await verifyInviteToken(token.slice(0, -4) + 'xxxx')).toBeNull();
+  });
+});
 
 describe('signToken / verifyToken', () => {
   it('round-trips a collectionId', async () => {

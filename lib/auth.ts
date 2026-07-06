@@ -22,6 +22,27 @@ export async function verifyToken(token: string): Promise<{ collectionId: string
   }
 }
 
+/**
+ * Invite tokens let anyone with the link unlock a collection without typing
+ * the password. Exchanged for a gallery_session at /join/[token].
+ */
+export async function signInviteToken(collectionId: string): Promise<string> {
+  return new SignJWT({ collectionId, invite: true })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setExpirationTime('30d')
+    .sign(secret());
+}
+
+export async function verifyInviteToken(token: string): Promise<{ collectionId: string } | null> {
+  try {
+    const { payload } = await jwtVerify(token, secret());
+    if (payload.invite !== true || typeof payload.collectionId !== 'string') return null;
+    return { collectionId: payload.collectionId };
+  } catch {
+    return null;
+  }
+}
+
 export async function signAdminToken(): Promise<string> {
   const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
   return new SignJWT({ admin: true })

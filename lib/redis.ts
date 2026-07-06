@@ -10,9 +10,9 @@ export const redis = url && token
 /**
  * Canonical Redis key for a collection's cached photo rows.
  * Single source of truth — the gallery page reads it, photo mutations bust it.
- * Versioned (`v2`) so a payload-shape change doesn't read stale entries.
+ * Versioned (`v3`) so a payload-shape change doesn't read stale entries.
  */
-export const galleryPhotosKey = (collectionId: string) => `gallery:v2:${collectionId}:photos`;
+export const galleryPhotosKey = (collectionId: string) => `gallery:v3:${collectionId}:photos`;
 
 export async function cachedFetch<T>(
   key: string,

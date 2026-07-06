@@ -1,18 +1,15 @@
 import { notFound } from 'next/navigation';
 import { supabaseAdmin } from '@/lib/supabase';
 import { signViewUrl, thumbPath } from '@/lib/r2';
+import { fetchPhotosChronological } from '@/lib/photos';
 import { ManageCollectionClient } from './ManageCollectionClient';
 
 export const revalidate = 0;
 
 export default async function ManageCollectionPage({ params }: { params: { id: string } }) {
-  const [{ data: collection }, { data: photos }] = await Promise.all([
+  const [{ data: collection }, photos] = await Promise.all([
     supabaseAdmin.from('collections').select('id, name, password_plain, event_date, is_private').eq('id', params.id).single(),
-    supabaseAdmin
-      .from('photos')
-      .select('id, filename, storage_path')
-      .eq('collection_id', params.id)
-      .order('uploaded_at', { ascending: true }),
+    fetchPhotosChronological(params.id),
   ]);
 
   if (!collection) notFound();

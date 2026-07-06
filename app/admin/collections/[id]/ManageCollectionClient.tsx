@@ -29,8 +29,25 @@ export function ManageCollectionClient({
   const [dateMsg, setDateMsg] = useState('');
   const [isPrivate, setIsPrivate] = useState(collection.is_private ?? false);
   const [privacyMsg, setPrivacyMsg] = useState('');
+  const [inviteMsg, setInviteMsg] = useState('');
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  async function handleCopyInvite() {
+    try {
+      const res = await fetch(`/api/admin/collections/${collection.id}/invite`, { method: 'POST' });
+      if (!res.ok) throw new Error();
+      const { url } = await res.json();
+      await navigator.clipboard.writeText(url);
+      setInviteMsg('Invite link copied — unlocks without a password, valid 30 days');
+    } catch {
+      setInviteMsg('Failed to create invite link');
+    }
+    setTimeout(() => setInviteMsg(''), 4000);
+  }
 
   interface ThumbnailResult {
     blob: Blob;
@@ -87,6 +104,20 @@ export function ManageCollectionClient({
     try {
       const rawFiles = Array.from(files);
 
+      // Capture time from EXIF — read from the original files, since HEIC
+      // conversion strips metadata. Best-effort: missing EXIF is fine.
+      let takenAts: (string | undefined)[] = [];
+      try {
+        const exifr = (await import('exifr')).default;
+        takenAts = await Promise.all(rawFiles.map(async file => {
+          try {
+            const tags = await exifr.parse(file, ['DateTimeOriginal', 'CreateDate']);
+            const taken = tags?.DateTimeOriginal ?? tags?.CreateDate;
+            return taken instanceof Date ? taken.toISOString() : undefined;
+          } catch { return undefined; }
+        }));
+      } catch { /* exifr failed to load — uploads proceed without taken_at */ }
+
       // Convert any HEIC files to JPEG before uploading
       const fileList: File[] = [];
       for (let i = 0; i < rawFiles.length; i++) {
@@ -131,13 +162,21 @@ export function ManageCollectionClient({
       // Step 2: upload to R2 with capped concurrency (20 at a time)
       const CONCURRENCY = 20;
       const uploadErrors: string[] = [];
-      const confirmed: { storagePath: string; filename: string; width?: number; height?: number; dominantColor?: string }[] = [];
+      const confirmed: { storagePath: string; filename: string; width?: number; height?: number; dominantColor?: string; takenAt?: string }[] = [];
       let completedUploads = 0;
       const totalFiles = fileList.length;
 
       const uploadTasks = urlResults.map((urlResult, idx) => async () => {
         const file = fileList[idx];
-        const { blob: thumbBlob, width, height, dominantColor } = await compressThumbnail(file);
+        let thumbBlob: Blob, width: number | undefined, height: number | undefined, dominantColor: string | undefined;
+        try {
+          ({ blob: thumbBlob, width, height, dominantColor } = await compressThumbnail(file));
+        } catch {
+          uploadErrors.push(`${file.name}: not a valid image — check it isn't a sidecar/metadata file (.xmp, .aae) or an unfinished cloud download`);
+          completedUploads++;
+          setUploadProgress(completedUploads / totalFiles);
+          return;
+        }
         let res: Response, thumbRes: Response;
         try {
           [res, thumbRes] = await Promise.all([
@@ -153,9 +192,9 @@ export function ManageCollectionClient({
         if (!res.ok) {
           uploadErrors.push(`${file.name}: R2 rejected upload (${res.status})`);
         } else if (thumbRes.ok) {
-          confirmed.push({ storagePath: urlResult.storagePath!, filename: file.name, width, height, dominantColor });
+          confirmed.push({ storagePath: urlResult.storagePath!, filename: file.name, width, height, dominantColor, takenAt: takenAts[idx] });
         } else {
-          confirmed.push({ storagePath: urlResult.storagePath!, filename: file.name });
+          confirmed.push({ storagePath: urlResult.storagePath!, filename: file.name, takenAt: takenAts[idx] });
         }
         completedUploads++;
         setUploadProgress(completedUploads / totalFiles);
@@ -169,9 +208,10 @@ export function ManageCollectionClient({
       });
       await Promise.all(workers);
 
-      if (uploadErrors.length) { setUploadErrors(uploadErrors); return; }
+      if (!confirmed.length) { setUploadErrors(uploadErrors); return; }
 
-      // Step 3: save all metadata to database
+      // Step 3: save all successfully-uploaded photos' metadata to database
+      // (even if some files in the batch failed above)
       let confirmResults: { filename: string; error?: string }[];
       try {
         const confirmRes = await fetch(`/api/admin/collections/${collection.id}/photos`, {
@@ -181,20 +221,20 @@ export function ManageCollectionClient({
         });
         if (!confirmRes.ok) {
           const text = await confirmRes.text();
-          setUploadErrors([`Failed to save photos (${confirmRes.status}): ${text.slice(0, 200)}`]);
+          setUploadErrors([...uploadErrors, `Failed to save photos (${confirmRes.status}): ${text.slice(0, 200)}`]);
           return;
         }
         confirmResults = await confirmRes.json();
       } catch {
-        setUploadErrors(['Could not save photo metadata. Photos may have uploaded to storage but won\'t appear in the gallery.']);
+        setUploadErrors([...uploadErrors, 'Could not save photo metadata. Photos may have uploaded to storage but won\'t appear in the gallery.']);
         return;
       }
 
       const confirmErrors = confirmResults
         .filter(r => r.error)
         .map(r => `${r.filename}: ${r.error}`);
-      setUploadErrors(confirmErrors);
-      if (!confirmErrors.length) router.refresh();
+      setUploadErrors([...uploadErrors, ...confirmErrors]);
+      router.refresh();
     } catch (err) {
       setUploadErrors([`Unexpected error: ${err instanceof Error ? err.message : String(err)}`]);
     } finally {
@@ -202,6 +242,38 @@ export function ManageCollectionClient({
       setUploadProgress(0);
       setUploadStatus('');
     }
+  }
+
+  function togglePhotoSelect(id: string) {
+    setSelectedPhotoIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function exitSelectMode() {
+    setSelectMode(false);
+    setSelectedPhotoIds(new Set());
+  }
+
+  async function handleBulkDelete() {
+    const ids = Array.from(selectedPhotoIds);
+    if (!ids.length) return;
+    if (!confirm(`Delete ${ids.length} photo${ids.length === 1 ? '' : 's'}? This cannot be undone.`)) return;
+    setBulkDeleting(true);
+    const res = await fetch(`/api/admin/collections/${collection.id}/photos`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ photoIds: ids }),
+    });
+    setBulkDeleting(false);
+    if (!res.ok) {
+      alert('Failed to delete photos.');
+      return;
+    }
+    setPhotos(ps => ps.filter(p => !selectedPhotoIds.has(p.id)));
+    exitSelectMode();
   }
 
   async function handleDelete(photoId: string) {
@@ -288,13 +360,22 @@ export function ManageCollectionClient({
             )}
           </div>
         </div>
-        <Link
-          href={`/c/${collection.id}/gallery`}
-          className="text-[#555] text-xs hover:text-[#888] transition-colors"
-        >
-          View gallery →
-        </Link>
+        <div className="flex flex-col items-end gap-1">
+          <Link
+            href={`/c/${collection.id}/gallery`}
+            className="text-[#555] text-xs hover:text-[#888] transition-colors"
+          >
+            View gallery →
+          </Link>
+          <button
+            onClick={handleCopyInvite}
+            className="text-[#555] text-xs hover:text-[#888] transition-colors"
+          >
+            Copy invite link
+          </button>
+        </div>
       </div>
+      {inviteMsg && <p className="text-[#777] text-xs -mt-6 mb-8 text-right">{inviteMsg}</p>}
 
       {/* Upload */}
       <section className="mb-8">
@@ -338,25 +419,84 @@ export function ManageCollectionClient({
 
       {/* Photos */}
       <section className="mb-8">
-        <button
-          onClick={() => setPhotosOpen(o => !o)}
-          className="flex items-center gap-2 mb-3 group"
-        >
-          <p className="text-[#666] text-xs uppercase tracking-widest">Photos ({photos.length})</p>
-          <span className="text-[#444] text-xs group-hover:text-[#666] transition-colors">{photosOpen ? '▼' : '▶'}</span>
-        </button>
-        {photosOpen && <div className="grid grid-cols-3 gap-2">
-          {photos.map(photo => (
-            <div key={photo.id} className="relative group">
-              <img src={photo.url} alt={photo.filename} className="w-full rounded-sm" />
-              <button
-                onClick={() => handleDelete(photo.id)}
-                className="absolute top-1 right-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                ×
-              </button>
+        <div className="flex items-center justify-between mb-3">
+          <button
+            onClick={() => setPhotosOpen(o => !o)}
+            className="flex items-center gap-2 group"
+          >
+            <p className="text-[#666] text-xs uppercase tracking-widest">Photos ({photos.length})</p>
+            <span className="text-[#444] text-xs group-hover:text-[#666] transition-colors">{photosOpen ? '▼' : '▶'}</span>
+          </button>
+          {photosOpen && photos.length > 0 && (
+            <div className="flex items-center gap-4">
+              {selectMode ? (
+                <>
+                  <button
+                    onClick={() => setSelectedPhotoIds(new Set(photos.map(p => p.id)))}
+                    className="text-[#666] text-xs hover:text-[#888] transition-colors"
+                  >
+                    Select all
+                  </button>
+                  {selectedPhotoIds.size > 0 && (
+                    <button
+                      onClick={handleBulkDelete}
+                      disabled={bulkDeleting}
+                      className="text-red-500/60 text-xs hover:text-red-500/80 transition-colors disabled:opacity-50"
+                    >
+                      {bulkDeleting ? 'Deleting…' : `Delete ${selectedPhotoIds.size}`}
+                    </button>
+                  )}
+                  <button
+                    onClick={exitSelectMode}
+                    className="text-[#666] text-xs hover:text-[#888] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setSelectMode(true)}
+                  className="text-[#666] text-xs hover:text-[#888] transition-colors"
+                >
+                  Select
+                </button>
+              )}
             </div>
-          ))}
+          )}
+        </div>
+        {photosOpen && <div className="grid grid-cols-3 gap-2">
+          {photos.map(photo => {
+            const selected = selectedPhotoIds.has(photo.id);
+            return (
+              <div
+                key={photo.id}
+                className={`relative group ${selectMode ? 'cursor-pointer' : ''}`}
+                onClick={() => selectMode && togglePhotoSelect(photo.id)}
+              >
+                <img
+                  src={photo.url}
+                  alt={photo.filename}
+                  className={`w-full rounded-sm transition-opacity ${
+                    selectMode ? (selected ? 'ring-2 ring-[#888] opacity-100' : 'opacity-50') : ''
+                  }`}
+                />
+                {selectMode ? (
+                  selected && (
+                    <span className="absolute top-1 right-1 bg-[#bbb] text-[#0f0f0f] text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                      ✓
+                    </span>
+                  )
+                ) : (
+                  <button
+                    onClick={() => handleDelete(photo.id)}
+                    className="absolute top-1 right-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>}
       </section>
 
