@@ -122,8 +122,8 @@ export function LogoTitle() {
   return (
     <div>
       <h1
-        className="text-[150px] leading-none uppercase tracking-[0.02em] whitespace-nowrap"
-        style={{ fontFamily: 'Rogeta, system-ui, sans-serif' }}
+        className="leading-none uppercase tracking-[0.02em] whitespace-nowrap"
+        style={{ fontFamily: 'Rogeta, system-ui, sans-serif', fontSize: 'clamp(3rem, 16vw, 150px)' }}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >

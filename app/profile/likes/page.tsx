@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { signViewUrl, signDownloadUrl, thumbPath } from '@/lib/r2';
 import { UserNav } from '@/components/UserNav';
 import { LikedPhotosClient, type LikedPhoto, type LikedSection } from '@/components/LikedPhotosClient';
+import { MobileNav } from '@/components/MobileNav';
 import Link from 'next/link';
 
 export const revalidate = 0;
@@ -79,13 +80,14 @@ export default async function LikedPhotosPage() {
   }
 
   return (
-    <main className="min-h-screen p-6">
-      <div className="flex justify-between items-center mb-10">
-        <div className="flex items-center gap-4">
-          <Link href="/profile" className="text-[#666] text-xs hover:text-[#777] transition-colors">← Back</Link>
+    <main className="min-h-screen p-4 sm:p-6">
+      <div className="flex justify-between items-center mb-8 sm:mb-10">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="md:hidden"><MobileNav /></div>
+          <Link href="/profile" className="hidden md:inline text-[#666] text-xs hover:text-[#777] transition-colors">← Back</Link>
           <span className="text-[#bbb] text-sm font-light">Liked photos</span>
         </div>
-        <UserNav />
+        <div className="hidden md:block"><UserNav /></div>
       </div>
 
       {signingError ? (

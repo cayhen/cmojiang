@@ -10,6 +10,7 @@ import { UserNav } from '@/components/UserNav';
 import { cachedFetch, galleryPhotosKey } from '@/lib/redis';
 import { fetchPhotosChronological, type PhotoRow } from '@/lib/photos';
 import { HomeLink } from '@/components/HomeLink';
+import { MobileNav } from '@/components/MobileNav';
 
 export default async function GalleryPage({ params }: { params: { id: string } }) {
   const cookieStore = cookies();
@@ -113,19 +114,20 @@ export default async function GalleryPage({ params }: { params: { id: string } }
   }));
 
   return (
-    <main className="min-h-screen p-6">
+    <main className="min-h-screen p-4 sm:p-6">
       {photosWithUrls.slice(0, 8).map(p => (
         <link key={p.id} rel="preload" as="image" href={p.url} />
       ))}
       <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
-          <HomeLink />
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="md:hidden"><MobileNav /></div>
+          <div className="hidden md:block"><HomeLink /></div>
           <div>
             <h1 className="text-[#bbb] font-light text-sm leading-tight">{collection.name}</h1>
             <p className="text-[#444] text-xs font-light leading-tight mt-0.5">{photosWithUrls.length} {photosWithUrls.length === 1 ? 'photo' : 'photos'}</p>
           </div>
         </div>
-        <UserNav />
+        <div className="hidden md:block"><UserNav /></div>
       </div>
 
       {signingError ? (

@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { SearchBar } from '@/components/SearchBar';
 import { UserNav } from '@/components/UserNav';
 import { LogoTitle } from '@/components/LogoTitle';
+import { MobileNav } from '@/components/MobileNav';
 
 export const revalidate = 0;
 
@@ -23,10 +24,15 @@ export default async function HomePage() {
   }));
 
   return (
-    <main className="p-10 max-w-4xl mx-auto">
+    <main className="px-5 py-8 sm:p-10 max-w-4xl mx-auto">
+        <div className="md:hidden mb-4">
+          <MobileNav />
+        </div>
         <header className="flex items-baseline justify-between">
           <LogoTitle />
-          <UserNav />
+          <div className="hidden md:block">
+            <UserNav />
+          </div>
         </header>
         <SearchBar collections={collections} />
         <footer className="mt-16 text-center">

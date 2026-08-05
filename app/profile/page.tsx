@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { SignOutButton } from '@/components/SignOutButton';
 import Link from 'next/link';
 import { HomeLink } from '@/components/HomeLink';
+import { MobileNav } from '@/components/MobileNav';
 
 export const revalidate = 0;
 
@@ -44,13 +45,14 @@ export default async function ProfilePage() {
     .filter(c => c.name) as { id: string; name: string; photoCount: number }[];
 
   return (
-    <main className="min-h-screen p-10 max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-10">
+    <main className="min-h-screen px-5 py-8 sm:p-10 max-w-4xl mx-auto">
+      <div className="flex justify-between items-center mb-8 sm:mb-10">
         <div className="flex items-center gap-4">
-          <HomeLink />
+          <div className="md:hidden"><MobileNav /></div>
+          <div className="hidden md:block"><HomeLink /></div>
           <span className="text-[#bbb] text-sm font-light">{session.username}</span>
         </div>
-        <SignOutButton />
+        <div className="hidden md:block"><SignOutButton /></div>
       </div>
 
       <Link
