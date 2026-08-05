@@ -7,8 +7,13 @@ import { KudosButton } from './KudosButton';
 import { CommentSection } from './CommentSection';
 import { ScrollToTop } from './ScrollToTop';
 import { downloadPhotosAsZip } from '@/lib/zip';
+import { useCanShareFiles, sharePhotos } from '@/lib/share';
 
 const BATCH_SIZE = 24;
+// Above this count, keep using the zip even on share-capable devices — pushing
+// hundreds of files through the OS share sheet is unreliable and memory-heavy.
+// Small/medium saves go straight to the native "Save to Photos" sheet.
+const MAX_SHARE_FILES = 50;
 
 export interface GalleryPhoto {
   id: string;
@@ -62,8 +67,11 @@ export function GalleryClient({
   const [downloadError, setDownloadError] = useState('');
   const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
   const [sizeLevel, setSizeLevel] = useState(2); // photo size 1 (small) – 4 (large)
+  const [sharing, setSharing] = useState(false); // share path active (vs. zip) — drives progress label
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]); // iOS retap: fetched files awaiting a fresh gesture
   const sentinelRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const canShareFiles = useCanShareFiles();
 
   const hasMore = visibleCount < photos.length;
   const visiblePhotos = photos.slice(0, visibleCount);
@@ -188,7 +196,62 @@ export function GalleryClient({
     }
   }
 
+  // On share-capable touch devices, saving hands the files to the OS sheet
+  // ("Save to Photos"/"Save to Files"); otherwise it falls back to the zip.
+  // Large requests always zip (see MAX_SHARE_FILES).
+  function getPhotos(photoList: GalleryPhoto[], zipName: string) {
+    if (canShareFiles && photoList.length <= MAX_SHARE_FILES) {
+      return savePhotosToDevice(photoList);
+    }
+    return downloadPhotos(photoList, zipName);
+  }
+
+  async function savePhotosToDevice(photoList: GalleryPhoto[]) {
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setDownloading(true);
+    setSharing(true);
+    setZipProgress(0);
+    setDownloadError('');
+    setPendingFiles([]);
+
+    try {
+      const result = await sharePhotos(photoList, { onProgress: setZipProgress, signal: controller.signal });
+      if (result.outcome === 'no_activation') {
+        // iOS dropped the gesture during the fetch — keep the files for a retap.
+        setPendingFiles(result.files);
+      } else if (result.outcome === 'error') {
+        setDownloadError('Couldn’t prepare photos. Please try again.');
+      } else if (result.outcome === 'shared') {
+        if (result.failed > 0) {
+          setDownloadError(`${result.failed} of ${photoList.length} photos couldn’t be prepared and were left out.`);
+        }
+        exitSelection();
+      }
+      // 'canceled' → no-op
+    } finally {
+      abortRef.current = null;
+      setDownloading(false);
+      setSharing(false);
+      setZipProgress(0);
+    }
+  }
+
+  // Second tap re-establishes a fresh user activation, so share the already
+  // fetched files synchronously (no awaited work before navigator.share).
+  async function retapShare() {
+    const files = pendingFiles;
+    setPendingFiles([]);
+    const result = await sharePhotos([], { preparedFiles: files });
+    if (result.outcome === 'error') {
+      setDownloadError('Couldn’t save photos. Please try again.');
+    } else if (result.outcome === 'shared') {
+      exitSelection();
+    }
+  }
+
   const slugName = collectionName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'photos';
+  const busyLabel = sharing ? 'Preparing…' : 'Zipping…';
   const selectedPhotos = photos.filter(p => selectedIds.has(p.id));
 
   return (
@@ -251,11 +314,11 @@ export function GalleryClient({
                 Select
               </button>
               <button
-                onClick={() => downloadPhotos(photos, slugName)}
+                onClick={() => getPhotos(photos, slugName)}
                 disabled={downloading}
                 className="text-[#666] text-xs hover:text-[#888] transition-colors disabled:opacity-50"
               >
-                {downloading ? 'Zipping…' : 'Download all'}
+                {downloading ? busyLabel : 'Download all'}
               </button>
             </>
           )}
@@ -266,7 +329,7 @@ export function GalleryClient({
       {downloading && (
         <div className="mb-4 space-y-1">
           <div className="flex justify-between text-[#555] text-xs">
-            <span>Zipping…</span>
+            <span>{busyLabel}</span>
             <div className="flex items-center gap-3">
               <span>{Math.round(zipProgress * 100)}%</span>
               <button onClick={cancelDownload} className="text-[#444] hover:text-[#666] transition-colors">
@@ -281,6 +344,15 @@ export function GalleryClient({
             />
           </div>
         </div>
+      )}
+
+      {pendingFiles.length > 0 && (
+        <button
+          onClick={retapShare}
+          className="mb-4 text-[#0f0f0f] bg-[#bbb] text-xs font-medium rounded px-4 py-2 hover:bg-white transition-colors"
+        >
+          Ready — tap to save {pendingFiles.length} photo{pendingFiles.length > 1 ? 's' : ''}
+        </button>
       )}
 
       {downloadError && <p className="text-red-500/70 text-xs mb-4">{downloadError}</p>}
@@ -322,6 +394,8 @@ export function GalleryClient({
           onClose={() => { setLightboxIndex(null); syncPhotoParam(null); }}
           onIndexChange={i => syncPhotoParam(photos[i].id)}
           showShare
+          likedIds={likedIds}
+          onToggleLike={loggedIn ? handleToggleLike : undefined}
         />
       )}
 
@@ -333,11 +407,11 @@ export function GalleryClient({
           </span>
           {selectedIds.size > 0 && (
             <button
-              onClick={() => downloadPhotos(selectedPhotos, slugName)}
+              onClick={() => getPhotos(selectedPhotos, slugName)}
               disabled={downloading}
               className="text-[#0f0f0f] bg-[#bbb] text-xs font-medium rounded px-4 py-2 hover:bg-white transition-colors disabled:opacity-50"
             >
-              {downloading ? 'Zipping…' : `Download ${selectedIds.size}`}
+              {downloading ? busyLabel : `Download ${selectedIds.size}`}
             </button>
           )}
         </div>

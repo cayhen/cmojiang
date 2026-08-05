@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import FocusTrap from 'focus-trap-react';
+import { useCanShareFiles, sharePhotos } from '@/lib/share';
 
 interface Photo { id: string; filename: string; url: string; originalUrl?: string; downloadUrl?: string; collectionId?: string; }
 
@@ -13,6 +14,10 @@ interface Props {
   onIndexChange?: (index: number) => void;
   /** Show the share button (gallery pages only — a share link makes no sense from /profile/likes). */
   showShare?: boolean;
+  /** Liked photo ids, so the heart button stays correct as you navigate. */
+  likedIds?: Set<string>;
+  /** Presence enables liking (double-tap + heart button); absence keeps double-tap as zoom. */
+  onToggleLike?: (photoId: string) => void;
 }
 
 const MAX_SCALE = 4;
@@ -25,15 +30,21 @@ const DOUBLE_TAP_MS = 300;
 interface Transform { scale: number; x: number; y: number; }
 const IDENTITY: Transform = { scale: 1, x: 0, y: 0 };
 
-export function Lightbox({ photos, initialIndex, onClose, onIndexChange, showShare }: Props) {
+export function Lightbox({ photos, initialIndex, onClose, onIndexChange, showShare, likedIds, onToggleLike }: Props) {
   const [index, setIndex] = useState(initialIndex);
   const [loaded, setLoaded] = useState(false);
   const [shared, setShared] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [heart, setHeart] = useState<'like' | 'unlike' | null>(null);
   const [transform, setTransform] = useState<Transform>(IDENTITY);
   const [gesturing, setGesturing] = useState(false);
   const photo = photos[index];
+  const canShareFiles = useCanShareFiles();
+  const canLike = !!onToggleLike;
+  const liked = likedIds?.has(photo.id) ?? false;
 
   const imgRef = useRef<HTMLImageElement>(null);
+  const heartTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const gesture = useRef({
     startTransform: IDENTITY,
@@ -60,6 +71,9 @@ export function Lightbox({ photos, initialIndex, onClose, onIndexChange, showSha
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [photos.length, onClose]);
+
+  // Clear a pending heart-burst timer if the lightbox unmounts mid-animation.
+  useEffect(() => () => { if (heartTimer.current) clearTimeout(heartTimer.current); }, []);
 
   /** Keep a zoomed image from being panned fully off-screen. */
   function clampPan(t: Transform): Transform {
@@ -171,7 +185,10 @@ export function Lightbox({ photos, initialIndex, onClose, onIndexChange, showSha
       const now = Date.now();
       if (now - g.lastTapTime < DOUBLE_TAP_MS) {
         g.lastTapTime = 0;
-        if (transform.scale > 1) {
+        if (canLike) {
+          // Double-tap likes when liking is enabled (heart-burst mirrors the grid).
+          toggleLike(true);
+        } else if (transform.scale > 1) {
           setTransform(IDENTITY);
         } else {
           // Zoom in about the tap point
@@ -195,6 +212,36 @@ export function Lightbox({ photos, initialIndex, onClose, onIndexChange, showSha
     if (pointers.current.size === 0) {
       setGesturing(false);
       if (transform.scale <= 1) setTransform(IDENTITY);
+    }
+  }
+
+  function triggerHeartBurst(kind: 'like' | 'unlike') {
+    setHeart(kind);
+    if (heartTimer.current) clearTimeout(heartTimer.current);
+    heartTimer.current = setTimeout(() => setHeart(null), 700);
+  }
+
+  // `burst` distinguishes the double-tap gesture (animates) from the action-row
+  // button (no burst) — matching the grid. `liked` is read before the toggle.
+  function toggleLike(burst: boolean) {
+    if (!onToggleLike) return;
+    if (burst) triggerHeartBurst(liked ? 'unlike' : 'like');
+    onToggleLike(photo.id);
+  }
+
+  // Adaptive "Download" on share-capable touch devices: hand the file to the OS
+  // sheet ("Save Image" → Photos, or Save to Files). Falls back to the direct
+  // download URL if the share can't be completed.
+  async function handleSave() {
+    if (!photo.downloadUrl) return;
+    setSaving(true);
+    try {
+      const result = await sharePhotos([{ filename: photo.filename, downloadUrl: photo.downloadUrl }]);
+      if (result.outcome === 'error' || result.outcome === 'no_activation') {
+        window.location.href = photo.downloadUrl;
+      }
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -223,7 +270,7 @@ export function Lightbox({ photos, initialIndex, onClose, onIndexChange, showSha
           onClick={e => e.stopPropagation()}
         >
           <div
-            className="max-w-full overflow-hidden select-none"
+            className="relative max-w-full overflow-hidden select-none"
             style={{ touchAction: 'none' }}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
@@ -242,6 +289,21 @@ export function Lightbox({ photos, initialIndex, onClose, onIndexChange, showSha
               }}
               className={`max-h-[80vh] max-w-full object-contain ${loaded ? 'opacity-100' : 'opacity-0'}`}
             />
+            {/* Heart burst on double-tap-to-like — pink for like, gray crossed-out for unlike */}
+            {heart && (
+              <div aria-hidden className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <svg
+                  className="animate-heart-burst drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
+                  width="84" height="84" viewBox="0 0 24 24"
+                  fill={heart === 'like' ? '#ff4d6d' : '#8f8f8f'}
+                >
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                  {heart === 'unlike' && (
+                    <line x1="3.5" y1="3.5" x2="20.5" y2="20.5" stroke="#1a1a1a" strokeWidth="2.4" strokeLinecap="round" />
+                  )}
+                </svg>
+              </div>
+            )}
           </div>
           <div className="flex justify-between items-center w-full mt-4 px-2">
             <div className="flex gap-4">
@@ -262,7 +324,22 @@ export function Lightbox({ photos, initialIndex, onClose, onIndexChange, showSha
                 Next →
               </button>
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-4 items-center">
+              {canLike && (
+                <button
+                  onClick={() => toggleLike(false)}
+                  aria-label={liked ? 'Unlike photo' : 'Like photo'}
+                  className="group/heart flex items-center transition-colors"
+                >
+                  <svg
+                    width="16" height="16" viewBox="0 0 24 24"
+                    strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+                    className={`transition-colors duration-150 ${liked ? 'fill-[#ff4d6d] stroke-none' : 'fill-none stroke-[#777] group-hover/heart:stroke-[#bbb]'}`}
+                  >
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                  </svg>
+                </button>
+              )}
               {showShare && (
                 <button
                   onClick={handleShare}
@@ -273,13 +350,23 @@ export function Lightbox({ photos, initialIndex, onClose, onIndexChange, showSha
                 </button>
               )}
               {photo.downloadUrl && (
-                <a
-                  href={photo.downloadUrl}
-                  download={photo.filename}
-                  className="text-[#777] hover:text-[#bbb] text-sm transition-colors"
-                >
-                  Download
-                </a>
+                canShareFiles ? (
+                  <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="text-[#777] hover:text-[#bbb] text-sm transition-colors disabled:opacity-50"
+                  >
+                    {saving ? 'Saving…' : 'Download'}
+                  </button>
+                ) : (
+                  <a
+                    href={photo.downloadUrl}
+                    download={photo.filename}
+                    className="text-[#777] hover:text-[#bbb] text-sm transition-colors"
+                  >
+                    Download
+                  </a>
+                )
               )}
             </div>
           </div>
