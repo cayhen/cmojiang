@@ -14,6 +14,8 @@ export const redis = url && token
  */
 export const galleryPhotosKey = (collectionId: string) => `gallery:v3:${collectionId}:photos`;
 
+// Redis is an optimization, never a dependency: every call fails open so an
+// unreachable or deleted Upstash database degrades to uncached, not to a 500.
 export async function cachedFetch<T>(
   key: string,
   ttlSeconds: number,
@@ -21,15 +23,20 @@ export async function cachedFetch<T>(
 ): Promise<T> {
   if (!redis) return fetcher();
 
-  const cached = await redis.get<T>(key);
-  if (cached !== null) return cached;
+  try {
+    const cached = await redis.get<T>(key);
+    if (cached !== null) return cached;
+  } catch (err) {
+    console.error('Redis get failed:', err);
+    return fetcher();
+  }
 
   const data = await fetcher();
-  await redis.set(key, data, { ex: ttlSeconds });
+  await redis.set(key, data, { ex: ttlSeconds }).catch(err => console.error('Redis set failed:', err));
   return data;
 }
 
 export async function invalidate(key: string): Promise<void> {
   if (!redis) return;
-  await redis.del(key);
+  await redis.del(key).catch(err => console.error('Redis del failed:', err));
 }

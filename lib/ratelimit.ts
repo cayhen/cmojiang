@@ -24,14 +24,21 @@ export function getClientIp(req: NextRequest): string {
 /**
  * Enforce a rate limit for the given limiter, keyed by client IP.
  * Returns a 429 response if the limit is exceeded, otherwise null.
- * Fails open when no limiter is configured (Redis env vars absent).
+ * Fails open when no limiter is configured (Redis env vars absent) or Redis
+ * is unreachable — an outage shouldn't lock everyone out of the site.
  */
 export async function enforceRateLimit(
   req: NextRequest,
   limiter: Ratelimit | null
 ): Promise<NextResponse | null> {
   if (!limiter) return null;
-  const { success } = await limiter.limit(getClientIp(req));
+  let success: boolean;
+  try {
+    ({ success } = await limiter.limit(getClientIp(req)));
+  } catch (err) {
+    console.error('Rate limit check failed:', err);
+    return null;
+  }
   if (!success) {
     return NextResponse.json(
       { error: 'Too many attempts. Please try again later.' },

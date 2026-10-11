@@ -9,7 +9,11 @@ export async function POST(req: NextRequest) {
   // Rate limit check — runs before any expensive operations
   if (ratelimit) {
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
-    const { success } = await ratelimit.limit(ip);
+    // Fail open if Redis is unreachable — an outage shouldn't block unlocking.
+    const success = await ratelimit.limit(ip).then(r => r.success, err => {
+      console.error('Rate limit check failed:', err);
+      return true;
+    });
     if (!success) {
       return NextResponse.json(
         { error: 'Too many attempts. Try again in 15 minutes.' },
