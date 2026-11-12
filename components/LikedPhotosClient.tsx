@@ -101,7 +101,7 @@ export function LikedPhotosClient({ initialSections }: Props) {
 
   if (sections.length === 0) {
     return (
-      <p className="text-[#444] text-sm font-light">No liked photos yet. Hover a photo and tap the heart to like it.</p>
+      <p className="text-[#888] text-sm font-light">No liked photos yet. Hover a photo and tap the heart to like it.</p>
     );
   }
 
@@ -112,21 +112,21 @@ export function LikedPhotosClient({ initialSections }: Props) {
         {selectionMode ? (
           <button
             onClick={exitSelection}
-            className="text-[#666] text-xs hover:text-[#888] transition-colors"
+            className="text-[#888] text-xs hover:text-[#bbb] transition-colors"
           >
             Cancel
           </button>
         ) : (
           <button
             onClick={() => setSelectionMode(true)}
-            className="text-[#666] text-xs hover:text-[#888] transition-colors"
+            className="text-[#888] text-xs hover:text-[#bbb] transition-colors"
           >
             Select
           </button>
         )}
       </div>
 
-      {downloadError && <p className="text-red-500/70 text-xs mb-4">{downloadError}</p>}
+      {downloadError && <p className="text-[#ef4444] text-xs mb-4">{downloadError}</p>}
 
       <div className="space-y-12">
         {sections.map(section => {
@@ -139,7 +139,7 @@ export function LikedPhotosClient({ initialSections }: Props) {
             <div className="flex items-center justify-between mb-4">
               <Link
                 href={`/c/${section.collectionId}/gallery`}
-                className="text-[#555] text-xs uppercase tracking-widest hover:text-[#888] transition-colors"
+                className="text-[#888] text-xs uppercase tracking-widest hover:text-[#bbb] transition-colors"
               >
                 {section.name}
               </Link>
@@ -152,8 +152,8 @@ export function LikedPhotosClient({ initialSections }: Props) {
                         style={{ width: `${sectionProgress * 100}%` }}
                       />
                     </div>
-                    <span className="text-[#555] text-xs">{Math.round(sectionProgress * 100)}%</span>
-                    <button onClick={() => abortRef.current?.abort()} className="text-[#444] hover:text-[#666] text-xs transition-colors">
+                    <span className="text-[#888] text-xs">{Math.round(sectionProgress * 100)}%</span>
+                    <button onClick={() => abortRef.current?.abort()} className="text-[#888] hover:text-[#bbb] text-xs transition-colors">
                       Cancel
                     </button>
                   </div>
@@ -161,7 +161,7 @@ export function LikedPhotosClient({ initialSections }: Props) {
                   <button
                     onClick={() => downloadPhotos(section.photos, slug, section.collectionId)}
                     disabled={downloading !== null}
-                    className="text-[#666] text-xs hover:text-[#888] transition-colors disabled:opacity-40"
+                    className="text-[#888] text-xs hover:text-[#bbb] transition-colors disabled:opacity-40"
                   >
                     Download
                   </button>
@@ -183,8 +183,8 @@ export function LikedPhotosClient({ initialSections }: Props) {
 
       {/* Bottom bar — selection mode */}
       {selectionMode && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#111]/95 backdrop-blur-sm border-t border-[#222] px-5 py-4 flex items-center justify-between">
-          <span className="text-[#777] text-sm">
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#111]/95 backdrop-blur-sm border-t border-[#1a1a1a] px-5 py-4 flex items-center justify-between">
+          <span className="text-[#888] text-sm">
             {selectedIds.size === 0 ? 'Tap photos to select' : `${selectedIds.size} selected`}
           </span>
           {selectedIds.size > 0 && (

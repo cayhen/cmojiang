@@ -84,14 +84,14 @@ export default async function LikedPhotosPage() {
       <div className="flex justify-between items-center mb-8 sm:mb-10">
         <div className="flex items-center gap-3 sm:gap-4">
           <div className="md:hidden"><MobileNav /></div>
-          <Link href="/profile" className="hidden md:inline text-[#666] text-xs hover:text-[#777] transition-colors">← Back</Link>
+          <Link href="/profile" className="hidden md:inline text-[#888] text-xs hover:text-[#bbb] transition-colors">← Back</Link>
           <span className="text-[#bbb] text-sm font-light">Liked photos</span>
         </div>
         <div className="hidden md:block"><UserNav /></div>
       </div>
 
       {signingError ? (
-        <p className="text-[#666] text-sm">Photos are temporarily unavailable. Please try again in a moment.</p>
+        <p className="text-[#888] text-sm">Photos are temporarily unavailable. Please try again in a moment.</p>
       ) : (
         <LikedPhotosClient initialSections={sections} />
       )}

@@ -36,7 +36,7 @@ export default async function HomePage() {
         </header>
         <SearchBar collections={collections} />
         <footer className="mt-16 text-center">
-          <Link href="/admin" className="text-[#2a2a2a] text-xs hover:text-[#555] transition-colors">admin</Link>
+          <Link href="/admin" className="text-[#2a2a2a] text-xs hover:text-[#bbb] transition-colors">admin</Link>
         </footer>
       </main>
   );

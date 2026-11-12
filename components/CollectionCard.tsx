@@ -25,11 +25,11 @@ export function CollectionCard({ id, name, photo_count, event_date }: Props) {
         {name}
       </p>
       <div className="flex items-center justify-between mt-1 group-hover:translate-x-1.5 transition-transform duration-200">
-        <p className="text-[#666] text-xs font-light group-hover:opacity-40 transition-opacity duration-200">
+        <p className="text-[#888] text-xs font-light">
           {photo_count} {photo_count === 1 ? 'photo' : 'photos'}
         </p>
         {event_date && (
-          <p className="text-[#444] text-xs font-light group-hover:opacity-60 transition-opacity duration-200">
+          <p className="text-[#888] text-xs font-light">
             {formatDate(event_date)}
           </p>
         )}

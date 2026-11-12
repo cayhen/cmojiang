@@ -155,12 +155,12 @@ export function LogoTitle() {
               href={activeData.href}
               target={activeData.href.startsWith('http') ? '_blank' : undefined}
               rel={activeData.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-              className="text-[#555] text-xs tracking-[0.04em] hover:text-[#777] transition-colors whitespace-nowrap"
+              className="text-[#888] text-xs tracking-[0.04em] hover:text-[#bbb] transition-colors whitespace-nowrap"
             >
               {activeData.value}
             </a>
           ) : (
-            <span className="text-[#555] text-xs tracking-[0.04em] whitespace-nowrap">{activeData?.value}</span>
+            <span className="text-[#888] text-xs tracking-[0.04em] whitespace-nowrap">{activeData?.value}</span>
           )}
         </div>
       </div>

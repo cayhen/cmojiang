@@ -68,15 +68,15 @@ export function CommentSection({ collectionId, initialComments, currentUsername,
 
 
       {comments.length === 0 && (
-        <p className="text-[#666] text-sm font-light mb-4">No comments yet.</p>
+        <p className="text-[#888] text-sm font-light mb-4">No comments yet.</p>
       )}
 
       <div className="space-y-4 mb-6">
         {comments.map(c => (
           <div key={c.id} className="group">
             <div className="flex items-baseline justify-between">
-              <span className="text-[#777] text-xs">{c.username}</span>
-              <span className="text-[#555] text-xs">
+              <span className="text-[#888] text-xs">{c.username}</span>
+              <span className="text-[#888] text-xs">
                 {new Date(c.created_at).toLocaleDateString()}
               </span>
             </div>
@@ -85,7 +85,7 @@ export function CommentSection({ collectionId, initialComments, currentUsername,
               {currentUsername === c.username && (
                 <button
                   onClick={() => handleDelete(c.id)}
-                  className="text-[#555] hover:text-[#777] text-xs ml-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                  className="text-[#888] hover:text-[#bbb] text-xs ml-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                   aria-label="Delete comment"
                 >
                   ×
@@ -103,7 +103,7 @@ export function CommentSection({ collectionId, initialComments, currentUsername,
             placeholder="Add a comment..."
             value={newComment}
             onChange={e => setNewComment(e.target.value)}
-            className="flex-1 bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2 text-[#bbb] text-sm placeholder:text-[#666] focus:outline-none focus:border-[#2a2a2a] font-light"
+            className="flex-1 bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2 text-[#bbb] text-sm placeholder:text-[#888] focus:outline-none focus:border-[#888] font-light"
           />
           <button
             type="submit"
@@ -114,11 +114,11 @@ export function CommentSection({ collectionId, initialComments, currentUsername,
           </button>
         </form>
       ) : (
-        <p className="text-[#666] text-xs">
-          <a href="/login" className="hover:text-[#777] transition-colors">Sign in</a> to leave a comment.
+        <p className="text-[#888] text-xs">
+          <a href="/login" className="hover:text-[#bbb] transition-colors">Sign in</a> to leave a comment.
         </p>
       )}
-      {error && <p className="text-red-500/70 text-xs mt-1">{error}</p>}
+      {error && <p className="text-[#ef4444] text-xs mt-1">{error}</p>}
     </section>
   );
 }
