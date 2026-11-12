@@ -31,7 +31,7 @@ export default function SignUpPage() {
       if (res.ok) {
         window.location.href = '/';
       } else {
-        const data = await res.json();
+        const data: { error?: string } = await res.json().catch(() => ({}));
         setError(data.error ?? 'Failed to create account');
       }
     } catch {
@@ -46,7 +46,7 @@ export default function SignUpPage() {
       <div className="w-full max-w-xs">
         <div className="relative flex items-center mb-8">
           <HomeLink />
-          <p className="absolute inset-x-0 text-[#666] text-xs tracking-widest uppercase text-center font-light pointer-events-none">Create account</p>
+          <p className="absolute inset-x-0 text-[#888] text-xs tracking-widest uppercase text-center font-light pointer-events-none">Create account</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
@@ -56,7 +56,7 @@ export default function SignUpPage() {
             onChange={e => setUsername(e.target.value)}
             required
             autoFocus
-            className="w-full bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2.5 text-[#bbb] text-sm placeholder:text-[#666] focus:outline-none focus:border-[#2a2a2a] font-light"
+            className="w-full bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2.5 text-[#bbb] text-sm placeholder:text-[#888] focus:outline-none focus:border-[#888] font-light"
           />
           <input
             type="email"
@@ -64,7 +64,7 @@ export default function SignUpPage() {
             value={email}
             onChange={e => setEmail(e.target.value)}
             required
-            className="w-full bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2.5 text-[#bbb] text-sm placeholder:text-[#666] focus:outline-none focus:border-[#2a2a2a] font-light"
+            className="w-full bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2.5 text-[#bbb] text-sm placeholder:text-[#888] focus:outline-none focus:border-[#888] font-light"
           />
           <input
             type="password"
@@ -72,10 +72,10 @@ export default function SignUpPage() {
             value={password}
             onChange={e => setPassword(e.target.value)}
             required
-            className="w-full bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2.5 text-[#bbb] text-sm placeholder:text-[#666] focus:outline-none focus:border-[#2a2a2a] font-light"
+            className="w-full bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2.5 text-[#bbb] text-sm placeholder:text-[#888] focus:outline-none focus:border-[#888] font-light"
           />
           {(error || oauthError) && (
-            <p className="text-red-500/70 text-xs">{error || 'Google sign-in failed. Please try again.'}</p>
+            <p className="text-[#ef4444] text-xs">{error || 'Google sign-in failed. Please try again.'}</p>
           )}
           <button
             type="submit"
@@ -89,7 +89,7 @@ export default function SignUpPage() {
         {/* Google auth — disabled until configured
         <div className="relative flex items-center my-4">
           <div className="flex-grow border-t border-[#1a1a1a]" />
-          <span className="mx-3 text-[#444] text-xs">or</span>
+          <span className="mx-3 text-[#888] text-xs">or</span>
           <div className="flex-grow border-t border-[#1a1a1a]" />
         </div>
         <a href="/api/auth/google" className="flex items-center justify-center gap-2 w-full bg-[#161616] border border-[#1a1a1a] text-[#888] text-sm py-2.5 rounded hover:border-[#2a2a2a] hover:text-[#bbb] transition-colors">
@@ -97,9 +97,9 @@ export default function SignUpPage() {
         </a>
         */}
 
-        <p className="text-[#666] text-xs text-center mt-5">
+        <p className="text-[#888] text-xs text-center mt-5">
           Already have an account?{' '}
-          <Link href="/login" className="hover:text-[#777] transition-colors">Sign in</Link>
+          <Link href="/login" className="hover:text-[#bbb] transition-colors">Sign in</Link>
         </p>
       </div>
     </main>

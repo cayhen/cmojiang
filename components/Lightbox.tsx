@@ -311,7 +311,7 @@ export function Lightbox({ photos, initialIndex, onClose, onIndexChange, showSha
                 onClick={() => setIndex(i => Math.max(i - 1, 0))}
                 disabled={index === 0}
                 aria-label="Previous photo"
-                className="text-[#777] hover:text-[#bbb] disabled:opacity-30 text-sm transition-colors"
+                className="text-[#888] hover:text-[#bbb] disabled:opacity-30 text-sm transition-colors"
               >
                 ← Prev
               </button>
@@ -319,7 +319,7 @@ export function Lightbox({ photos, initialIndex, onClose, onIndexChange, showSha
                 onClick={() => setIndex(i => Math.min(i + 1, photos.length - 1))}
                 disabled={index === photos.length - 1}
                 aria-label="Next photo"
-                className="text-[#777] hover:text-[#bbb] disabled:opacity-30 text-sm transition-colors"
+                className="text-[#888] hover:text-[#bbb] disabled:opacity-30 text-sm transition-colors"
               >
                 Next →
               </button>
@@ -344,7 +344,7 @@ export function Lightbox({ photos, initialIndex, onClose, onIndexChange, showSha
                 <button
                   onClick={handleShare}
                   aria-label="Share photo"
-                  className="text-[#777] hover:text-[#bbb] text-sm transition-colors"
+                  className="text-[#888] hover:text-[#bbb] text-sm transition-colors"
                 >
                   {shared ? 'Copied' : 'Share'}
                 </button>
@@ -354,7 +354,7 @@ export function Lightbox({ photos, initialIndex, onClose, onIndexChange, showSha
                   <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="text-[#777] hover:text-[#bbb] text-sm transition-colors disabled:opacity-50"
+                    className="text-[#888] hover:text-[#bbb] text-sm transition-colors disabled:opacity-50"
                   >
                     {saving ? 'Saving…' : 'Download'}
                   </button>
@@ -362,7 +362,7 @@ export function Lightbox({ photos, initialIndex, onClose, onIndexChange, showSha
                   <a
                     href={photo.downloadUrl}
                     download={photo.filename}
-                    className="text-[#777] hover:text-[#bbb] text-sm transition-colors"
+                    className="text-[#888] hover:text-[#bbb] text-sm transition-colors"
                   >
                     Download
                   </a>
@@ -374,14 +374,14 @@ export function Lightbox({ photos, initialIndex, onClose, onIndexChange, showSha
         <button
           onClick={onClose}
           aria-label="Back to gallery"
-          className="absolute top-4 left-4 text-[#777] hover:text-[#bbb] text-sm transition-colors"
+          className="absolute top-4 left-4 text-[#888] hover:text-[#bbb] text-sm transition-colors"
         >
           ← Back
         </button>
         <button
           onClick={onClose}
           aria-label="Close lightbox"
-          className="absolute top-4 right-4 text-[#777] hover:text-[#bbb] text-2xl leading-none transition-colors"
+          className="absolute top-4 right-4 text-[#888] hover:text-[#bbb] text-2xl leading-none transition-colors"
         >
           ×
         </button>

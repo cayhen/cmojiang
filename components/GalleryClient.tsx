@@ -271,10 +271,10 @@ export function GalleryClient({
             aria-label="Toggle comments"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
-              className={`transition-colors duration-150 ${commentsOpen ? 'stroke-[#bbb]' : 'stroke-[#666] group-hover:stroke-[#888]'}`}>
+              className={`transition-colors duration-150 ${commentsOpen ? 'stroke-[#bbb]' : 'stroke-[#888] group-hover:stroke-[#bbb]'}`}>
               <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
             </svg>
-            <span className={`text-xs font-light transition-colors ${commentsOpen ? 'text-[#bbb]' : 'text-[#666] group-hover:text-[#888]'}`}>
+            <span className={`text-xs font-light transition-colors ${commentsOpen ? 'text-[#bbb]' : 'text-[#888] group-hover:text-[#bbb]'}`}>
               {commentCount}
             </span>
           </button>
@@ -283,7 +283,7 @@ export function GalleryClient({
           {selectionMode ? (
             <button
               onClick={exitSelection}
-              className="text-[#666] text-xs hover:text-[#888] transition-colors"
+              className="text-[#888] text-xs hover:text-[#bbb] transition-colors"
             >
               Cancel
             </button>
@@ -309,14 +309,14 @@ export function GalleryClient({
               </div>
               <button
                 onClick={() => setSelectionMode(true)}
-                className="text-[#666] text-xs hover:text-[#888] transition-colors"
+                className="text-[#888] text-xs hover:text-[#bbb] transition-colors"
               >
                 Select
               </button>
               <button
                 onClick={() => getPhotos(photos, slugName)}
                 disabled={downloading}
-                className="text-[#666] text-xs hover:text-[#888] transition-colors disabled:opacity-50"
+                className="text-[#888] text-xs hover:text-[#bbb] transition-colors disabled:opacity-50"
               >
                 {downloading ? busyLabel : 'Download all'}
               </button>
@@ -328,11 +328,11 @@ export function GalleryClient({
       {/* Zip progress bar */}
       {downloading && (
         <div className="mb-4 space-y-1">
-          <div className="flex justify-between text-[#555] text-xs">
+          <div className="flex justify-between text-[#888] text-xs">
             <span>{busyLabel}</span>
             <div className="flex items-center gap-3">
               <span>{Math.round(zipProgress * 100)}%</span>
-              <button onClick={cancelDownload} className="text-[#444] hover:text-[#666] transition-colors">
+              <button onClick={cancelDownload} className="text-[#888] hover:text-[#bbb] transition-colors">
                 Cancel
               </button>
             </div>
@@ -355,7 +355,7 @@ export function GalleryClient({
         </button>
       )}
 
-      {downloadError && <p className="text-red-500/70 text-xs mb-4">{downloadError}</p>}
+      {downloadError && <p className="text-[#ef4444] text-xs mb-4">{downloadError}</p>}
 
       {/* Comments — expands above grid */}
       {commentsOpen && (
@@ -369,7 +369,7 @@ export function GalleryClient({
 
       {/* Grid */}
       {photos.length === 0 ? (
-        <p className="text-[#555] text-sm font-light mt-4">No photos yet.</p>
+        <p className="text-[#888] text-sm font-light mt-4">No photos yet.</p>
       ) : (
         <>
           <MasonryGrid
@@ -401,8 +401,8 @@ export function GalleryClient({
 
       {/* Bottom bar — selection mode */}
       {selectionMode && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#111]/95 backdrop-blur-sm border-t border-[#222] px-5 py-4 flex items-center justify-between">
-          <span className="text-[#777] text-sm">
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#111]/95 backdrop-blur-sm border-t border-[#1a1a1a] px-5 py-4 flex items-center justify-between">
+          <span className="text-[#888] text-sm">
             {selectedIds.size === 0 ? 'Tap photos to select' : `${selectedIds.size} selected`}
           </span>
           {selectedIds.size > 0 && (

@@ -28,7 +28,7 @@ export default function NewCollectionPage() {
       if (res.ok) {
         window.location.href = '/admin/dashboard';
       } else {
-        const data = await res.json();
+        const data: { error?: string } = await res.json().catch(() => ({}));
         setError(data.error ?? 'Failed to create');
       }
     } catch {
@@ -41,10 +41,10 @@ export default function NewCollectionPage() {
   return (
     <main className="min-h-screen p-8 max-w-md mx-auto">
       <div className="flex items-center gap-4 mb-8">
-        <Link href="/admin/dashboard" className="text-[#666] text-xs hover:text-[#777]">
+        <Link href="/admin/dashboard" className="text-[#888] text-xs hover:text-[#bbb]">
           ← Back
         </Link>
-        <p className="text-[#666] text-xs tracking-widest uppercase font-light">New Collection</p>
+        <p className="text-[#888] text-xs tracking-widest uppercase font-light">New Collection</p>
       </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
@@ -53,7 +53,7 @@ export default function NewCollectionPage() {
           value={name}
           onChange={e => setName(e.target.value)}
           required
-          className="w-full bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2.5 text-[#bbb] text-sm placeholder:text-[#666] focus:outline-none focus:border-[#2a2a2a] font-light"
+          className="w-full bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2.5 text-[#bbb] text-sm placeholder:text-[#888] focus:outline-none focus:border-[#888] font-light"
         />
         <input
           type="password"
@@ -61,19 +61,19 @@ export default function NewCollectionPage() {
           value={password}
           onChange={e => setPassword(e.target.value)}
           required
-          className="w-full bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2.5 text-[#bbb] text-sm placeholder:text-[#666] focus:outline-none focus:border-[#2a2a2a] font-light"
+          className="w-full bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2.5 text-[#bbb] text-sm placeholder:text-[#888] focus:outline-none focus:border-[#888] font-light"
         />
         <div>
-          <label className="text-[#555] text-xs uppercase tracking-widest block mb-1.5">Event date</label>
+          <label className="text-[#888] text-xs uppercase tracking-widest block mb-1.5">Event date</label>
           <input
             type="date"
             value={eventDate}
             onChange={e => setEventDate(e.target.value)}
             required
-            className="w-full bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2.5 text-[#bbb] text-sm focus:outline-none focus:border-[#2a2a2a] font-light"
+            className="w-full bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2.5 text-[#bbb] text-sm focus:outline-none focus:border-[#888] font-light"
           />
         </div>
-        {error && <p className="text-red-500/70 text-xs">{error}</p>}
+        {error && <p className="text-[#ef4444] text-xs">{error}</p>}
         <button
           type="submit"
           disabled={loading}

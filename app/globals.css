@@ -3,27 +3,23 @@
 @tailwind utilities;
 
 @font-face {
-  font-family: 'Nevanta';
-  src: url('/fonts/NevantaBlack.otf') format('opentype');
-  font-weight: 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Nevanta';
-  src: url('/fonts/NevantaExtraBold.otf') format('opentype');
-  font-weight: 800;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
   font-family: 'Rogeta';
   src: url('/fonts/RogetaBlack.ttf') format('truetype');
   font-weight: 400 900;
   font-style: normal;
   font-display: block;
+}
+
+/* Visible, on-palette focus for every keyboard-reachable control.
+   Fields opt out with focus:outline-none and brighten their border instead. */
+:focus-visible {
+  outline: 1px solid #bbb;
+  outline-offset: 2px;
+}
+
+::selection {
+  background: #bbb;
+  color: #080808;
 }
 
 body::after {

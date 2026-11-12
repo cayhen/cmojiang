@@ -64,8 +64,11 @@ export function UnlockForm({ collectionId }: { collectionId: string }) {
         return;
       }
 
-      const data = await res.json();
-      setError(data.error ?? 'Something went wrong');
+      // A server crash returns an empty or HTML body, so don't assume JSON.
+      const data: { error?: string } = await res.json().catch(() => ({}));
+      setError(data.error ?? "Couldn't unlock this collection. Please try again.");
+    } catch {
+      setError('Network error. Check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -97,13 +100,13 @@ export function UnlockForm({ collectionId }: { collectionId: string }) {
           value={password}
           onChange={e => setPassword(e.target.value)}
           required
-          className="w-full bg-[#161616] border border-[#1e1e1e] rounded px-3 py-2.5 text-[#bbb] text-sm placeholder:text-[#666] focus:outline-none focus:border-[#2a2a2a] font-light"
+          className="w-full bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2.5 text-[#bbb] text-sm placeholder:text-[#888] focus:outline-none focus:border-[#888] font-light"
         />
-        {error && <p className="text-red-500/70 text-xs">{error}</p>}
+        {error && <p className="text-[#ef4444] text-xs">{error}</p>}
         <button
           type="submit"
           disabled={loading || phase !== 'idle'}
-          className="w-full bg-[#161616] border border-[#1e1e1e] text-[#888] text-sm py-2.5 rounded hover:border-[#2a2a2a] hover:text-[#bbb] transition-colors disabled:opacity-50"
+          className="w-full bg-[#161616] border border-[#1a1a1a] text-[#888] text-sm py-2.5 rounded hover:border-[#2a2a2a] hover:text-[#bbb] transition-colors disabled:opacity-50"
         >
           {loading ? 'Checking...' : 'Unlock'}
         </button>

@@ -124,14 +124,14 @@ export default async function GalleryPage({ params }: { params: { id: string } }
           <div className="hidden md:block"><HomeLink /></div>
           <div>
             <h1 className="text-[#bbb] font-light text-sm leading-tight">{collection.name}</h1>
-            <p className="text-[#444] text-xs font-light leading-tight mt-0.5">{photosWithUrls.length} {photosWithUrls.length === 1 ? 'photo' : 'photos'}</p>
+            <p className="text-[#888] text-xs font-light leading-tight mt-0.5">{photosWithUrls.length} {photosWithUrls.length === 1 ? 'photo' : 'photos'}</p>
           </div>
         </div>
         <div className="hidden md:block"><UserNav /></div>
       </div>
 
       {signingError ? (
-        <p className="text-[#666] text-sm">Photos are temporarily unavailable. Please try again in a moment.</p>
+        <p className="text-[#888] text-sm">Photos are temporarily unavailable. Please try again in a moment.</p>
       ) : (
         <GalleryClient
           collectionId={params.id}

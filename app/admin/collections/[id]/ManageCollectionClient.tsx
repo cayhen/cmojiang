@@ -352,41 +352,41 @@ export function ManageCollectionClient({
     <main className="min-h-screen p-10 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <Link href="/admin/dashboard" className="text-[#666] text-xs hover:text-[#777]">← Back</Link>
+          <Link href="/admin/dashboard" className="text-[#888] text-xs hover:text-[#bbb]">← Back</Link>
           <div>
             <p className="text-[#bbb] text-sm font-light">{collection.name}</p>
             {collection.password_plain && (
-              <p className="text-[#555] text-xs mt-0.5">password: {collection.password_plain}</p>
+              <p className="text-[#888] text-xs mt-0.5">password: {collection.password_plain}</p>
             )}
           </div>
         </div>
         <div className="flex flex-col items-end gap-1">
           <Link
             href={`/c/${collection.id}/gallery`}
-            className="text-[#555] text-xs hover:text-[#888] transition-colors"
+            className="text-[#888] text-xs hover:text-[#bbb] transition-colors"
           >
             View gallery →
           </Link>
           <button
             onClick={handleCopyInvite}
-            className="text-[#555] text-xs hover:text-[#888] transition-colors"
+            className="text-[#888] text-xs hover:text-[#bbb] transition-colors"
           >
             Copy invite link
           </button>
         </div>
       </div>
-      {inviteMsg && <p className="text-[#777] text-xs -mt-6 mb-8 text-right">{inviteMsg}</p>}
+      {inviteMsg && <p className="text-[#888] text-xs -mt-6 mb-8 text-right">{inviteMsg}</p>}
 
       {/* Upload */}
       <section className="mb-8">
-        <p className="text-[#666] text-xs uppercase tracking-widest mb-3">Upload Photos</p>
+        <p className="text-[#888] text-xs uppercase tracking-widest mb-3">Upload Photos</p>
         <div
           className="border border-dashed border-[#2a2a2a] rounded p-8 text-center cursor-pointer hover:border-[#3a3a3a] transition-colors"
           onClick={() => fileInputRef.current?.click()}
           onDragOver={e => e.preventDefault()}
           onDrop={e => { e.preventDefault(); handleUpload(e.dataTransfer.files); }}
         >
-          <p className="text-[#666] text-sm font-light">
+          <p className="text-[#888] text-sm font-light">
             {uploading ? (uploadStatus || 'Uploading…') : 'Drag photos here or click to select'}
           </p>
           <input
@@ -400,7 +400,7 @@ export function ManageCollectionClient({
         </div>
         {uploading && (
           <div className="mt-3 space-y-1">
-            <div className="flex justify-between text-[#555] text-xs">
+            <div className="flex justify-between text-[#888] text-xs">
               <span>{uploadStatus || 'Uploading…'}</span>
               <span>{Math.round(uploadProgress * 100)}%</span>
             </div>
@@ -413,7 +413,7 @@ export function ManageCollectionClient({
           </div>
         )}
         {uploadErrors.map((err, i) => (
-          <p key={i} className="text-red-500/70 text-xs mt-1">{err}</p>
+          <p key={i} className="text-[#ef4444] text-xs mt-1">{err}</p>
         ))}
       </section>
 
@@ -424,8 +424,8 @@ export function ManageCollectionClient({
             onClick={() => setPhotosOpen(o => !o)}
             className="flex items-center gap-2 group"
           >
-            <p className="text-[#666] text-xs uppercase tracking-widest">Photos ({photos.length})</p>
-            <span className="text-[#444] text-xs group-hover:text-[#666] transition-colors">{photosOpen ? '▼' : '▶'}</span>
+            <p className="text-[#888] text-xs uppercase tracking-widest">Photos ({photos.length})</p>
+            <span className="text-[#888] text-xs group-hover:text-[#bbb] transition-colors">{photosOpen ? '▼' : '▶'}</span>
           </button>
           {photosOpen && photos.length > 0 && (
             <div className="flex items-center gap-4">
@@ -433,7 +433,7 @@ export function ManageCollectionClient({
                 <>
                   <button
                     onClick={() => setSelectedPhotoIds(new Set(photos.map(p => p.id)))}
-                    className="text-[#666] text-xs hover:text-[#888] transition-colors"
+                    className="text-[#888] text-xs hover:text-[#bbb] transition-colors"
                   >
                     Select all
                   </button>
@@ -441,14 +441,14 @@ export function ManageCollectionClient({
                     <button
                       onClick={handleBulkDelete}
                       disabled={bulkDeleting}
-                      className="text-red-500/60 text-xs hover:text-red-500/80 transition-colors disabled:opacity-50"
+                      className="text-[#ef4444] text-xs hover:text-[#f87171] transition-colors disabled:opacity-50"
                     >
                       {bulkDeleting ? 'Deleting…' : `Delete ${selectedPhotoIds.size}`}
                     </button>
                   )}
                   <button
                     onClick={exitSelectMode}
-                    className="text-[#666] text-xs hover:text-[#888] transition-colors"
+                    className="text-[#888] text-xs hover:text-[#bbb] transition-colors"
                   >
                     Cancel
                   </button>
@@ -456,7 +456,7 @@ export function ManageCollectionClient({
               ) : (
                 <button
                   onClick={() => setSelectMode(true)}
-                  className="text-[#666] text-xs hover:text-[#888] transition-colors"
+                  className="text-[#888] text-xs hover:text-[#bbb] transition-colors"
                 >
                   Select
                 </button>
@@ -502,7 +502,7 @@ export function ManageCollectionClient({
 
       {/* Rename */}
       <section className="mb-8">
-        <p className="text-[#666] text-xs uppercase tracking-widest mb-3">Rename</p>
+        <p className="text-[#888] text-xs uppercase tracking-widest mb-3">Rename</p>
         <form onSubmit={handleNameUpdate} className="flex gap-2">
           <input
             type="text"
@@ -510,7 +510,7 @@ export function ManageCollectionClient({
             value={newName}
             onChange={e => setNewName(e.target.value)}
             required
-            className="flex-1 bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2 text-[#bbb] text-sm placeholder:text-[#444] focus:outline-none focus:border-[#2a2a2a] font-light"
+            className="flex-1 bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2 text-[#bbb] text-sm placeholder:text-[#888] focus:outline-none focus:border-[#888] font-light"
           />
           <button
             type="submit"
@@ -519,19 +519,19 @@ export function ManageCollectionClient({
             Update
           </button>
         </form>
-        {nameMsg && <p className="text-[#777] text-xs mt-1">{nameMsg}</p>}
+        {nameMsg && <p className="text-[#888] text-xs mt-1">{nameMsg}</p>}
       </section>
 
       {/* Event date */}
       <section className="mb-8">
-        <p className="text-[#666] text-xs uppercase tracking-widest mb-3">Event Date</p>
+        <p className="text-[#888] text-xs uppercase tracking-widest mb-3">Event Date</p>
         <form onSubmit={handleDateUpdate} className="flex gap-2">
           <input
             type="date"
             value={eventDate}
             onChange={e => setEventDate(e.target.value)}
             required
-            className="flex-1 bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2 text-[#bbb] text-sm focus:outline-none focus:border-[#2a2a2a] font-light"
+            className="flex-1 bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2 text-[#bbb] text-sm focus:outline-none focus:border-[#888] font-light"
           />
           <button
             type="submit"
@@ -540,12 +540,12 @@ export function ManageCollectionClient({
             Update
           </button>
         </form>
-        {dateMsg && <p className="text-[#777] text-xs mt-1">{dateMsg}</p>}
+        {dateMsg && <p className="text-[#888] text-xs mt-1">{dateMsg}</p>}
       </section>
 
       {/* Change password */}
       <section className="mb-8">
-        <p className="text-[#666] text-xs uppercase tracking-widest mb-3">Change Password</p>
+        <p className="text-[#888] text-xs uppercase tracking-widest mb-3">Change Password</p>
         <form onSubmit={handlePasswordUpdate} className="flex gap-2">
           <input
             type="password"
@@ -553,7 +553,7 @@ export function ManageCollectionClient({
             value={newPassword}
             onChange={e => setNewPassword(e.target.value)}
             required
-            className="flex-1 bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2 text-[#bbb] text-sm placeholder:text-[#666] focus:outline-none focus:border-[#2a2a2a] font-light"
+            className="flex-1 bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2 text-[#bbb] text-sm placeholder:text-[#888] focus:outline-none focus:border-[#888] font-light"
           />
           <button
             type="submit"
@@ -562,14 +562,14 @@ export function ManageCollectionClient({
             Update
           </button>
         </form>
-        {passwordMsg && <p className="text-[#777] text-xs mt-1">{passwordMsg}</p>}
+        {passwordMsg && <p className="text-[#888] text-xs mt-1">{passwordMsg}</p>}
       </section>
 
       {/* Visibility */}
       <section className="mb-8">
-        <p className="text-[#666] text-xs uppercase tracking-widest mb-3">Visibility</p>
+        <p className="text-[#888] text-xs uppercase tracking-widest mb-3">Visibility</p>
         <div className="flex items-center justify-between">
-          <p className="text-[#777] text-sm font-light">
+          <p className="text-[#888] text-sm font-light">
             {isPrivate ? 'Hidden — not shown on home page' : 'Public — visible on home page'}
           </p>
           <button
@@ -583,14 +583,14 @@ export function ManageCollectionClient({
             {isPrivate ? 'Make public' : 'Make private'}
           </button>
         </div>
-        {privacyMsg && <p className="text-[#777] text-xs mt-2">{privacyMsg}</p>}
+        {privacyMsg && <p className="text-[#888] text-xs mt-2">{privacyMsg}</p>}
       </section>
 
       {/* Delete collection */}
       <section>
         <button
           onClick={handleDeleteCollection}
-          className="text-red-500/50 text-xs hover:text-red-500/70 transition-colors"
+          className="text-[#ef4444] text-xs hover:text-[#f87171] transition-colors"
         >
           Delete collection
         </button>

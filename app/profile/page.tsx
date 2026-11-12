@@ -57,7 +57,7 @@ export default async function ProfilePage() {
 
       <Link
         href="/profile/likes"
-        className="flex items-center justify-between py-3 mb-8 border border-[#1e1e1e] hover:border-[#2a2a2a] rounded px-4 transition-colors group"
+        className="flex items-center justify-between py-3 mb-8 border border-[#1a1a1a] hover:border-[#2a2a2a] rounded px-4 transition-colors group"
       >
         <div className="flex items-center gap-2.5">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="#ff4d6d" aria-hidden>
@@ -65,15 +65,15 @@ export default async function ProfilePage() {
           </svg>
           <span className="text-[#bbb] text-sm font-light group-hover:text-white transition-colors">Liked Photos</span>
         </div>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#444] group-hover:text-[#777] transition-colors" aria-hidden>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#888] group-hover:text-[#bbb] transition-colors" aria-hidden>
           <path d="M9 18l6-6-6-6" />
         </svg>
       </Link>
 
-      <p className="text-[#555] text-xs uppercase tracking-widest mb-4">Unlocked Collections</p>
+      <p className="text-[#888] text-xs uppercase tracking-widest mb-4">Unlocked Collections</p>
 
       {collections.length === 0 ? (
-        <p className="text-[#444] text-sm font-light">No collections unlocked yet.</p>
+        <p className="text-[#888] text-sm font-light">No collections unlocked yet.</p>
       ) : (
         <div className="space-y-px">
           {collections.map(c => (
@@ -85,7 +85,7 @@ export default async function ProfilePage() {
               <span className="text-[#bbb] text-sm font-light group-hover:text-white transition-colors">
                 {c.name}
               </span>
-              <span className="text-[#444] text-xs">
+              <span className="text-[#888] text-xs">
                 {c.photoCount} {c.photoCount === 1 ? 'photo' : 'photos'}
               </span>
             </Link>

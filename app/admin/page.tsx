@@ -37,8 +37,8 @@ export default function AdminSignIn() {
     <main className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-xs">
         <div className="relative flex items-center mb-8">
-          <Link href="/" className="text-[#555] text-xs hover:text-[#777] transition-colors">← Home</Link>
-          <p className="absolute inset-x-0 text-[#666] text-xs tracking-widest uppercase text-center font-light pointer-events-none">Admin</p>
+          <Link href="/" className="text-[#888] text-xs hover:text-[#bbb] transition-colors">← Home</Link>
+          <p className="absolute inset-x-0 text-[#888] text-xs tracking-widest uppercase text-center font-light pointer-events-none">Admin</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
@@ -48,9 +48,9 @@ export default function AdminSignIn() {
             onChange={e => setPassword(e.target.value)}
             required
             autoFocus
-            className="w-full bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2.5 text-[#bbb] text-sm placeholder:text-[#666] focus:outline-none focus:border-[#2a2a2a] font-light"
+            className="w-full bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2.5 text-[#bbb] text-sm placeholder:text-[#888] focus:outline-none focus:border-[#888] font-light"
           />
-          {error && <p className="text-red-500/70 text-xs">{error}</p>}
+          {error && <p className="text-[#ef4444] text-xs">{error}</p>}
           <button
             type="submit"
             disabled={loading}

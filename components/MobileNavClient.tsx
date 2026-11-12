@@ -48,10 +48,10 @@ export function MobileNavClient({ username }: { username: string | null }) {
         <FocusTrap focusTrapOptions={{ clickOutsideDeactivates: false, escapeDeactivates: false }}>
           <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Navigation">
             <div className="absolute inset-0 bg-black/60" onClick={close} />
-            <nav className="animate-slide-in-left absolute top-0 left-0 h-full w-64 max-w-[80vw] bg-[#111] border-r border-[#222] flex flex-col p-6">
+            <nav className="animate-slide-in-left absolute top-0 left-0 h-full w-64 max-w-[80vw] bg-[#111] border-r border-[#1a1a1a] flex flex-col p-6">
               <div className="flex items-center justify-between mb-8">
-                <span className="text-[#555] text-xs uppercase tracking-widest truncate pr-2">{username ?? 'Menu'}</span>
-                <button onClick={close} aria-label="Close menu" className="text-[#777] hover:text-[#bbb] text-2xl leading-none shrink-0">×</button>
+                <span className="text-[#888] text-xs uppercase tracking-widest truncate pr-2">{username ?? 'Menu'}</span>
+                <button onClick={close} aria-label="Close menu" className="text-[#888] hover:text-[#bbb] text-2xl leading-none shrink-0">×</button>
               </div>
               <div className="flex flex-col">
                 <NavLink href="/" onNavigate={close}>Home</NavLink>
@@ -67,10 +67,7 @@ export function MobileNavClient({ username }: { username: string | null }) {
                     </button>
                   </>
                 ) : (
-                  <>
-                    <NavLink href="/login" onNavigate={close}>Sign in</NavLink>
-                    <NavLink href="/signup" onNavigate={close}>Create account</NavLink>
-                  </>
+                  <NavLink href="/login" onNavigate={close}>Sign in</NavLink>
                 )}
               </div>
             </nav>
