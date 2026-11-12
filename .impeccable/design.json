@@ -1,0 +1,407 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-11T00:00:00Z",
+  "title": "Design System: cmojiang",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "tonalRamp": [
+          "#080808",
+          "#111111",
+          "#1a1a1a",
+          "#2a2a2a",
+          "#444444",
+          "#666666",
+          "#888888",
+          "#bbbbbb"
+        ]
+      },
+      "ink-raised": {
+        "role": "neutral",
+        "displayName": "Raised Ink",
+        "tonalRamp": [
+          "#080808",
+          "#111111",
+          "#1a1a1a",
+          "#2a2a2a",
+          "#444444",
+          "#666666",
+          "#888888",
+          "#bbbbbb"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "tonalRamp": [
+          "#080808",
+          "#111111",
+          "#1a1a1a",
+          "#2a2a2a",
+          "#444444",
+          "#666666",
+          "#888888",
+          "#bbbbbb"
+        ]
+      },
+      "surface-field": {
+        "role": "neutral",
+        "displayName": "Field",
+        "tonalRamp": [
+          "#080808",
+          "#111111",
+          "#1a1a1a",
+          "#2a2a2a",
+          "#444444",
+          "#666666",
+          "#888888",
+          "#bbbbbb"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "tonalRamp": [
+          "#080808",
+          "#111111",
+          "#1a1a1a",
+          "#2a2a2a",
+          "#444444",
+          "#666666",
+          "#888888",
+          "#bbbbbb"
+        ]
+      },
+      "line-active": {
+        "role": "neutral",
+        "displayName": "Active Hairline",
+        "tonalRamp": [
+          "#080808",
+          "#111111",
+          "#1a1a1a",
+          "#2a2a2a",
+          "#444444",
+          "#666666",
+          "#888888",
+          "#bbbbbb"
+        ]
+      },
+      "wordmark": {
+        "role": "neutral",
+        "displayName": "Wordmark Bone",
+        "tonalRamp": [
+          "#111111",
+          "#1a1a1a",
+          "#2a2a2a",
+          "#444444",
+          "#666666",
+          "#888888",
+          "#bbbbbb",
+          "#d8d8d6"
+        ]
+      },
+      "text-primary": {
+        "role": "neutral",
+        "displayName": "Primary Text",
+        "tonalRamp": [
+          "#111111",
+          "#1a1a1a",
+          "#2a2a2a",
+          "#444444",
+          "#666666",
+          "#888888",
+          "#bbbbbb",
+          "#d8d8d6"
+        ]
+      },
+      "text-secondary": {
+        "role": "neutral",
+        "displayName": "Secondary Text",
+        "tonalRamp": [
+          "#111111",
+          "#1a1a1a",
+          "#2a2a2a",
+          "#444444",
+          "#666666",
+          "#888888",
+          "#bbbbbb",
+          "#d8d8d6"
+        ]
+      },
+      "text-tertiary": {
+        "role": "neutral",
+        "displayName": "Tertiary Text",
+        "tonalRamp": [
+          "#111111",
+          "#1a1a1a",
+          "#2a2a2a",
+          "#444444",
+          "#666666",
+          "#888888",
+          "#bbbbbb",
+          "#d8d8d6"
+        ]
+      },
+      "icon-muted": {
+        "role": "neutral",
+        "displayName": "Muted Icon",
+        "tonalRamp": [
+          "#111111",
+          "#1a1a1a",
+          "#2a2a2a",
+          "#444444",
+          "#666666",
+          "#888888",
+          "#bbbbbb",
+          "#d8d8d6"
+        ]
+      },
+      "decor-faint": {
+        "role": "neutral",
+        "displayName": "Faint",
+        "tonalRamp": [
+          "#111111",
+          "#1a1a1a",
+          "#2a2a2a",
+          "#444444",
+          "#666666",
+          "#888888",
+          "#bbbbbb",
+          "#d8d8d6"
+        ]
+      },
+      "white": {
+        "role": "neutral",
+        "displayName": "White",
+        "tonalRamp": [
+          "#111111",
+          "#1a1a1a",
+          "#2a2a2a",
+          "#444444",
+          "#666666",
+          "#888888",
+          "#bbbbbb",
+          "#d8d8d6"
+        ]
+      },
+      "heart": {
+        "role": "primary",
+        "displayName": "Heart Pink",
+        "tonalRamp": [
+          "#3d0a14",
+          "#6b1426",
+          "#9c1f39",
+          "#cf2d50",
+          "#ff4d6d",
+          "#ff7a90",
+          "#ffa8b6",
+          "#ffd6dc"
+        ]
+      },
+      "error": {
+        "role": "error",
+        "displayName": "Error",
+        "tonalRamp": [
+          "#450a0a",
+          "#7f1d1d",
+          "#991b1b",
+          "#b91c1c",
+          "#dc2626",
+          "#ef4444",
+          "#f87171",
+          "#fecaca"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Wordmark",
+        "purpose": "The cmojiang wordmark only."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Collection name on the unlock page."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Collection names on cards and gallery header."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Comments, fields, buttons, states."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Counts, dates, timestamps, gallery text actions."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Uppercase tracked section labels."
+      },
+      "button-strong": {
+        "displayName": "Button Strong",
+        "purpose": "The single solid primary action."
+      }
+    },
+    "shadows": [
+      {
+        "name": "icon-lift",
+        "value": "drop-shadow(0 1px 2px rgba(0,0,0,0.8))",
+        "purpose": "Keeps white/pink icons legible over photos."
+      },
+      {
+        "name": "icon-lift-burst",
+        "value": "drop-shadow(0 1px 3px rgba(0,0,0,0.6))",
+        "purpose": "Heart burst over photos."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state",
+        "value": "150ms ease",
+        "purpose": "Color and border changes on hover/focus."
+      },
+      {
+        "name": "image-fade",
+        "value": "300ms ease",
+        "purpose": "Photo fade-in after load."
+      },
+      {
+        "name": "drawer",
+        "value": "250ms ease-out",
+        "purpose": "Mobile nav slide-in."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Default button for Unlock, Sign in, Google, Post.",
+      "html": "<button class=\"ds-btn-secondary\">Unlock</button>",
+      "css": ".ds-btn-secondary { background: #161616; color: #888888; border: 1px solid #1a1a1a; border-radius: 4px; padding: 10px 16px; font: 300 14px/20px 'DM Sans', system-ui, sans-serif; cursor: pointer; transition: color .15s, border-color .15s; } .ds-btn-secondary:hover { color: #bbbbbb; border-color: #2a2a2a; } .ds-btn-secondary:focus-visible { outline: 1px solid #bbbbbb; outline-offset: 2px; } .ds-btn-secondary:disabled { opacity: .5; }"
+    },
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single most important action in context, e.g. Download N.",
+      "html": "<button class=\"ds-btn-primary\">Download 12</button>",
+      "css": ".ds-btn-primary { background: #bbbbbb; color: #0f0f0f; border: none; border-radius: 4px; padding: 8px 16px; font: 500 12px/16px 'DM Sans', system-ui, sans-serif; cursor: pointer; transition: background .15s; } .ds-btn-primary:hover { background: #ffffff; } .ds-btn-primary:focus-visible { outline: 1px solid #bbbbbb; outline-offset: 2px; } .ds-btn-primary:disabled { opacity: .5; }"
+    },
+    {
+      "name": "Text Action",
+      "kind": "button",
+      "refersTo": "text-action",
+      "description": "Box-less control used for gallery and lightbox actions.",
+      "html": "<button class=\"ds-text-action\">Download all</button>",
+      "css": ".ds-text-action { background: none; border: none; padding: 0; color: #888888; font: 300 12px/16px 'DM Sans', system-ui, sans-serif; cursor: pointer; transition: color .15s; } .ds-text-action:hover { color: #bbbbbb; } .ds-text-action:focus-visible { outline: 1px solid #bbbbbb; outline-offset: 2px; border-radius: 2px; } .ds-text-action:disabled { opacity: .4; }"
+    },
+    {
+      "name": "Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Text, password, and search fields.",
+      "html": "<input class=\"ds-input\" type=\"password\" placeholder=\"Enter password\" />",
+      "css": ".ds-input { width: 100%; background: #161616; color: #bbbbbb; border: 1px solid #1a1a1a; border-radius: 4px; padding: 10px 12px; font: 300 14px/20px 'DM Sans', system-ui, sans-serif; transition: border-color .15s; } .ds-input::placeholder { color: #888888; } .ds-input:hover { border-color: #2a2a2a; } .ds-input:focus-visible { outline: none; border-color: #888888; }"
+    },
+    {
+      "name": "Collection Card",
+      "kind": "card",
+      "refersTo": "card-collection",
+      "description": "Home page entry for one event collection.",
+      "html": "<a class=\"ds-card\" href=\"#\"><span class=\"ds-card-name\">Spring Formal</span><span class=\"ds-card-meta\"><span>84 photos</span><span>Apr 2026</span></span></a>",
+      "css": ".ds-card { display: block; background: #161616; border: 1px solid #1a1a1a; border-radius: 4px; padding: 16px; text-decoration: none; font-family: 'DM Sans', system-ui, sans-serif; transition: border-color .15s; } .ds-card:hover { border-color: #2a2a2a; } .ds-card:focus-visible { outline: 1px solid #bbbbbb; outline-offset: 2px; } .ds-card-name { display: block; color: #bbbbbb; font-size: 14px; font-weight: 300; line-height: 1.25; } .ds-card-meta { display: flex; justify-content: space-between; margin-top: 4px; color: #888888; font-size: 12px; font-weight: 300; }"
+    },
+    {
+      "name": "Drawer Nav",
+      "kind": "nav",
+      "description": "Mobile slide-out navigation drawer.",
+      "html": "<nav class=\"ds-drawer\"><span class=\"ds-drawer-label\">caden</span><a class=\"ds-drawer-link\" href=\"#\">Home</a><a class=\"ds-drawer-link\" href=\"#\">Liked photos</a><a class=\"ds-drawer-link\" href=\"#\">Sign out</a></nav>",
+      "css": ".ds-drawer { width: 256px; background: #111111; border-right: 1px solid #1a1a1a; padding: 24px; display: flex; flex-direction: column; font-family: 'DM Sans', system-ui, sans-serif; } .ds-drawer-label { color: #888888; font-size: 12px; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 32px; } .ds-drawer-link { color: #bbbbbb; text-decoration: none; font-size: 16px; font-weight: 300; padding: 12px 0; border-bottom: 1px solid #1a1a1a; transition: color .15s; } .ds-drawer-link:hover { color: #ffffff; } .ds-drawer-link:focus-visible { outline: 1px solid #bbbbbb; outline-offset: 2px; }"
+    },
+    {
+      "name": "Like Heart",
+      "kind": "custom",
+      "description": "Per-photo like toggle; the only use of Heart Pink.",
+      "html": "<button class=\"ds-heart\" aria-pressed=\"true\" aria-label=\"Unlike\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\"><path d=\"M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.1 5.2 3 1.6-1.9 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z\"/></svg></button><button class=\"ds-heart\" aria-pressed=\"false\" aria-label=\"Like\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\"><path d=\"M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.1 5.2 3 1.6-1.9 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z\"/></svg></button>",
+      "css": ".ds-heart { background: none; border: none; padding: 4px; cursor: pointer; } .ds-heart svg path { fill: none; stroke: #888888; stroke-width: 1.5; transition: fill .15s, stroke .15s; } .ds-heart:hover svg path { stroke: #bbbbbb; } .ds-heart[aria-pressed=\"true\"] svg path { fill: #ff4d6d; stroke: none; } .ds-heart:focus-visible { outline: 1px solid #bbbbbb; outline-offset: 2px; border-radius: 4px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Fine Instrument",
+    "overview": "cmojiang should feel like a well-made instrument: sleek and high quality, with few controls, each built very well. The photographs supply all the color and all the life. The interface is a near-black field of greys that holds them and then gets out of the way. Its quality shows in precision rather than ornament: aligned edges, controls whose purpose is obvious, states that answer immediately, and nothing on screen that isn't needed.\n\nDensity is low and controls are deliberate. A gallery page shows the collection name, a short row of text actions, and photos. The home page shows the wordmark, a search field, and a list of collections. New capability earns its place by making the core job (find your photos, keep them) faster or clearer. It never gets a new surface just because it exists. When adding a feature would complicate navigation, the answer is to fold it into an existing control or leave it out.\n\nComponents should be **precise and tactile**: still dark and restrained, but with crisp edges, clear affordances, and visible feedback on hover, focus, and press. The incumbent code leans recessed and barely there. The direction from here is clearer interactive states, not louder surfaces.",
+    "keyCharacteristics": [
+      "Near-black neutral field. The photos are the only color, apart from the like heart.",
+      "One light-weight sans (DM Sans 300) for all interface text. The Rogeta wordmark is the only display type.",
+      "Flat, tonal layering. No card shadows and no gradients.",
+      "Small radii (2\u20134px). Shapes read as cut and precise, not soft.",
+      "Few controls, mostly text actions. Each has an obvious, readable state."
+    ],
+    "rules": [
+      {
+        "name": "The Hearts Only Rule",
+        "body": "Heart Pink appears only on like and kudos state. Never use it on buttons, links, text, focus rings, or decoration. A pink pixel always means \"someone loved this\".",
+        "section": "colors"
+      },
+      {
+        "name": "The Readable Floor Rule",
+        "body": "Any text a visitor needs to read is Tertiary Text or brighter. Muted Icon is for icons and control strokes; Faint is for decoration. Many incumbent labels use `#444`\u2013`#666` for text and must be raised to the floor when touched.",
+        "section": "colors"
+      },
+      {
+        "name": "The Photos Carry Color Rule",
+        "body": "The interface stays neutral so it never competes with the images. No tinted surfaces, gradients, or brand colors beyond the wordmark and the heart.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Loud Word Rule",
+        "body": "Rogeta is reserved for the wordmark. Headings, numbers, and labels are DM Sans. Hierarchy comes from size, brightness, and case, not from a second display face.",
+        "section": "typography"
+      },
+      {
+        "name": "The Light Weight Rule",
+        "body": "Interface text is weight 300. Weight 500 marks the one solid primary action on a screen. Nothing is bold.",
+        "section": "typography"
+      },
+      {
+        "name": "The No Floating Cards Rule",
+        "body": "Containers never cast shadows. If something needs to sit above the page, give it a lighter tonal step or a scrim behind it.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** keep every readable piece of text at Tertiary Text (`#888888`) or brighter. Raise incumbent `#444`\u2013`#666` text to that floor whenever you touch it.",
+      "**Do** reserve Heart Pink (`#ff4d6d`) for like and kudos state only.",
+      "**Do** express layering with tonal steps (Ink \u2192 Surface \u2192 Field) and hairline borders, never shadows.",
+      "**Do** give every interactive element a visible hover, focus, and disabled state. Focus must be visible on the dark field, not just a hairline shift.",
+      "**Do** keep interface type in DM Sans 300, with 500 only for the single solid primary action.",
+      "**Do** fold new capability into existing controls before adding a new screen, row, or menu."
+    ],
+    "donts": [
+      "**Don't** use Rogeta or any second display face outside the wordmark.",
+      "**Don't** add tinted surfaces, gradients, or accent colors. The photos carry the color.",
+      "**Don't** add decorative motion or flourishes. The incumbent film grain, wordmark icon burst, \"UNLOCKED\" text scramble, and card hover slide are not commitments and may be removed in favor of plainer, faster interactions.",
+      "**Don't** put Muted Icon (`#666666`) or Faint (`#444444`) on text a visitor needs to read.",
+      "**Don't** crop photos into uniform tiles. Preserve each image's aspect ratio.",
+      "**Don't** crowd a screen with controls. If navigation gets harder to understand, the feature isn't ready."
+    ]
+  }
+}
