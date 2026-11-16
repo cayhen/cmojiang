@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import { supabaseAdmin } from '@/lib/supabase';
-import { SearchBar } from '@/components/SearchBar';
-import { UserNav } from '@/components/UserNav';
-import { LogoTitle } from '@/components/LogoTitle';
-import { MobileNav } from '@/components/MobileNav';
+import { CollectionList } from '@/components/CollectionList';
+import { AccountMenu } from '@/components/AccountMenu';
+import { PageHeader } from '@/components/PageHeader';
+import { CONTAINER } from '@/components/container';
 
 export const revalidate = 0;
 
@@ -24,20 +24,22 @@ export default async function HomePage() {
   }));
 
   return (
-    <main className="px-5 py-8 sm:p-10 max-w-4xl mx-auto">
-        <div className="md:hidden mb-4">
-          <MobileNav />
-        </div>
-        <header className="flex items-baseline justify-between">
-          <LogoTitle />
-          <div className="hidden md:block">
-            <UserNav />
-          </div>
-        </header>
-        <SearchBar collections={collections} />
-        <footer className="mt-16 text-center">
-          <Link href="/admin" className="text-[#2a2a2a] text-xs hover:text-[#bbb] transition-colors">admin</Link>
-        </footer>
-      </main>
+    <main className="min-h-screen bg-grouped">
+      <PageHeader title="cmojiang" subtitle="Photos by Caden Jiang" actions={<AccountMenu />} />
+      <div className={CONTAINER.narrow}>
+        <CollectionList collections={collections} />
+      </div>
+      <footer className={`${CONTAINER.narrow} pb-[max(32px,env(safe-area-inset-bottom))] pt-16 text-center text-footnote text-label2`}>
+        <p>Human Biology at Stanford, Class of 2028</p>
+        <p className="mt-1 flex items-center justify-center gap-3">
+          <a href="https://instagram.com/caden.jiang" target="_blank" rel="noopener noreferrer" className="text-tint hover:opacity-70">
+            Instagram
+          </a>
+          <span aria-hidden>·</span>
+          <a href="mailto:cadenjiang777@gmail.com" className="text-tint hover:opacity-70">Email</a>
+        </p>
+        <Link href="/admin" className="mt-6 inline-block opacity-40 transition-opacity hover:opacity-100">Admin</Link>
+      </footer>
+    </main>
   );
 }

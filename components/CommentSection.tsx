@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { ArrowUpIcon, CommentIcon } from './icons';
 
 interface Comment {
   id: string;
@@ -16,16 +18,20 @@ interface Props {
   onCountChange?: (count: number) => void;
 }
 
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 export function CommentSection({ collectionId, initialComments, currentUsername, onCountChange }: Props) {
   const [comments, setComments] = useState(initialComments);
+  const [newComment, setNewComment] = useState('');
+  const [posting, setPosting] = useState(false);
+  const [error, setError] = useState('');
 
   function updateComments(next: Comment[]) {
     setComments(next);
     onCountChange?.(next.length);
   }
-  const [newComment, setNewComment] = useState('');
-  const [posting, setPosting] = useState(false);
-  const [error, setError] = useState('');
 
   async function handlePost(e: React.FormEvent) {
     e.preventDefault();
@@ -45,11 +51,11 @@ export function CommentSection({ collectionId, initialComments, currentUsername,
         updateComments([...comments, comment]);
         setNewComment('');
       } else {
-        const data = await res.json();
-        setError(data.error ?? 'Failed to post');
+        const data: { error?: string } = await res.json().catch(() => ({}));
+        setError(data.error ?? 'Couldn’t post your comment. Please try again.');
       }
     } catch {
-      setError('Network error. Please try again.');
+      setError('Network error. Check your connection and try again.');
     } finally {
       setPosting(false);
     }
@@ -60,65 +66,73 @@ export function CommentSection({ collectionId, initialComments, currentUsername,
     const res = await fetch(`/api/comments/${commentId}`, { method: 'DELETE' });
     if (res.ok) {
       updateComments(comments.filter(c => c.id !== commentId));
+    } else {
+      setError('Couldn’t delete that comment. Please try again.');
     }
   }
 
   return (
-    <section className="py-5 border-b border-[#1a1a1a] mb-6">
-
-
-      {comments.length === 0 && (
-        <p className="text-[#888] text-sm font-light mb-4">No comments yet.</p>
-      )}
-
-      <div className="space-y-4 mb-6">
-        {comments.map(c => (
-          <div key={c.id} className="group">
-            <div className="flex items-baseline justify-between">
-              <span className="text-[#888] text-xs">{c.username}</span>
-              <span className="text-[#888] text-xs">
-                {new Date(c.created_at).toLocaleDateString()}
-              </span>
-            </div>
-            <div className="flex items-start justify-between mt-0.5">
-              <p className="text-[#bbb] text-sm font-light">{c.content}</p>
-              {currentUsername === c.username && (
-                <button
-                  onClick={() => handleDelete(c.id)}
-                  className="text-[#888] hover:text-[#bbb] text-xs ml-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                  aria-label="Delete comment"
-                >
-                  ×
-                </button>
-              )}
-            </div>
+    <div className="flex min-h-[40vh] flex-col">
+      <div className="flex-1 px-4 pb-4">
+        {comments.length === 0 ? (
+          <div className="flex flex-col items-center py-12 text-center">
+            <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-fill text-label2">
+              <CommentIcon size={22} />
+            </span>
+            <p className="text-headline">No Comments Yet</p>
+            <p className="mt-1 text-subhead text-label2">Be the first to say something about these photos.</p>
           </div>
-        ))}
+        ) : (
+          <ul className="space-y-4 pt-1">
+            {comments.map(c => (
+              <li key={c.id} className="animate-rise">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-subhead font-semibold">{c.username}</span>
+                  <span className="text-footnote text-label2">{formatDate(c.created_at)}</span>
+                  {currentUsername === c.username && (
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(c.id)}
+                      className="ml-auto text-footnote text-label2 transition-colors hover:text-destructive"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+                <p className="mt-0.5 whitespace-pre-wrap break-words text-body">{c.content}</p>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
-      {currentUsername ? (
-        <form onSubmit={handlePost} className="flex gap-2">
-          <input
-            type="text"
-            placeholder="Add a comment..."
-            value={newComment}
-            onChange={e => setNewComment(e.target.value)}
-            className="flex-1 bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2 text-[#bbb] text-sm placeholder:text-[#888] focus:outline-none focus:border-[#888] font-light"
-          />
-          <button
-            type="submit"
-            disabled={posting || !newComment.trim()}
-            className="bg-[#161616] border border-[#1a1a1a] text-[#888] text-sm px-4 rounded hover:border-[#2a2a2a] hover:text-[#bbb] transition-colors disabled:opacity-50"
-          >
-            {posting ? '...' : 'Post'}
-          </button>
-        </form>
-      ) : (
-        <p className="text-[#888] text-xs">
-          <a href="/login" className="hover:text-[#bbb] transition-colors">Sign in</a> to leave a comment.
-        </p>
-      )}
-      {error && <p className="text-[#ef4444] text-xs mt-1">{error}</p>}
-    </section>
+      <div className="sticky bottom-0 bg-surface px-4 pb-4 pt-2 hairline-t">
+        {error && <p className="animate-rise pb-2 text-footnote text-destructive">{error}</p>}
+        {currentUsername ? (
+          <form onSubmit={handlePost} className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Add a comment"
+              value={newComment}
+              onChange={e => setNewComment(e.target.value)}
+              aria-label="Comment"
+              className="field h-10 rounded-full"
+            />
+            <button
+              type="submit"
+              disabled={posting || !newComment.trim()}
+              aria-label="Post comment"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-tint text-white transition-[transform,opacity] duration-150 active:scale-90 disabled:opacity-30"
+            >
+              <ArrowUpIcon size={18} />
+            </button>
+          </form>
+        ) : (
+          <p className="py-2 text-center text-subhead text-label2">
+            <Link href="/login" className="text-tint hover:opacity-70">Sign in</Link> to leave a comment.
+          </p>
+        )}
+      </div>
+    </div>
   );
 }

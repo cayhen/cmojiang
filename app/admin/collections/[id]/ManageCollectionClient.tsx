@@ -3,9 +3,28 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { PageHeader } from '@/components/PageHeader';
+import { CONTAINER } from '@/components/container';
+import { ProgressTrack } from '@/components/FloatingBar';
+import { CheckIcon, ChevronRightIcon, CloseIcon, PhotoStackIcon, Spinner } from '@/components/icons';
 
 interface Photo { id: string; filename: string; url: string; }
 interface Collection { id: string; name: string; password_plain?: string; event_date?: string | null; is_private?: boolean; }
+
+/** Inline result under a section: quiet for confirmations, destructive for failures. */
+function StatusLine({ msg }: { msg: string }) {
+  if (!msg) return null;
+  const failed = msg.startsWith('Failed');
+  return (
+    <p
+      key={msg}
+      role={failed ? 'alert' : 'status'}
+      className={`list-footer animate-rise ${failed ? 'text-destructive' : ''}`}
+    >
+      {msg}
+    </p>
+  );
+}
 
 export function ManageCollectionClient({
   collection,
@@ -33,6 +52,7 @@ export function ManageCollectionClient({
   const [selectMode, setSelectMode] = useState(false);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -348,253 +368,296 @@ export function ManageCollectionClient({
     window.location.href = '/admin/dashboard';
   }
 
+  const photoCount = `${photos.length} photo${photos.length === 1 ? '' : 's'}`;
+  const inviteFailed = inviteMsg.startsWith('Failed');
+
   return (
-    <main className="min-h-screen p-10 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <Link href="/admin/dashboard" className="text-[#888] text-xs hover:text-[#bbb]">← Back</Link>
+    <main className="min-h-screen bg-grouped pb-16">
+      <PageHeader
+        title={collection.name}
+        subtitle={
+          <>
+            {photoCount}
+            {collection.password_plain && <> · password: {collection.password_plain}</>}
+          </>
+        }
+        back={{ href: '/admin/dashboard', label: 'Collections' }}
+        actions={
+          <Link href={`/c/${collection.id}/gallery`} className="btn btn-sm btn-tinted">
+            View Gallery
+          </Link>
+        }
+      />
+
+      <div className={`${CONTAINER.narrow} space-y-8`}>
+        {/* Upload */}
+        <section>
+          <h2 className="list-header">Upload</h2>
           <div>
-            <p className="text-[#bbb] text-sm font-light">{collection.name}</p>
-            {collection.password_plain && (
-              <p className="text-[#888] text-xs mt-0.5">password: {collection.password_plain}</p>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={e => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragOver(false);
+              }}
+              onDrop={e => { e.preventDefault(); setDragOver(false); handleUpload(e.dataTransfer.files); }}
+              className={`flex w-full flex-col items-center justify-center gap-2 rounded-card border-2 border-dashed bg-surface px-6 py-10 text-center transition-colors duration-150 ${
+                dragOver ? 'border-tint' : 'border-separator hover:border-label2'
+              }`}
+            >
+              {uploading
+                ? <Spinner size={24} className="text-label2" />
+                : <PhotoStackIcon size={28} className="text-label2" />}
+              <span className="text-body text-label">
+                {uploading ? (uploadStatus || 'Uploading…') : 'Drag photos here or click to select'}
+              </span>
+              {!uploading && <span className="text-footnote text-label2">JPEG, PNG, WebP or HEIC</span>}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/heic,.heic"
+              multiple
+              className="hidden"
+              onChange={e => handleUpload(e.target.files)}
+            />
+            {uploading && (
+              <div className="flex items-center gap-3 px-4 pt-3">
+                <div className="flex-1">
+                  <ProgressTrack value={uploadProgress} />
+                </div>
+                <span className="text-footnote tabular-nums text-label2">{Math.round(uploadProgress * 100)}%</span>
+              </div>
             )}
           </div>
-        </div>
-        <div className="flex flex-col items-end gap-1">
-          <Link
-            href={`/c/${collection.id}/gallery`}
-            className="text-[#888] text-xs hover:text-[#bbb] transition-colors"
-          >
-            View gallery →
-          </Link>
-          <button
-            onClick={handleCopyInvite}
-            className="text-[#888] text-xs hover:text-[#bbb] transition-colors"
-          >
-            Copy invite link
-          </button>
-        </div>
-      </div>
-      {inviteMsg && <p className="text-[#888] text-xs -mt-6 mb-8 text-right">{inviteMsg}</p>}
-
-      {/* Upload */}
-      <section className="mb-8">
-        <p className="text-[#888] text-xs uppercase tracking-widest mb-3">Upload Photos</p>
-        <div
-          className="border border-dashed border-[#2a2a2a] rounded p-8 text-center cursor-pointer hover:border-[#3a3a3a] transition-colors"
-          onClick={() => fileInputRef.current?.click()}
-          onDragOver={e => e.preventDefault()}
-          onDrop={e => { e.preventDefault(); handleUpload(e.dataTransfer.files); }}
-        >
-          <p className="text-[#888] text-sm font-light">
-            {uploading ? (uploadStatus || 'Uploading…') : 'Drag photos here or click to select'}
-          </p>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/heic,.heic"
-            multiple
-            className="hidden"
-            onChange={e => handleUpload(e.target.files)}
-          />
-        </div>
-        {uploading && (
-          <div className="mt-3 space-y-1">
-            <div className="flex justify-between text-[#888] text-xs">
-              <span>{uploadStatus || 'Uploading…'}</span>
-              <span>{Math.round(uploadProgress * 100)}%</span>
-            </div>
-            <div className="h-px bg-[#1e1e1e] rounded-full overflow-hidden">
-              <div
-                className="h-full bg-[#555] transition-all duration-200"
-                style={{ width: `${uploadProgress * 100}%` }}
-              />
-            </div>
-          </div>
-        )}
-        {uploadErrors.map((err, i) => (
-          <p key={i} className="text-[#ef4444] text-xs mt-1">{err}</p>
-        ))}
-      </section>
-
-      {/* Photos */}
-      <section className="mb-8">
-        <div className="flex items-center justify-between mb-3">
-          <button
-            onClick={() => setPhotosOpen(o => !o)}
-            className="flex items-center gap-2 group"
-          >
-            <p className="text-[#888] text-xs uppercase tracking-widest">Photos ({photos.length})</p>
-            <span className="text-[#888] text-xs group-hover:text-[#bbb] transition-colors">{photosOpen ? '▼' : '▶'}</span>
-          </button>
-          {photosOpen && photos.length > 0 && (
-            <div className="flex items-center gap-4">
-              {selectMode ? (
-                <>
-                  <button
-                    onClick={() => setSelectedPhotoIds(new Set(photos.map(p => p.id)))}
-                    className="text-[#888] text-xs hover:text-[#bbb] transition-colors"
-                  >
-                    Select all
-                  </button>
-                  {selectedPhotoIds.size > 0 && (
-                    <button
-                      onClick={handleBulkDelete}
-                      disabled={bulkDeleting}
-                      className="text-[#ef4444] text-xs hover:text-[#f87171] transition-colors disabled:opacity-50"
-                    >
-                      {bulkDeleting ? 'Deleting…' : `Delete ${selectedPhotoIds.size}`}
-                    </button>
-                  )}
-                  <button
-                    onClick={exitSelectMode}
-                    className="text-[#888] text-xs hover:text-[#bbb] transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => setSelectMode(true)}
-                  className="text-[#888] text-xs hover:text-[#bbb] transition-colors"
-                >
-                  Select
-                </button>
-              )}
-            </div>
+          {uploadErrors.length > 0 && (
+            <ul role="alert" className="space-y-1 px-4 pt-2">
+              {uploadErrors.map((err, i) => (
+                <li key={i} className="break-words text-footnote text-destructive">{err}</li>
+              ))}
+            </ul>
           )}
-        </div>
-        {photosOpen && <div className="grid grid-cols-3 gap-2">
-          {photos.map(photo => {
-            const selected = selectedPhotoIds.has(photo.id);
-            return (
-              <div
-                key={photo.id}
-                className={`relative group ${selectMode ? 'cursor-pointer' : ''}`}
-                onClick={() => selectMode && togglePhotoSelect(photo.id)}
-              >
-                <img
-                  src={photo.url}
-                  alt={photo.filename}
-                  className={`w-full rounded-sm transition-opacity ${
-                    selectMode ? (selected ? 'ring-2 ring-[#888] opacity-100' : 'opacity-50') : ''
-                  }`}
-                />
+        </section>
+
+        {/* Photos */}
+        <section>
+          <div className="list-header flex min-h-[26px] items-end justify-between gap-4">
+            <h2>Photos</h2>
+            {photosOpen && photos.length > 0 && (
+              <div className="flex items-center gap-4">
                 {selectMode ? (
-                  selected && (
-                    <span className="absolute top-1 right-1 bg-[#bbb] text-[#0f0f0f] text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                      ✓
-                    </span>
-                  )
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPhotoIds(new Set(photos.map(p => p.id)))}
+                      className="btn-plain text-subhead"
+                    >
+                      Select All
+                    </button>
+                    {selectedPhotoIds.size > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleBulkDelete}
+                        disabled={bulkDeleting}
+                        className="btn-plain text-subhead text-destructive"
+                      >
+                        {bulkDeleting ? 'Deleting…' : `Delete ${selectedPhotoIds.size}`}
+                      </button>
+                    )}
+                    <button type="button" onClick={exitSelectMode} className="btn-plain text-subhead font-semibold">
+                      Cancel
+                    </button>
+                  </>
                 ) : (
-                  <button
-                    onClick={() => handleDelete(photo.id)}
-                    className="absolute top-1 right-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    ×
+                  <button type="button" onClick={() => setSelectMode(true)} className="btn-plain text-subhead">
+                    Select
                   </button>
                 )}
               </div>
-            );
-          })}
-        </div>}
-      </section>
+            )}
+          </div>
+          <div className="list">
+            <button
+              type="button"
+              onClick={() => setPhotosOpen(o => !o)}
+              aria-expanded={photosOpen}
+              className="list-row"
+            >
+              <span className="flex-1">{photoCount}</span>
+              <span className="text-label2">{photosOpen ? 'Hide' : 'Show'}</span>
+              <ChevronRightIcon size={18} className={`-mr-1 shrink-0 text-label2 ${photosOpen ? 'rotate-90' : ''}`} />
+            </button>
+            {photosOpen && (photos.length > 0 ? (
+              <div className="hairline-t grid grid-cols-4 gap-1 p-1 sm:grid-cols-5">
+                {photos.map(photo => {
+                  const selected = selectedPhotoIds.has(photo.id);
+                  return (
+                    <div key={photo.id} className="group relative aspect-square">
+                      <img
+                        src={photo.url}
+                        alt={photo.filename}
+                        loading="lazy"
+                        decoding="async"
+                        className={`absolute inset-0 h-full w-full rounded-tile bg-fill object-cover transition-opacity duration-150 ${
+                          selectMode && selected ? 'opacity-70' : ''
+                        }`}
+                      />
+                      {selectMode ? (
+                        <button
+                          type="button"
+                          onClick={() => togglePhotoSelect(photo.id)}
+                          aria-pressed={selected}
+                          aria-label={`Select ${photo.filename}`}
+                          className="absolute inset-0 flex items-end justify-end rounded-tile p-1.5"
+                        >
+                          <span
+                            className={`flex h-[22px] w-[22px] items-center justify-center rounded-full ${
+                              selected
+                                ? 'bg-tint text-white ring-2 ring-white'
+                                : 'bg-black/10 ring-[1.5px] ring-inset ring-white/90'
+                            }`}
+                          >
+                            {selected && <CheckIcon size={14} />}
+                          </span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(photo.id)}
+                          aria-label={`Delete ${photo.filename}`}
+                          className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-black/55 text-white opacity-0 transition-opacity duration-150 focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
+                        >
+                          <CloseIcon size={14} />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="hairline-t px-4 py-3 text-footnote text-label2">No photos yet.</p>
+            ))}
+          </div>
+        </section>
 
-      {/* Rename */}
-      <section className="mb-8">
-        <p className="text-[#888] text-xs uppercase tracking-widest mb-3">Rename</p>
-        <form onSubmit={handleNameUpdate} className="flex gap-2">
-          <input
-            type="text"
-            placeholder={collection.name}
-            value={newName}
-            onChange={e => setNewName(e.target.value)}
-            required
-            className="flex-1 bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2 text-[#bbb] text-sm placeholder:text-[#888] focus:outline-none focus:border-[#888] font-light"
-          />
-          <button
-            type="submit"
-            className="bg-[#161616] border border-[#1a1a1a] text-[#888] text-sm px-4 rounded hover:border-[#2a2a2a] hover:text-[#bbb] transition-colors"
-          >
-            Update
-          </button>
-        </form>
-        {nameMsg && <p className="text-[#888] text-xs mt-1">{nameMsg}</p>}
-      </section>
-
-      {/* Event date */}
-      <section className="mb-8">
-        <p className="text-[#888] text-xs uppercase tracking-widest mb-3">Event Date</p>
-        <form onSubmit={handleDateUpdate} className="flex gap-2">
-          <input
-            type="date"
-            value={eventDate}
-            onChange={e => setEventDate(e.target.value)}
-            required
-            className="flex-1 bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2 text-[#bbb] text-sm focus:outline-none focus:border-[#888] font-light"
-          />
-          <button
-            type="submit"
-            className="bg-[#161616] border border-[#1a1a1a] text-[#888] text-sm px-4 rounded hover:border-[#2a2a2a] hover:text-[#bbb] transition-colors"
-          >
-            Update
-          </button>
-        </form>
-        {dateMsg && <p className="text-[#888] text-xs mt-1">{dateMsg}</p>}
-      </section>
-
-      {/* Change password */}
-      <section className="mb-8">
-        <p className="text-[#888] text-xs uppercase tracking-widest mb-3">Change Password</p>
-        <form onSubmit={handlePasswordUpdate} className="flex gap-2">
-          <input
-            type="password"
-            placeholder="New password"
-            value={newPassword}
-            onChange={e => setNewPassword(e.target.value)}
-            required
-            className="flex-1 bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2 text-[#bbb] text-sm placeholder:text-[#888] focus:outline-none focus:border-[#888] font-light"
-          />
-          <button
-            type="submit"
-            className="bg-[#161616] border border-[#1a1a1a] text-[#888] text-sm px-4 rounded hover:border-[#2a2a2a] hover:text-[#bbb] transition-colors"
-          >
-            Update
-          </button>
-        </form>
-        {passwordMsg && <p className="text-[#888] text-xs mt-1">{passwordMsg}</p>}
-      </section>
-
-      {/* Visibility */}
-      <section className="mb-8">
-        <p className="text-[#888] text-xs uppercase tracking-widest mb-3">Visibility</p>
-        <div className="flex items-center justify-between">
-          <p className="text-[#888] text-sm font-light">
-            {isPrivate ? 'Hidden — not shown on home page' : 'Public — visible on home page'}
+        {/* Details: inline rows in one grouped list */}
+        <section>
+          <h2 className="list-header">Details</h2>
+          <div className="list">
+            <form onSubmit={handleNameUpdate} className="list-row py-0">
+              <label htmlFor="collection-name" className="w-24 shrink-0">Name</label>
+              <input
+                id="collection-name"
+                type="text"
+                placeholder={collection.name}
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
+                required
+                className="h-12 min-w-0 flex-1 bg-transparent text-body text-label outline-none placeholder:text-label2"
+              />
+              {newName.trim() && <button type="submit" className="btn-plain animate-pop font-semibold">Save</button>}
+            </form>
+            <form onSubmit={handleDateUpdate} className="list-row py-0">
+              <label htmlFor="collection-date" className="w-24 shrink-0">Event date</label>
+              <input
+                id="collection-date"
+                type="date"
+                value={eventDate}
+                onChange={e => setEventDate(e.target.value)}
+                required
+                className="h-12 min-w-0 flex-1 bg-transparent text-body text-label outline-none [&::-webkit-date-and-time-value]:text-left"
+              />
+              {eventDate !== (collection.event_date ?? '') && <button type="submit" className="btn-plain animate-pop font-semibold">Save</button>}
+            </form>
+            <form onSubmit={handlePasswordUpdate} className="list-row py-0">
+              <label htmlFor="collection-password" className="w-24 shrink-0">Password</label>
+              <input
+                id="collection-password"
+                type="password"
+                placeholder="New password"
+                autoComplete="new-password"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                required
+                className="h-12 min-w-0 flex-1 bg-transparent text-body text-label outline-none placeholder:text-label2"
+              />
+              {newPassword && <button type="submit" className="btn-plain animate-pop font-semibold">Save</button>}
+            </form>
+          </div>
+          <p className="list-footer">
+            Collections are ordered by event date on the home page. People who already unlocked this collection keep access after a password change.
           </p>
-          <button
-            onClick={handlePrivacyToggle}
-            className={`text-xs px-3 py-1.5 rounded border transition-colors ${
-              isPrivate
-                ? 'border-[#2a2a2a] text-[#888] hover:text-[#bbb] hover:border-[#3a3a3a]'
-                : 'border-[#2a2a2a] text-[#888] hover:text-[#bbb] hover:border-[#3a3a3a]'
-            }`}
-          >
-            {isPrivate ? 'Make public' : 'Make private'}
-          </button>
-        </div>
-        {privacyMsg && <p className="text-[#888] text-xs mt-2">{privacyMsg}</p>}
-      </section>
+          <StatusLine msg={nameMsg} />
+          <StatusLine msg={dateMsg} />
+          <StatusLine msg={passwordMsg} />
+        </section>
 
-      {/* Delete collection */}
-      <section>
-        <button
-          onClick={handleDeleteCollection}
-          className="text-[#ef4444] text-xs hover:text-[#f87171] transition-colors"
-        >
-          Delete collection
-        </button>
-      </section>
+        {/* Visibility */}
+        <section>
+          <h2 className="list-header">Visibility</h2>
+          <div className="list">
+            <div className="list-row">
+              <span id="private-label" className="flex-1">Private</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isPrivate}
+                aria-labelledby="private-label"
+                onClick={handlePrivacyToggle}
+                className={`relative inline-flex h-[31px] w-[51px] shrink-0 items-center rounded-full p-[2px] transition-colors duration-200 ease-out ${
+                  isPrivate ? 'bg-[#34c759]' : 'bg-fill2'
+                }`}
+              >
+                <span
+                  aria-hidden
+                  className={`h-[27px] w-[27px] rounded-full bg-white shadow-md transition-transform duration-200 ease-out ${
+                    isPrivate ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+          <p className="list-footer">
+            Private collections are hidden from the home page. Anyone with the password or an invite link can still open them.
+          </p>
+          <StatusLine msg={privacyMsg} />
+        </section>
+
+        {/* Invite link */}
+        <section>
+          <h2 className="list-header">Invite link</h2>
+          <div className="list">
+            <button type="button" onClick={handleCopyInvite} className="list-row text-tint">
+              Copy Invite Link
+            </button>
+          </div>
+          {inviteMsg ? (
+            <p
+              key={inviteMsg}
+              role={inviteFailed ? 'alert' : 'status'}
+              className={`list-footer animate-rise ${inviteFailed ? 'text-destructive' : ''}`}
+            >
+              {inviteMsg}
+            </p>
+          ) : (
+            <p className="list-footer">Opens the collection without the password. Links expire after 30 days.</p>
+          )}
+        </section>
+
+        {/* Delete collection */}
+        <section>
+          <div className="list">
+            <button
+              type="button"
+              onClick={handleDeleteCollection}
+              className="list-row justify-center text-destructive"
+            >
+              Delete Collection
+            </button>
+          </div>
+        </section>
+      </div>
     </main>
   );
 }

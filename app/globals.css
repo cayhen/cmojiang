@@ -2,66 +2,229 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: 'Rogeta';
-  src: url('/fonts/RogetaBlack.ttf') format('truetype');
-  font-weight: 400 900;
-  font-style: normal;
-  font-display: block;
+/* ── Tokens ───────────────────────────────────────────────────────────────
+   One neutral system that follows the visitor's light/dark setting. The photo
+   viewer is always dark and uses its own fixed values (see Lightbox). */
+:root {
+  color-scheme: light dark;
+
+  --bg: #ffffff;
+  --bg-grouped: #f2f2f7;
+  --surface: #ffffff;
+  --fill: rgba(118, 118, 128, 0.12);
+  --fill-2: rgba(118, 118, 128, 0.2);
+  --label: #1d1d1f;
+  --label-2: #6e6e73;
+  --separator: rgba(60, 60, 67, 0.18);
+  --tint: #0066cc;
+  --tint-ring: rgba(0, 102, 204, 0.32);
+  --heart: #ff2d55;
+  --destructive: #d70015;
+  --on-label: #ffffff;
+  --material: rgba(255, 255, 255, 0.74);
+  --material-thick: rgba(250, 250, 252, 0.88);
+  --shadow-float: 0 10px 34px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
+
+  --ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Visible, on-palette focus for every keyboard-reachable control.
-   Fields opt out with focus:outline-none and brighten their border instead. */
-:focus-visible {
-  outline: 1px solid #bbb;
-  outline-offset: 2px;
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --bg-grouped: #000000;
+    --surface: #1c1c1e;
+    --fill: rgba(118, 118, 128, 0.24);
+    --fill-2: rgba(118, 118, 128, 0.36);
+    --label: #f5f5f7;
+    --label-2: #98989d;
+    --separator: rgba(84, 84, 88, 0.65);
+    --tint: #2997ff;
+    --tint-ring: rgba(41, 151, 255, 0.4);
+    --heart: #ff375f;
+    --destructive: #ff453a;
+    --on-label: #000000;
+    --material: rgba(22, 22, 23, 0.74);
+    --material-thick: rgba(36, 36, 38, 0.9);
+    --shadow-float: 0 10px 34px rgba(0, 0, 0, 0.55), 0 0 0 0.5px rgba(255, 255, 255, 0.08);
+  }
 }
 
-::selection {
-  background: #bbb;
-  color: #080808;
+/* ── Base ─────────────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    scrollbar-gutter: stable;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-bg text-label font-sans text-body antialiased;
+    text-rendering: optimizeLegibility;
+    -webkit-tap-highlight-color: transparent;
+  }
+  :focus-visible {
+    outline: 2px solid var(--tint);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--tint-ring);
+  }
+  input, textarea {
+    caret-color: var(--tint);
+  }
 }
 
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.1;
-  mix-blend-mode: screen;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 256px 256px;
+/* ── Shared controls ──────────────────────────────────────────────────── */
+@layer components {
+  .material {
+    background: var(--material);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+  .material-thick {
+    background: var(--material-thick);
+    -webkit-backdrop-filter: saturate(180%) blur(28px);
+    backdrop-filter: saturate(180%) blur(28px);
+  }
+  .hairline-b {
+    box-shadow: inset 0 -0.5px 0 var(--separator);
+  }
+  .hairline-t {
+    box-shadow: inset 0 0.5px 0 var(--separator);
+  }
+
+  /* Buttons: pill shapes, press feedback by scale, never by color jumps. */
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-full select-none whitespace-nowrap
+      h-11 px-5 text-body font-semibold
+      transition-[transform,background-color,opacity] duration-150 ease-out
+      active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none;
+  }
+  .btn-sm {
+    @apply h-8 px-3.5 text-subhead font-semibold;
+  }
+  .btn-filled {
+    @apply bg-label text-onlabel hover:opacity-90;
+  }
+  .btn-tinted {
+    @apply bg-fill text-label hover:bg-fill2;
+  }
+  .btn-plain {
+    @apply inline-flex items-center gap-0.5 text-tint text-body select-none
+      transition-opacity duration-150 hover:opacity-70 active:opacity-50 disabled:opacity-40;
+  }
+  .btn-icon {
+    @apply inline-flex items-center justify-center h-9 w-9 rounded-full text-label select-none
+      transition-[transform,background-color] duration-150 ease-out hover:bg-fill active:scale-[0.94]
+      disabled:opacity-40;
+  }
+
+  /* Fields: filled, no border; focus draws a soft tint ring. */
+  .field {
+    @apply w-full h-11 rounded-control bg-fill px-4 text-body text-label outline-none
+      placeholder:text-label2 transition-shadow duration-150;
+  }
+  .field:focus {
+    box-shadow: 0 0 0 3px var(--tint-ring);
+  }
+
+  /* Grouped inset lists (iOS Settings style). */
+  .list {
+    @apply rounded-card bg-surface overflow-hidden;
+  }
+  .list-row {
+    @apply relative flex items-center gap-3 min-h-[48px] px-4 py-2.5 text-body text-label
+      transition-colors duration-150;
+  }
+  a.list-row, button.list-row {
+    @apply w-full text-left hover:bg-fill active:bg-fill2;
+  }
+  .list > .list-row + .list-row::before,
+  .list > * + .list-row::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 16px;
+    right: 0;
+    height: 0.5px;
+    background: var(--separator);
+  }
+  .list-header {
+    @apply px-4 pb-1.5 text-footnote text-label2;
+  }
+  .list-footer {
+    @apply px-4 pt-1.5 text-footnote text-label2;
+  }
 }
 
+/* ── Motion ───────────────────────────────────────────────────────────── */
+@keyframes heart-pop {
+  0%   { transform: scale(0.4); opacity: 0; }
+  22%  { transform: scale(1.12); opacity: 1; }
+  40%  { transform: scale(0.96); opacity: 1; }
+  55%  { transform: scale(1); opacity: 1; }
+  80%  { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.04); opacity: 0; }
+}
+.animate-heart-pop { animation: heart-pop 0.8s var(--ease-out) forwards; }
 
-@keyframes icon-burst {
-  0%   { transform: translateX(-50%) translateY(4px)   scale(0.6); opacity: 0; }
-  22%  { transform: translateX(-50%) translateY(-6px)  scale(1);   opacity: 1; }
-  55%  { transform: translateX(-50%) translateY(-14px) scale(1);   opacity: 0.85; }
-  100% { transform: translateX(-50%) translateY(-18px) scale(0.9); opacity: 0; }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-7px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(2px); }
+}
+.animate-shake { animation: shake 0.42s var(--ease-out); }
+
+/* Starts already legible, so content never depends on the animation running. */
+@keyframes rise-in {
+  from { opacity: 0.5; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-rise { animation: rise-in 0.45s var(--ease-ios) both; }
+
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.animate-pop { animation: pop-in 0.22s var(--ease-out) both; }
+
+@keyframes badge-in {
+  from { transform: scale(0.5); }
+  60%  { transform: scale(1.08); }
+  to   { transform: scale(1); }
+}
+.animate-badge { animation: badge-in 0.3s var(--ease-out) both; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.animate-spin-smooth { animation: spin 0.9s linear infinite; }
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+.animate-shimmer { animation: shimmer 1.6s ease-in-out infinite; }
+
+/* Grid density changes run as a view transition; tiles glide to new spots. */
+::view-transition-group(*) {
+  animation-duration: 0.42s;
+  animation-timing-function: var(--ease-ios);
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.2s;
 }
 
-.icon-burst {
-  animation: icon-burst 1.1s ease-out forwards;
-}
-
-@keyframes heart-burst {
-  0%   { transform: scale(0.3); opacity: 1; }
-  50%  { transform: scale(1.3); opacity: 1; }
-  80%  { transform: scale(1.1); opacity: 0.8; }
-  100% { transform: scale(0.9); opacity: 0; }
-}
-
-.animate-heart-burst {
-  animation: heart-burst 0.65s ease-out forwards;
-}
-
-@keyframes slide-in-left {
-  from { transform: translateX(-100%); }
-  to   { transform: translateX(0); }
-}
-
-.animate-slide-in-left {
-  animation: slide-in-left 0.25s ease-out;
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
 }

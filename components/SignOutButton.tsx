@@ -1,5 +1,6 @@
 'use client';
 
+/** Sign-out row for grouped lists. */
 export function SignOutButton() {
   async function handleSignOut() {
     await fetch('/api/logout', { method: 'POST' });
@@ -7,11 +8,8 @@ export function SignOutButton() {
   }
 
   return (
-    <button
-      onClick={handleSignOut}
-      className="text-[11px] font-normal tracking-[0.06em] uppercase text-[#888] hover:text-[#bbb] transition-colors"
-    >
-      Sign out
+    <button type="button" onClick={handleSignOut} className="list-row justify-center text-destructive">
+      Sign Out
     </button>
   );
 }

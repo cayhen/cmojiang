@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { UnlockForm } from '@/components/UnlockForm';
 import { verifyUserToken } from '@/lib/auth';
 import { USER_COOKIE_NAME } from '@/lib/session';
-import { HomeLink } from '@/components/HomeLink';
+import { TopBar } from '@/components/PageHeader';
 
 export const revalidate = 0;
 
@@ -34,13 +34,12 @@ export default async function UnlockPage({ params }: { params: { id: string } })
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-6">
-      <div className="w-full max-w-xs">
-        <div className="mb-8"><HomeLink /></div>
-        <h1 className="text-[#bbb] font-light text-lg text-center mb-8">
-          {collection.name}
-        </h1>
-        <UnlockForm collectionId={collection.id} />
+    <main className="flex min-h-[100dvh] flex-col bg-grouped">
+      <TopBar back={{ href: '/', label: 'Collections' }} />
+      <div className="flex flex-1 items-center justify-center px-6 pb-24">
+        <div className="animate-rise w-full max-w-sm">
+          <UnlockForm collectionId={collection.id} name={collection.name} />
+        </div>
       </div>
     </main>
   );

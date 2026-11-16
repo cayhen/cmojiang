@@ -2,10 +2,9 @@ import { redirect } from 'next/navigation';
 import { getUserSession } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
 import { signViewUrl, signDownloadUrl, thumbPath } from '@/lib/r2';
-import { UserNav } from '@/components/UserNav';
+import { AccountMenu } from '@/components/AccountMenu';
 import { LikedPhotosClient, type LikedPhoto, type LikedSection } from '@/components/LikedPhotosClient';
-import { MobileNav } from '@/components/MobileNav';
-import Link from 'next/link';
+import { PageHeader } from '@/components/PageHeader';
 
 export const revalidate = 0;
 
@@ -79,22 +78,18 @@ export default async function LikedPhotosPage() {
     sections[seen.get(photo.collectionId)!].photos.push(photo);
   }
 
-  return (
-    <main className="min-h-screen p-4 sm:p-6">
-      <div className="flex justify-between items-center mb-8 sm:mb-10">
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="md:hidden"><MobileNav /></div>
-          <Link href="/profile" className="hidden md:inline text-[#888] text-xs hover:text-[#bbb] transition-colors">← Back</Link>
-          <span className="text-[#bbb] text-sm font-light">Liked photos</span>
-        </div>
-        <div className="hidden md:block"><UserNav /></div>
-      </div>
+  if (signingError) {
+    return (
+      <main className="min-h-screen bg-bg">
+        <PageHeader width="wide" title="Liked Photos" back={{ href: '/profile', label: 'Profile' }} actions={<AccountMenu />} />
+        <p className="px-4 text-subhead text-label2 sm:px-6 lg:px-8">Photos are temporarily unavailable. Please try again in a moment.</p>
+      </main>
+    );
+  }
 
-      {signingError ? (
-        <p className="text-[#888] text-sm">Photos are temporarily unavailable. Please try again in a moment.</p>
-      ) : (
-        <LikedPhotosClient initialSections={sections} />
-      )}
+  return (
+    <main className="min-h-screen bg-bg">
+      <LikedPhotosClient initialSections={sections} accountMenu={<AccountMenu />} />
     </main>
   );
 }

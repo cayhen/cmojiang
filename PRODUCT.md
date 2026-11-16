@@ -40,7 +40,8 @@ These are personal galleries from one photographer to the people who were there.
 
 ## Brand Commitments
 
-- Name and wordmark: "cmojiang", set in the self-hosted Rogeta face. The wordmark doubles as the contact card: hovering certain letters reveals email, Instagram, and school affiliation.
+- Name: "cmojiang". The old Rogeta wordmark and its hover contact reveal are no longer binding (Caden, Nov 2026); contact details (email, Instagram, school) should stay reachable somewhere on the site.
+- Standing visual preference (Caden, Nov 2026): clean and unthemed, at the polish of Apple Photos and Linear. Two themed directions were rejected as "too themed". Appearance follows the visitor's system light/dark setting; the photo viewer is always black.
 - Voice: polished studio. Copy is clean, precise, and professional, never cute or chatty. It should sound like a capable photographer's service, even though the audience is friends.
 - Photography-first: the interface steps back so the photos lead (carried from the original 2026-05-23 spec).
 
