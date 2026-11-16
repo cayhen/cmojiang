@@ -5,6 +5,8 @@ import { signViewUrl, signDownloadUrl, thumbPath } from '@/lib/r2';
 import { AccountMenu } from '@/components/AccountMenu';
 import { LikedPhotosClient, type LikedPhoto, type LikedSection } from '@/components/LikedPhotosClient';
 import { PageHeader } from '@/components/PageHeader';
+import { AmbientGlow } from '@/components/AmbientGlow';
+import { glowPalette } from '@/lib/glow';
 
 export const revalidate = 0;
 
@@ -88,7 +90,8 @@ export default async function LikedPhotosPage() {
   }
 
   return (
-    <main className="min-h-screen bg-bg">
+    <main className="relative isolate min-h-screen bg-bg">
+      <AmbientGlow colors={glowPalette(photos.slice(0, 60).map(p => p.dominantColor))} />
       <LikedPhotosClient initialSections={sections} accountMenu={<AccountMenu />} />
     </main>
   );

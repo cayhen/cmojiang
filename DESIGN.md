@@ -41,12 +41,12 @@ typography:
     fontWeight: 700
     lineHeight: "41px"
     letterSpacing: "-0.022em"
-  large-title-wide:
+  display:
     fontFamily: "-apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"SF Pro Display\", system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
-    fontSize: "40px"
+    fontSize: "clamp(40px, 6.25vw, 88px)"
     fontWeight: 700
-    lineHeight: "46px"
-    letterSpacing: "-0.022em"
+    lineHeight: "1.02"
+    letterSpacing: "-0.035em"
   title1:
     fontFamily: "-apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"SF Pro Display\", system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
     fontSize: "28px"
@@ -200,6 +200,7 @@ Appearance follows the visitor's system light or dark setting through one set of
 - Continuous rounded corners nested by scale, pill shapes for every action.
 - Spring and long-settle motion, press feedback by scale, never by color jumps.
 - Photos edge to edge on phones with 2px gutters; chrome steps back.
+- One soft ambient glow behind the top of photo pages and home, made from the event's own photo colors.
 
 ## Colors
 
@@ -208,7 +209,7 @@ A neutral system with one blue for interaction and one pink for affection; every
 The frontmatter records each role twice: the bare key is the light appearance, the `-dark` key is the value it switches to under `prefers-color-scheme: dark`. Both come straight from the `:root` custom properties in `app/globals.css`. Build with the role, never with one appearance's literal.
 
 ### Primary
-- **System Blue** (`tint` / `tint-dark`): tappable text and links (back links, Select, Sign In, Copy Invite Link, footer links), the caret, the selection highlight's base, the selected-photo badge, and the comment send button. Its translucent companion **Tint Ring** (`tint-ring` / `tint-ring-dark`) is the soft focus glow on fields and the text-selection color.
+- **System Blue** (`tint` / `tint-dark`): tappable text and links (back links, Select, Copy Invite Link, footer links), the caret, the selection highlight's base, the selected-photo badge, and the comment send button. Its translucent companion **Tint Ring** (`tint-ring` / `tint-ring-dark`) is the soft focus glow on fields and the text-selection color.
 
 ### Secondary
 - **Like Pink** (`heart` / `heart-dark`): photo likes, the double-tap heart burst, kudos when given, and the Liked Photos entry points. Nothing else.
@@ -228,7 +229,12 @@ The frontmatter records each role twice: the bare key is the light appearance, t
 - **Material** (`material` / `material-dark`) and **Thick Material** (`material-thick` / `material-thick-dark`): translucent backgrounds for frosted layers, always paired with a saturate-and-blur backdrop filter (Elevation & Depth).
 - **Viewer Black** (`viewer-backdrop`) and **Viewer White** (`viewer-label`): the fixed photo viewer, independent of appearance. Its chrome uses white at reduced opacity (10% button wash, 80% counter text) over black gradients at 50%.
 
+### Ambient Glow
+Pages with photos behind them (home, a gallery, Liked Photos) carry a soft light at the top in the photos' own colors. `lib/glow.ts` reduces the stored per-photo dominant colors to four. It buckets hues, ranks the buckets by how much visible color they hold across the set, and lifts each pick to lightness 0.42 to 0.58, with saturation capped at 0.62. A forest shoot glows green and amber, not in the one red jacket, and a mostly gray set puts its gray in a minor slot. In dark appearance the palette is used as is at 0.86 opacity. In light it is mixed to 35% with white at 0.62 opacity, a pale wash, because gray text on white has little contrast to spare.
+
 ### Named Rules
+**The Photos Light The Page Rule.** The only color in the page background comes from the photos on it. Never pick glow colors by hand or by brand, and never let the glow take a text element below 4.5:1 (it is tuned so every title, subtitle, bar link and index number clears that in both appearances, on phones and desktop).
+
 **The One Tint Rule.** Blue means "you can tap this" or "this is selected". It never decorates, never fills a large area, and never labels static text.
 
 **The Heart Is Only For Likes Rule.** Pink appears only where a person has expressed affection: photo likes, kudos, and the Liked Photos entries. Not for brand, emphasis, or alerts.
@@ -244,7 +250,8 @@ The frontmatter records each role twice: the bare key is the light appearance, t
 **Character:** One family, the platform's own, so text reads as native chrome on every device. Hierarchy comes from size and weight alone, with letter-spacing tightening as size grows, exactly as the system ramp does.
 
 ### Hierarchy
-- **Large Title** (700, 34px / 41px, -0.022em; 40px / 46px from md up): the page title under the transparent bar; collection names, "cmojiang".
+- **Display** (700, `clamp(40px, 6.25vw, 88px)` / 1.02, -0.035em): the page title from md up, so about 48px on a tablet and 88px on a wide desktop. Balanced wrapping. On desktop it is the loudest thing on the page by design: one huge name, then quiet chrome.
+- **Large Title** (700, 34px / 41px, -0.022em): the page title on phones; collection names, "cmojiang".
 - **Title 1** (700, 28px / 34px, -0.02em): titles on single-task pages (unlock, sign in, sign up).
 - **Title 3** (600, 20px / 25px, -0.016em): sheet titles.
 - **Headline** (600, 17px / 22px, -0.022em): the collapsed bar title, empty-state headings, emphasized row text, button labels.
@@ -254,13 +261,15 @@ The frontmatter records each role twice: the bare key is the light appearance, t
 - **Caption** (400, 12px / 16px, 0): the smallest annotations.
 
 ### Named Rules
-**The System Voice Rule.** Use the system stack and the eight named steps only. No webfont, no second family, no ad hoc sizes; the one exception is the large title's md-up step.
+**The System Voice Rule.** Use the system stack and the eight named steps only. No webfont, no second family, no ad hoc sizes. Display is the only fluid step.
 
 **The Sentence-Weight Rule.** Emphasis is weight (600 or 700), never uppercase or letter-spaced labels. No tracked small caps above titles.
 
 ## Layout
 
-Two page widths. Reading pages (home, unlock, auth, profile, admin) sit in a centered narrow column (max 672px) with 16px side padding, 24px from sm up. Photo pages use the wide container: full width, 16 / 24 / 32px side padding at base / sm / lg for header content.
+Three page widths. Reading pages (unlock, auth, profile, admin) sit in a centered narrow column (max 672px) with 16px side padding, 24px from sm up. Photo pages use the wide container: full width, 16 / 24 / 32px side padding at base / sm / lg for header content. Home uses the index container: the narrow column below lg, then max 1152px with 32px padding.
+
+**Phone and desktop diverge at lg (1024px).** Phones and tablets keep the iOS composition (large title, grouped inset lists). From lg the page title goes Display, the subtitle steps up to Title 3 weight 400, a page toolbar moves onto the title's baseline at the right, and the home list becomes a full-width index (see Collection Index).
 
 The photo grid is a column masonry. On phones it runs edge to edge with 2px gutters and near-square 2px tile corners; from sm up it gains 24px (sm) or 32px (lg) side padding, 6px gutters and 6px tile corners. Column count is breakpoint times a four-step size level: 4/3/2/1 below 640px, 5/4/3/2 to 1024px, 7/5/4/3 above, defaulting to the second step. Photos keep their stored aspect ratio and their column assignment, so appending never reshuffles.
 
@@ -270,7 +279,7 @@ Every fixed layer respects safe-area insets (top bar, floating bar, sheet bottom
 
 ## Elevation & Depth
 
-Depth is tonal and material first. Pages are flat; grouped lists lift off the grouped page by surface tone alone; hover and press darken with translucent fills. Layers that float over scrolling content become frosted material: translucent background plus `saturate(180%) blur(20px)` for bars, `saturate(180%) blur(28px)` for thick material (floating bar, account menu). Hairlines are half-pixel inset box-shadows in the separator color, never borders.
+Depth is tonal and material first. Pages are flat apart from the Ambient Glow, which sits behind all content in its own isolated layer; grouped lists lift off the grouped page by surface tone alone; hover and press darken with translucent fills. Layers that float over scrolling content become frosted material: translucent background plus `saturate(180%) blur(20px)` for bars, `saturate(180%) blur(28px)` for thick material (floating bar, account menu). Hairlines are half-pixel inset box-shadows in the separator color, never borders.
 
 ### Shadow Vocabulary
 - **Float** (light `0 10px 34px rgba(0,0,0,0.12), 0 1px 3px rgba(0,0,0,0.08)`; dark `0 10px 34px rgba(0,0,0,0.55), 0 0 0 0.5px rgba(255,255,255,0.08)`): the only elevation shadow, for the floating bar, sheets and the account menu. In dark it adds a faint white edge so the layer reads against black.
@@ -297,7 +306,7 @@ Calm and tactile: they acknowledge a press by scaling, never by flashing color.
 - **Shape:** fully rounded pill (`rounded.full`); 44px tall with 20px padding at default, 32px tall with 14px padding at small. Label is semibold (600).
 - **Filled:** Label background with On Label text, so it inverts with appearance (near-black in light, near-white in dark). Primary actions: Unlock, Sign In, Save, Download N. Hover drops to 90% opacity.
 - **Tinted:** Fill background with Label text; hover steps to Fill 2. Secondary actions: kudos, comments, download all, the size control.
-- **Plain:** System Blue text with no container; hover 70% opacity, press 50%. Back links, Select, Cancel, Sign In in bars.
+- **Plain:** System Blue text with no container; hover 70% opacity, press 50%. Back links, Select, Cancel.
 - **Icon:** 36px circle, Label icon, Fill on hover, scale 0.94 on press. The sheet close button is a 32px Fill circle with a Secondary Label glyph.
 - **Press / Disabled:** press scales to 0.97 (icon buttons 0.94, small circular controls 0.90) over 150ms; disabled is 40% opacity with no pointer events. Focus is a 2px System Blue outline at 2px offset, globally.
 
@@ -319,7 +328,13 @@ The backbone of every non-photo page, in the manner of iOS Settings.
 ### Navigation
 - **Large-title header:** a 52px three-column bar (back link, centered small title, actions) over a Large Title. While the title is visible the bar is transparent; once it scrolls under, the bar turns to Material with a bottom hairline and the small Headline title fades and rises in (300ms). Tapping the small title scrolls to top.
 - **Top bar:** single-task pages use the same 52px bar with only a back link and actions.
-- **Account menu:** a 32px Fill circle showing the user's initial opens a 240px Thick Material menu with Float shadow, scaling from 95% out of its top-right corner (200ms): a signed-in header, hairline-separated rows, Sign Out in Destructive Red.
+- **Account control:** one 32px Fill circle in two states, never a text link or a pill. Signed out it holds a person glyph in Secondary Label; signed in, the user's initial in Label. Either opens a 256px Thick Material menu with Float shadow, scaling from 95% out of its top-right corner (200ms). Signed out, the menu says what an account is for ("like photos & leave comments"), offers a full-width filled Sign In, and has a Create Account row. Signed in, it shows a header, hairline-separated rows, and Sign Out in Destructive Red.
+
+### Collection Index (home, lg and up)
+The grouped list drops its card and becomes an index between hairlines on the plain Page background. Each row is a four-column grid: the collection name in Title 1 at weight 600, then the photo count and the month in Body, Secondary Label, tabular and right-aligned, then a chevron. Rows are 24px tall in padding with full-width hairlines. On hover the name slides 6px right on the long-settle curve, the count and month brighten to Label, and the chevron moves 4px and goes full strength; press dims the name to 60%. The search field narrows to 320px above it, and the footer splits into school on the left and links on the right.
+
+### Ambient Glow Layer
+An absolutely positioned layer behind everything in its page (the page is `relative isolate`; the layer is `z-index: -1`). Four elliptical radial gradients, one per palette color, each fading to transparent by 70%. A vertical mask runs from 30% at the top edge, so the top bar's blue links keep contrast, to full strength at 128px, then fades out. Header reach is 300px on phones and 440px on desktop, ending near the top of the grid. Page reach (home) is 380px and 760px, so on dark desktop the light runs behind the index. Phones keep the light in the top-right corner, clear of the title block. Desktop spreads it beside the title, where the header is empty; light home on desktop keeps it up by the title. The four colors are registered custom properties, so on home they ease over 0.9s on the long-settle curve to the colors of whichever collection is hovered or focused.
 
 ### Photo Tile
 - **Style:** the photo fills a 6px-radius tile (2px on phones) whose background is the photo's stored dominant color, or Fill, until the image loads and fades in over 500ms.
@@ -348,7 +363,7 @@ Always black, with white chrome under black gradients at top and bottom: a close
 - **Do** keep the photo viewer black with white chrome in both appearances.
 
 ### Don't:
-- **Don't** add grain, textures, gradients as decoration, themed metaphors, or display typefaces; the system is deliberately unthemed.
+- **Don't** add grain, textures, gradients as decoration, themed metaphors, or display typefaces; the system is deliberately unthemed. The Ambient Glow is the one gradient, and it is made only of the photos' own colors.
 - **Don't** draw borders around fields, cards, or buttons; depth comes from tonal fill and the one Float shadow.
 - **Don't** put a shadow on anything that does not float above content.
 - **Don't** use uppercase, letter-spaced eyebrow labels or kickers above titles.

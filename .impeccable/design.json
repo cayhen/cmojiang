@@ -580,9 +580,9 @@
         "displayName": "Caption",
         "purpose": "Smallest annotations."
       },
-      "large-title-wide": {
-        "displayName": "Large Title (wide)",
-        "purpose": "The Large Title from the md breakpoint up (40px / 46px)."
+      "display": {
+        "displayName": "Display",
+        "purpose": "The page title from md up, fluid to 88px on desktop (clamp(40px, 6.25vw, 88px), -0.035em)."
       }
     },
     "shadows": [

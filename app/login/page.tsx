@@ -5,7 +5,7 @@ export default function LoginPage() {
   return (
     <AuthForm
       title="Sign In"
-      subtitle="Like photos, leave comments, and skip passwords next time."
+      subtitle="like photos & leave comments"
       endpoint="/api/login"
       fallbackError="Couldn't sign you in. Please try again."
       submitLabel="Sign In"

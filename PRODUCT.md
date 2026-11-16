@@ -41,7 +41,7 @@ These are personal galleries from one photographer to the people who were there.
 ## Brand Commitments
 
 - Name: "cmojiang". The old Rogeta wordmark and its hover contact reveal are no longer binding (Caden, Nov 2026); contact details (email, Instagram, school) should stay reachable somewhere on the site.
-- Standing visual preference (Caden, Nov 2026): clean and unthemed, at the polish of Apple Photos and Linear. Two themed directions were rejected as "too themed". Appearance follows the visitor's system light/dark setting; the photo viewer is always black.
+- Standing visual preference (Caden, Nov 2026): clean and unthemed, at the polish of Apple Photos and Linear. Two themed directions were rejected as "too themed". Appearance follows the visitor's system light/dark setting; the photo viewer is always black. Later in Nov 2026 Caden found the desktop version and the plain black background too boring: desktop now has its own bolder layout (display-size titles, a full-width collection index), and pages carry a soft ambient glow made from the photos' own colors.
 - Voice: polished studio. Copy is clean, precise, and professional, never cute or chatty. It should sound like a capable photographer's service, even though the audience is friends.
 - Photography-first: the interface steps back so the photos lead (carried from the original 2026-05-23 spec).
 

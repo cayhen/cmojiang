@@ -13,8 +13,8 @@ interface Props {
   actions?: React.ReactNode;
   /** Controls that sit under the large title (filters, counts, buttons). */
   toolbar?: React.ReactNode;
-  /** narrow: centered reading column (lists, forms). wide: full-width (photo grids). */
-  width?: 'narrow' | 'wide';
+  /** narrow: centered reading column (lists, forms). wide: full-width (photo grids). index: home. */
+  width?: keyof typeof CONTAINER;
 }
 
 
@@ -69,12 +69,17 @@ export function PageHeader({ title, subtitle, back, actions, toolbar, width = 'n
         </div>
       </div>
 
-      <header className={`${CONTAINER[width]} pb-4 pt-1`}>
-        <h1 ref={titleRef} className="text-large-title md:text-[40px] md:leading-[46px] break-words">
-          {title}
-        </h1>
-        {subtitle && <div className="mt-1 text-subhead text-label2">{subtitle}</div>}
-        {toolbar && <div className="mt-4">{toolbar}</div>}
+      {/* From lg the title goes display-size and the toolbar moves onto its baseline. */}
+      <header className={`${CONTAINER[width]} pb-4 pt-1 lg:flex lg:items-end lg:justify-between lg:gap-12 lg:pb-10 lg:pt-6`}>
+        <div className="min-w-0">
+          <h1 ref={titleRef} className="text-large-title md:text-display break-words [text-wrap:balance]">
+            {title}
+          </h1>
+          {subtitle && (
+            <div className="mt-1 text-subhead text-label2 md:mt-2 lg:mt-3 lg:text-title3 lg:font-normal">{subtitle}</div>
+          )}
+        </div>
+        {toolbar && <div className="mt-4 lg:mt-0 lg:shrink-0 lg:pb-0.5">{toolbar}</div>}
       </header>
     </>
   );

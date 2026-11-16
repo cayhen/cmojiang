@@ -8,6 +8,8 @@ import { signViewUrl, signDownloadUrl, thumbPath } from '@/lib/r2';
 import { GalleryClient } from '@/components/GalleryClient';
 import { AccountMenu } from '@/components/AccountMenu';
 import { PageHeader } from '@/components/PageHeader';
+import { AmbientGlow } from '@/components/AmbientGlow';
+import { glowPalette } from '@/lib/glow';
 import { cachedFetch, galleryPhotosKey } from '@/lib/redis';
 import { fetchPhotosChronological, type PhotoRow } from '@/lib/photos';
 
@@ -116,8 +118,12 @@ export default async function GalleryPage({ params }: { params: { id: string } }
   const countLabel = `${photosWithUrls.length} ${photosWithUrls.length === 1 ? 'Photo' : 'Photos'}`;
   const subtitle = eventDate ? `${formatEventDate(eventDate)} · ${countLabel}` : countLabel;
 
+  // Weighted toward the opening photos, which is what the header sits above.
+  const glow = glowPalette(photosWithUrls.slice(0, 60).map(p => p.dominantColor));
+
   return (
-    <main className="min-h-screen bg-bg">
+    <main className="relative isolate min-h-screen bg-bg">
+      <AmbientGlow colors={glow} />
       {photosWithUrls.slice(0, 8).map(p => (
         <link key={p.id} rel="preload" as="image" href={p.url} />
       ))}

@@ -319,7 +319,7 @@ export function GalleryClient({
   const barOpen = selectionMode || downloading || pendingFiles.length > 0;
 
   const toolbar = photos.length > 0 && (
-    <div className="flex items-center justify-between gap-2">
+    <div className="flex items-center justify-between gap-2 lg:gap-5">
       <div className="flex items-center gap-2">
         <KudosButton collectionId={collectionId} initialCount={kudosCount} initialHasKudos={hasKudos} loggedIn={loggedIn} />
         <button

@@ -55,7 +55,6 @@ export function UnlockForm({ collectionId, name }: { collectionId: string; name:
         {unlocked ? <CheckIcon size={28} className="animate-badge" /> : <LockIcon size={28} />}
       </span>
       <h1 className="text-title1">{name}</h1>
-      <p className="mt-2 text-subhead text-label2">Enter the password to see these photos.</p>
 
       <form key={attempt} onSubmit={handleSubmit} className={`mt-8 w-full space-y-3 ${attempt ? 'animate-shake' : ''}`}>
         <input

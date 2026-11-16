@@ -39,6 +39,15 @@ export function ChevronRightIcon(p: IconProps) {
   return <Svg strokeWidth={2.2} {...p}><path d="M9 5l7 7-7 7" /></Svg>;
 }
 
+export function PersonIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <circle cx="12" cy="8.5" r="3.75" />
+      <path d="M4.75 20c.9-3.6 3.8-5.75 7.25-5.75S18.35 16.4 19.25 20" />
+    </Svg>
+  );
+}
+
 export function CloseIcon(p: IconProps) {
   return <Svg strokeWidth={2.2} {...p}><path d="M6 6l12 12M18 6L6 18" /></Svg>;
 }

@@ -148,11 +148,94 @@
     height: 0.5px;
     background: var(--separator);
   }
+  /* From lg the home list drops its card and becomes an index between hairlines. */
+  @media (min-width: 1024px) {
+    .list-index {
+      border-radius: 0;
+      background: transparent;
+      overflow: visible;
+      box-shadow: inset 0 0.5px 0 var(--separator), inset 0 -0.5px 0 var(--separator);
+    }
+    .list-index > .list-row + .list-row::before {
+      left: 0;
+    }
+    /* Outranks a.list-row:hover; index rows answer hover with motion, not fill. */
+    .list-index > a.list-row:hover,
+    .list-index > a.list-row:active {
+      background: transparent;
+    }
+  }
   .list-header {
     @apply px-4 pb-1.5 text-footnote text-label2;
   }
   .list-footer {
     @apply px-4 pt-1.5 text-footnote text-label2;
+  }
+}
+
+/* ── Ambient glow ─────────────────────────────────────────────────────────
+   Light in the photos' own colors behind the top of the page (AmbientGlow).
+   The colors are registered so a palette change eases instead of jumping.
+   Brightest off to the trailing side, where desktop headers are empty; text
+   over it stays above 4.5:1 in both appearances. */
+@property --glow-1 { syntax: '<color>'; inherits: false; initial-value: transparent; }
+@property --glow-2 { syntax: '<color>'; inherits: false; initial-value: transparent; }
+@property --glow-3 { syntax: '<color>'; inherits: false; initial-value: transparent; }
+@property --glow-4 { syntax: '<color>'; inherits: false; initial-value: transparent; }
+
+:root {
+  --glow-strength: 0.62;
+  --glow-purity: 35%; /* light appearance: a pale wash, since gray text on white has little contrast to spare */
+  --glow-base: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --glow-strength: 0.86; --glow-purity: 100%; --glow-base: #000000; }
+}
+
+.ambient-glow {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: -1;
+  pointer-events: none;
+  /* Geometry per light (size and center). Phones keep it in the top-right
+     corner, clear of the title block; desktop spreads it beside the title. */
+  --g1: 70% 80% at 100% -5%;
+  --g2: 50% 60% at 62% -30%;
+  --g3: 40% 50% at 0% -45%;
+  --g4: 34% 50% at 104% 46%;
+  background:
+    radial-gradient(var(--g1), color-mix(in oklab, var(--glow-1) var(--glow-purity), var(--glow-base)), transparent 72%),
+    radial-gradient(var(--g2), color-mix(in oklab, var(--glow-2) var(--glow-purity), var(--glow-base)), transparent 70%),
+    radial-gradient(var(--g3), color-mix(in oklab, var(--glow-3) var(--glow-purity), var(--glow-base)), transparent 70%),
+    radial-gradient(var(--g4), color-mix(in oklab, var(--glow-4) var(--glow-purity), var(--glow-base)), transparent 70%);
+  opacity: var(--glow-strength);
+  /* Dim under the top bar so its blue links keep contrast, full beside the
+     title, then fading into the page. */
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0, #000 128px, #000 34%, transparent);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0, #000 128px, #000 34%, transparent);
+  transition: --glow-1 0.9s var(--ease-ios), --glow-2 0.9s var(--ease-ios),
+    --glow-3 0.9s var(--ease-ios), --glow-4 0.9s var(--ease-ios);
+}
+.ambient-glow-header { height: 300px; }
+.ambient-glow-page { height: 380px; }
+@media (min-width: 1024px) {
+  .ambient-glow {
+    --g1: 46% 78% at 84% 22%;
+    --g2: 40% 66% at 54% 0%;
+    --g3: 34% 56% at 10% -12%;
+    --g4: 28% 56% at 102% 56%;
+  }
+  .ambient-glow-header { height: 440px; }
+  .ambient-glow-page { height: 760px; }
+}
+/* Light home on desktop: keep the light up by the title, off the index's gray
+   numbers, which have little contrast to spare on white. */
+@media (min-width: 1024px) and (prefers-color-scheme: light) {
+  .ambient-glow-page {
+    --g1: 46% 50% at 86% 10%;
+    --g2: 40% 42% at 54% 0%;
+    --g3: 34% 36% at 10% -7%;
+    --g4: 28% 34% at 102% 30%;
   }
 }
 

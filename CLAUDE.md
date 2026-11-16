@@ -22,6 +22,7 @@ Changes that increase costs:
 Current known cost drivers:
 - Gallery page generates presigned R2 URLs for every photo on each load (180 AWS SDK calls for a 60-photo gallery)
 - `revalidate = 0` on home, admin dashboard, manage collection, and profile pages (dynamic render per request)
+- Home query also returns up to 24 photo colors per public collection for the ambient glow (about 8KB from Supabase per load at 10 collections; still one query)
 
 ---
 
@@ -157,8 +158,8 @@ Middleware (`middleware.ts`) protects `/admin/:path+` and `/api/admin/((?!login)
 ## Page & Data Flow
 
 ### Home (`/`)
-- Server component (`revalidate = 0`). Queries public collections (`is_private = false`) with photo counts, ordered by `event_date` descending.
-- Renders `PageHeader` (large title) and `CollectionList` (client: search field, shown only above 5 collections, plus a grouped list of collections).
+- Server component (`revalidate = 0`). Queries public collections (`is_private = false`) with photo counts, ordered by `event_date` descending. The same query embeds up to 24 stored `dominant_color` values per collection (`swatches:photos(dominant_color)`, limited via `referencedTable`); `glowPalette` (`lib/glow.ts`) reduces them to 4 hex colors server-side for the ambient glow, so only those reach the client.
+- Renders `PageHeader` (large title; display-size from md up) and `CollectionList` (client: search field, shown only above 5 collections, plus a grouped list of collections that becomes a full-width index from `lg` up).
 - Footer carries the contact links (Instagram, email) that used to live in the old wordmark, plus a faint admin link `/admin`.
 - No error handling on the Supabase query.
 
@@ -186,6 +187,7 @@ Middleware (`middleware.ts`) protects `/admin/:path+` and `/api/admin/((?!login)
 - Injects `<link rel="preload" as="image">` for the first 8 thumbnails in the HTML head.
 - Fetches kudos count, whether current user has given kudos, all comments, and the user's liked photo IDs server-side.
 - Passes everything to `GalleryClient` as props — no client-side API calls on initial load. The account control (`AccountMenu`, a server component) is passed in as a prop.
+- An `AmbientGlow` layer behind the header uses `glowPalette` over the first 60 photos' stored dominant colors (already loaded, no extra query). The `main` is `relative isolate` so the layer sits behind content.
 - `loading.tsx` shows a static skeleton while the server renders (no data, no cost).
 - On signing errors, renders a "temporarily unavailable" message instead of the grid.
 
@@ -213,7 +215,7 @@ Design system: tokens are CSS variables in `app/globals.css` (light and dark und
 - `TopBar` is the back-link-only bar for single-task pages (unlock, sign in, admin login).
 
 ### `AccountMenu` / `AccountMenuClient`
-- Server wrapper reads `user_session`; the client shows "Sign In" or an initial avatar with a popover (Liked Photos, Your Collections, Sign Out). Replaces the old `UserNav` and the mobile hamburger drawer.
+- Server wrapper reads `user_session`; the client is one 32px circle in two states. Signed out it shows a person glyph and its popover explains accounts and offers Sign In and Create Account; signed in it shows the initial, with Liked Photos, Your Collections, and Sign Out. Replaces the old `UserNav` and the mobile hamburger drawer.
 
 ### `MasonryGrid`
 Flex-column masonry. Column count comes from breakpoint × `sizeLevel` (1–4). The server and first client render use the phone breakpoint, and the real breakpoint is applied in a layout effect before paint (avoids hydration mismatches). Tiles keep their aspect ratio, sit on a `dominantColor` placeholder and fade in on load. 2px gutters edge-to-edge on phones, 6px with rounded tiles from `sm`.

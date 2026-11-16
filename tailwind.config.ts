@@ -27,6 +27,8 @@ const config: Config = {
         ],
       },
       fontSize: {
+        // Page titles from md up: scales with the viewport to 88px on desktop.
+        'display': ['clamp(40px, 6.25vw, 88px)', { lineHeight: '1.02', letterSpacing: '-0.035em', fontWeight: '700' }],
         'large-title': ['34px', { lineHeight: '41px', letterSpacing: '-0.022em', fontWeight: '700' }],
         'title1': ['28px', { lineHeight: '34px', letterSpacing: '-0.02em', fontWeight: '700' }],
         'title2': ['22px', { lineHeight: '28px', letterSpacing: '-0.018em', fontWeight: '600' }],
