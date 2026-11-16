@@ -1,34 +1,24 @@
-import type { Metadata } from 'next';
-import { DM_Sans } from 'next/font/google';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
-
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  weight: ['300', '400'],
-  variable: '--font-dm-sans',
-});
 
 export const metadata: Metadata = {
   title: 'Caden Jiang — Photos',
 };
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+  ],
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={dmSans.variable}>
-      <head>
-        <link
-          rel="preload"
-          href="/fonts/RogetaBlack.ttf"
-          as="font"
-          type="font/ttf"
-          crossOrigin="anonymous"
-        />
-      </head>
-      <body className="font-sans bg-[#080808] text-[#bbb] antialiased">
-        <div className="relative z-[2]">
-          {children}
-        </div>
-      </body>
+    <html lang="en">
+      <body>{children}</body>
     </html>
   );
 }

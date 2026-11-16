@@ -2,52 +2,21 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { TextScramble } from '@/components/ui/text-scramble';
+import { CheckIcon, LockIcon, Spinner } from './icons';
 
-type Phase = 'idle' | 'unlocking' | 'open';
+type Phase = 'idle' | 'checking' | 'unlocked';
 
-function LockIcon({ open }: { open: boolean }) {
-  return (
-    <div>
-      <svg
-        width="48"
-        height="48"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.25"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        overflow="visible"
-        className="text-[#bbb]"
-      >
-        {/* Lock body — always visible */}
-        <rect x="3" y="11" width="18" height="11" rx="2" />
-        <circle cx="12" cy="16" r="1" fill="currentColor" stroke="none" />
-
-        {/* Shackle — slides straight up when open */}
-        <path
-          d="M7 11V7a5 5 0 0 1 10 0v4"
-          className="transition-all duration-500 ease-out"
-          style={{
-            transform: open ? 'translateY(-7px)' : 'translateY(0px)',
-          }}
-        />
-      </svg>
-    </div>
-  );
-}
-
-export function UnlockForm({ collectionId }: { collectionId: string }) {
+export function UnlockForm({ collectionId, name }: { collectionId: string; name: string }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const [phase, setPhase] = useState<Phase>('idle');
+  const [attempt, setAttempt] = useState(0);
   const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
+    if (phase !== 'idle') return;
+    setPhase('checking');
     setError('');
 
     try {
@@ -58,56 +27,54 @@ export function UnlockForm({ collectionId }: { collectionId: string }) {
       });
 
       if (res.ok) {
-        setPhase('unlocking');
-        setTimeout(() => setPhase('open'), 350);
-        setTimeout(() => router.push(`/c/${collectionId}/gallery`), 1200);
+        setPhase('unlocked');
+        setTimeout(() => router.push(`/c/${collectionId}/gallery`), 450);
         return;
       }
 
-      const data = await res.json();
-      setError(data.error ?? 'Something went wrong');
-    } finally {
-      setLoading(false);
+      // A server crash returns an empty or HTML body, so don't assume JSON.
+      const data: { error?: string } = await res.json().catch(() => ({}));
+      setError(data.error ?? "Couldn't unlock this collection. Please try again.");
+      setAttempt(a => a + 1);
+      setPhase('idle');
+    } catch {
+      setError('Network error. Check your connection and try again.');
+      setPhase('idle');
     }
   }
 
-  return (
-    <>
-      {/* Unlock animation overlay */}
-      {phase !== 'idle' && (
-        <div className="fixed inset-0 bg-[#0f0f0f] z-50 flex flex-col items-center justify-center gap-4">
-          <LockIcon open={phase === 'open'} />
-          <div className={`transition-opacity duration-300 ${phase === 'open' ? 'opacity-100' : 'opacity-0'}`}>
-            {phase === 'open' && (
-              <TextScramble
-                text="UNLOCKED"
-                autoPlay
-                fast
-                className="text-white text-xs tracking-widest font-light"
-              />
-            )}
-          </div>
-        </div>
-      )}
+  const unlocked = phase === 'unlocked';
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+  return (
+    <div className="flex flex-col items-center text-center">
+      <span
+        className={`mb-5 flex h-16 w-16 items-center justify-center rounded-full transition-colors duration-300 ${
+          unlocked ? 'bg-label text-onlabel' : 'bg-fill text-label'
+        }`}
+      >
+        {unlocked ? <CheckIcon size={28} className="animate-badge" /> : <LockIcon size={28} />}
+      </span>
+      <h1 className="text-title1">{name}</h1>
+
+      <form key={attempt} onSubmit={handleSubmit} className={`mt-8 w-full space-y-3 ${attempt ? 'animate-shake' : ''}`}>
         <input
           type="password"
-          placeholder="Enter password"
+          placeholder="Password"
           value={password}
-          onChange={e => setPassword(e.target.value)}
+          onChange={e => { setPassword(e.target.value); if (error) setError(''); }}
           required
-          className="w-full bg-[#161616] border border-[#1e1e1e] rounded px-3 py-2.5 text-[#bbb] text-sm placeholder:text-[#666] focus:outline-none focus:border-[#2a2a2a] font-light"
+          autoFocus
+          autoComplete="current-password"
+          aria-label="Collection password"
+          aria-invalid={!!error}
+          aria-describedby={error ? 'unlock-error' : undefined}
+          className="field text-center"
         />
-        {error && <p className="text-red-500/70 text-xs">{error}</p>}
-        <button
-          type="submit"
-          disabled={loading || phase !== 'idle'}
-          className="w-full bg-[#161616] border border-[#1e1e1e] text-[#888] text-sm py-2.5 rounded hover:border-[#2a2a2a] hover:text-[#bbb] transition-colors disabled:opacity-50"
-        >
-          {loading ? 'Checking...' : 'Unlock'}
+        <button type="submit" disabled={phase !== 'idle' || !password} className="btn btn-filled w-full">
+          {phase === 'checking' ? <Spinner size={18} /> : unlocked ? 'Unlocked' : 'Unlock'}
         </button>
       </form>
-    </>
+      <p id="unlock-error" role="alert" className="mt-3 min-h-[18px] text-footnote text-destructive">{error}</p>
+    </div>
   );
 }

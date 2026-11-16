@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { PageHeader } from '@/components/PageHeader';
+import { CONTAINER } from '@/components/container';
+import { Spinner } from '@/components/icons';
 
 function today() {
   return new Date().toISOString().slice(0, 10);
@@ -28,7 +30,7 @@ export default function NewCollectionPage() {
       if (res.ok) {
         window.location.href = '/admin/dashboard';
       } else {
-        const data = await res.json();
+        const data: { error?: string } = await res.json().catch(() => ({}));
         setError(data.error ?? 'Failed to create');
       }
     } catch {
@@ -39,48 +41,75 @@ export default function NewCollectionPage() {
   }
 
   return (
-    <main className="min-h-screen p-8 max-w-md mx-auto">
-      <div className="flex items-center gap-4 mb-8">
-        <Link href="/admin/dashboard" className="text-[#666] text-xs hover:text-[#777]">
-          ← Back
-        </Link>
-        <p className="text-[#666] text-xs tracking-widest uppercase font-light">New Collection</p>
-      </div>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="text"
-          placeholder="Collection name"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          required
-          className="w-full bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2.5 text-[#bbb] text-sm placeholder:text-[#666] focus:outline-none focus:border-[#2a2a2a] font-light"
-        />
-        <input
-          type="password"
-          placeholder="Collection password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-          className="w-full bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2.5 text-[#bbb] text-sm placeholder:text-[#666] focus:outline-none focus:border-[#2a2a2a] font-light"
-        />
+    <main className="min-h-screen bg-grouped pb-16">
+      <PageHeader title="New Collection" back={{ href: '/admin/dashboard', label: 'Collections' }} />
+
+      <form onSubmit={handleSubmit} className={`${CONTAINER.narrow} space-y-8`}>
+        <section>
+          <label htmlFor="new-name" className="list-header block">Name</label>
+          <div className="list p-2">
+            <input
+              id="new-name"
+              type="text"
+              placeholder="Collection name"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              required
+              autoFocus
+              className="field"
+            />
+          </div>
+        </section>
+
+        <section>
+          <label htmlFor="new-password" className="list-header block">Password</label>
+          <div className="list p-2">
+            <input
+              id="new-password"
+              type="password"
+              placeholder="Collection password"
+              autoComplete="new-password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              className="field"
+            />
+          </div>
+          <p className="list-footer">Visitors enter this to open the collection. It stays visible on the dashboard so you can re-share it.</p>
+        </section>
+
+        <section>
+          <label htmlFor="new-date" className="list-header block">Event date</label>
+          <div className="list p-2">
+            <input
+              id="new-date"
+              type="date"
+              value={eventDate}
+              onChange={e => setEventDate(e.target.value)}
+              required
+              className="field min-w-0 [&::-webkit-date-and-time-value]:text-left"
+            />
+          </div>
+          <p className="list-footer">Collections are ordered by event date on the home page.</p>
+        </section>
+
         <div>
-          <label className="text-[#555] text-xs uppercase tracking-widest block mb-1.5">Event date</label>
-          <input
-            type="date"
-            value={eventDate}
-            onChange={e => setEventDate(e.target.value)}
-            required
-            className="w-full bg-[#161616] border border-[#1a1a1a] rounded px-3 py-2.5 text-[#bbb] text-sm focus:outline-none focus:border-[#2a2a2a] font-light"
-          />
+          <button type="submit" disabled={loading} className="btn btn-filled w-full">
+            {loading ? (
+              <>
+                <Spinner />
+                <span className="sr-only">Creating…</span>
+              </>
+            ) : (
+              'Create Collection'
+            )}
+          </button>
+          {error && (
+            <p role="alert" className="animate-rise px-4 pt-3 text-center text-footnote text-destructive">
+              {error}
+            </p>
+          )}
         </div>
-        {error && <p className="text-red-500/70 text-xs">{error}</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-[#161616] border border-[#1a1a1a] text-[#888] text-sm py-2.5 rounded hover:border-[#2a2a2a] hover:text-[#bbb] transition-colors disabled:opacity-50"
-        >
-          {loading ? 'Creating...' : 'Create Collection'}
-        </button>
       </form>
     </main>
   );

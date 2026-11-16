@@ -6,11 +6,12 @@ import { getUserSession } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
 import { signViewUrl, signDownloadUrl, thumbPath } from '@/lib/r2';
 import { GalleryClient } from '@/components/GalleryClient';
-import { UserNav } from '@/components/UserNav';
+import { AccountMenu } from '@/components/AccountMenu';
+import { PageHeader } from '@/components/PageHeader';
+import { AmbientGlow } from '@/components/AmbientGlow';
+import { glowPalette } from '@/lib/glow';
 import { cachedFetch, galleryPhotosKey } from '@/lib/redis';
 import { fetchPhotosChronological, type PhotoRow } from '@/lib/photos';
-import { HomeLink } from '@/components/HomeLink';
-import { MobileNav } from '@/components/MobileNav';
 
 export default async function GalleryPage({ params }: { params: { id: string } }) {
   const cookieStore = cookies();
@@ -32,7 +33,7 @@ export default async function GalleryPage({ params }: { params: { id: string } }
   // The photo cache holds raw rows (not URLs) so we never cache an expiring
   // signed URL; URL generation happens below, outside the cache boundary.
   const [collectionRes, rawPhotos, kudosRes, commentsRes, userSession] = await Promise.all([
-    supabaseAdmin.from('collections').select('name').eq('id', params.id).single(),
+    supabaseAdmin.from('collections').select('name, event_date').eq('id', params.id).single(),
     cachedFetch<PhotoRow[]>(galleryPhotosKey(params.id), 300, () =>
       fetchPhotosChronological(params.id)
     ),
@@ -113,29 +114,31 @@ export default async function GalleryPage({ params }: { params: { id: string } }
     username: (c.users as unknown as { username: string } | null)?.username ?? 'unknown',
   }));
 
+  const eventDate = (collection as { event_date?: string | null }).event_date;
+  const countLabel = `${photosWithUrls.length} ${photosWithUrls.length === 1 ? 'Photo' : 'Photos'}`;
+  const subtitle = eventDate ? `${formatEventDate(eventDate)} · ${countLabel}` : countLabel;
+
+  // Weighted toward the opening photos, which is what the header sits above.
+  const glow = glowPalette(photosWithUrls.slice(0, 60).map(p => p.dominantColor));
+
   return (
-    <main className="min-h-screen p-4 sm:p-6">
+    <main className="relative isolate min-h-screen bg-bg">
+      <AmbientGlow colors={glow} />
       {photosWithUrls.slice(0, 8).map(p => (
         <link key={p.id} rel="preload" as="image" href={p.url} />
       ))}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="md:hidden"><MobileNav /></div>
-          <div className="hidden md:block"><HomeLink /></div>
-          <div>
-            <h1 className="text-[#bbb] font-light text-sm leading-tight">{collection.name}</h1>
-            <p className="text-[#444] text-xs font-light leading-tight mt-0.5">{photosWithUrls.length} {photosWithUrls.length === 1 ? 'photo' : 'photos'}</p>
-          </div>
-        </div>
-        <div className="hidden md:block"><UserNav /></div>
-      </div>
-
       {signingError ? (
-        <p className="text-[#666] text-sm">Photos are temporarily unavailable. Please try again in a moment.</p>
+        <>
+          <PageHeader width="wide" title={collection.name} back={{ href: '/', label: 'Collections' }} actions={<AccountMenu />} />
+          <p className="mx-auto w-full px-4 text-subhead text-label2 sm:px-6 lg:px-8">
+            Photos are temporarily unavailable. Please try again in a moment.
+          </p>
+        </>
       ) : (
         <GalleryClient
           collectionId={params.id}
           collectionName={collection.name}
+          subtitle={subtitle}
           photos={photosWithUrls}
           kudosCount={kudosCount ?? 0}
           hasKudos={hasKudos}
@@ -143,8 +146,15 @@ export default async function GalleryPage({ params }: { params: { id: string } }
           comments={comments}
           currentUsername={userSession?.username ?? null}
           likedPhotoIds={likedPhotoIds}
+          accountMenu={<AccountMenu />}
         />
       )}
     </main>
   );
+}
+
+/** "2026-10-11" → "October 11, 2026" (date-only, no timezone shift). */
+function formatEventDate(date: string) {
+  const [y, m, d] = date.split('-').map(Number);
+  return new Date(y, (m || 1) - 1, d || 1).toLocaleDateString('en-US', d ? { month: 'long', day: 'numeric', year: 'numeric' } : { month: 'long', year: 'numeric' });
 }

@@ -1,0 +1,892 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-15T00:00:00Z",
+  "title": "Design System: cmojiang",
+  "extensions": {
+    "colorMeta": {
+      "label": {
+        "role": "neutral",
+        "displayName": "Label (light)",
+        "canonical": "#1d1d1f",
+        "appearance": "light",
+        "pair": "label-dark",
+        "tonalRamp": [
+          "#1c1c1e",
+          "#2c2c2e",
+          "#3a3a3c",
+          "#48484a",
+          "#636366",
+          "#8e8e93",
+          "#c7c7cc",
+          "#f2f2f7"
+        ]
+      },
+      "label-dark": {
+        "role": "neutral",
+        "displayName": "Label (dark)",
+        "canonical": "#f5f5f7",
+        "appearance": "dark",
+        "pair": "label",
+        "tonalRamp": [
+          "#1c1c1e",
+          "#2c2c2e",
+          "#3a3a3c",
+          "#48484a",
+          "#636366",
+          "#8e8e93",
+          "#c7c7cc",
+          "#f2f2f7"
+        ]
+      },
+      "label-2": {
+        "role": "neutral",
+        "displayName": "Secondary Label (light)",
+        "canonical": "#6e6e73",
+        "appearance": "light",
+        "pair": "label-2-dark",
+        "tonalRamp": [
+          "#1c1c1e",
+          "#2c2c2e",
+          "#3a3a3c",
+          "#48484a",
+          "#636366",
+          "#8e8e93",
+          "#c7c7cc",
+          "#f2f2f7"
+        ]
+      },
+      "label-2-dark": {
+        "role": "neutral",
+        "displayName": "Secondary Label (dark)",
+        "canonical": "#98989d",
+        "appearance": "dark",
+        "pair": "label-2",
+        "tonalRamp": [
+          "#1c1c1e",
+          "#2c2c2e",
+          "#3a3a3c",
+          "#48484a",
+          "#636366",
+          "#8e8e93",
+          "#c7c7cc",
+          "#f2f2f7"
+        ]
+      },
+      "on-label": {
+        "role": "neutral",
+        "displayName": "On Label (light)",
+        "canonical": "#ffffff",
+        "appearance": "light",
+        "pair": "on-label-dark",
+        "tonalRamp": [
+          "#1c1c1e",
+          "#2c2c2e",
+          "#3a3a3c",
+          "#48484a",
+          "#636366",
+          "#8e8e93",
+          "#c7c7cc",
+          "#f2f2f7"
+        ]
+      },
+      "on-label-dark": {
+        "role": "neutral",
+        "displayName": "On Label (dark)",
+        "canonical": "#000000",
+        "appearance": "dark",
+        "pair": "on-label",
+        "tonalRamp": [
+          "#1c1c1e",
+          "#2c2c2e",
+          "#3a3a3c",
+          "#48484a",
+          "#636366",
+          "#8e8e93",
+          "#c7c7cc",
+          "#f2f2f7"
+        ]
+      },
+      "tint": {
+        "role": "primary",
+        "displayName": "System Blue (light)",
+        "canonical": "#0066cc",
+        "appearance": "light",
+        "pair": "tint-dark",
+        "tonalRamp": [
+          "#002a54",
+          "#003f7f",
+          "#0055aa",
+          "#0066cc",
+          "#2997ff",
+          "#66b3ff",
+          "#a8d4ff",
+          "#e5f2ff"
+        ]
+      },
+      "tint-dark": {
+        "role": "primary",
+        "displayName": "System Blue (dark)",
+        "canonical": "#2997ff",
+        "appearance": "dark",
+        "pair": "tint",
+        "tonalRamp": [
+          "#002a54",
+          "#003f7f",
+          "#0055aa",
+          "#0066cc",
+          "#2997ff",
+          "#66b3ff",
+          "#a8d4ff",
+          "#e5f2ff"
+        ]
+      },
+      "tint-ring": {
+        "role": "primary",
+        "displayName": "Tint Ring (light)",
+        "canonical": "rgba(0, 102, 204, 0.32)",
+        "appearance": "light",
+        "pair": "tint-ring-dark",
+        "tonalRamp": [
+          "#002a54",
+          "#003f7f",
+          "#0055aa",
+          "#0066cc",
+          "#2997ff",
+          "#66b3ff",
+          "#a8d4ff",
+          "#e5f2ff"
+        ]
+      },
+      "tint-ring-dark": {
+        "role": "primary",
+        "displayName": "Tint Ring (dark)",
+        "canonical": "rgba(41, 151, 255, 0.4)",
+        "appearance": "dark",
+        "pair": "tint-ring",
+        "tonalRamp": [
+          "#002a54",
+          "#003f7f",
+          "#0055aa",
+          "#0066cc",
+          "#2997ff",
+          "#66b3ff",
+          "#a8d4ff",
+          "#e5f2ff"
+        ]
+      },
+      "heart": {
+        "role": "secondary",
+        "displayName": "Like Pink (light)",
+        "canonical": "#ff2d55",
+        "appearance": "light",
+        "pair": "heart-dark",
+        "tonalRamp": [
+          "#4d0014",
+          "#80001f",
+          "#b8002e",
+          "#ff2d55",
+          "#ff5c7c",
+          "#ff8fa5",
+          "#ffc2cf",
+          "#ffe8ed"
+        ]
+      },
+      "heart-dark": {
+        "role": "secondary",
+        "displayName": "Like Pink (dark)",
+        "canonical": "#ff375f",
+        "appearance": "dark",
+        "pair": "heart",
+        "tonalRamp": [
+          "#4d0014",
+          "#80001f",
+          "#b8002e",
+          "#ff2d55",
+          "#ff5c7c",
+          "#ff8fa5",
+          "#ffc2cf",
+          "#ffe8ed"
+        ]
+      },
+      "destructive": {
+        "role": "tertiary",
+        "displayName": "Destructive Red (light)",
+        "canonical": "#d70015",
+        "appearance": "light",
+        "pair": "destructive-dark",
+        "tonalRamp": [
+          "#470007",
+          "#7a000c",
+          "#a80012",
+          "#d70015",
+          "#ff453a",
+          "#ff7d75",
+          "#ffb3ad",
+          "#ffe5e3"
+        ]
+      },
+      "destructive-dark": {
+        "role": "tertiary",
+        "displayName": "Destructive Red (dark)",
+        "canonical": "#ff453a",
+        "appearance": "dark",
+        "pair": "destructive",
+        "tonalRamp": [
+          "#470007",
+          "#7a000c",
+          "#a80012",
+          "#d70015",
+          "#ff453a",
+          "#ff7d75",
+          "#ffb3ad",
+          "#ffe5e3"
+        ]
+      },
+      "bg": {
+        "role": "neutral",
+        "displayName": "Page (light)",
+        "canonical": "#ffffff",
+        "appearance": "light",
+        "pair": "bg-dark",
+        "tonalRamp": [
+          "#1c1c1e",
+          "#2c2c2e",
+          "#3a3a3c",
+          "#48484a",
+          "#636366",
+          "#8e8e93",
+          "#c7c7cc",
+          "#f2f2f7"
+        ]
+      },
+      "bg-dark": {
+        "role": "neutral",
+        "displayName": "Page (dark)",
+        "canonical": "#000000",
+        "appearance": "dark",
+        "pair": "bg",
+        "tonalRamp": [
+          "#1c1c1e",
+          "#2c2c2e",
+          "#3a3a3c",
+          "#48484a",
+          "#636366",
+          "#8e8e93",
+          "#c7c7cc",
+          "#f2f2f7"
+        ]
+      },
+      "bg-grouped": {
+        "role": "neutral",
+        "displayName": "Grouped Page (light)",
+        "canonical": "#f2f2f7",
+        "appearance": "light",
+        "pair": "bg-grouped-dark",
+        "tonalRamp": [
+          "#1c1c1e",
+          "#2c2c2e",
+          "#3a3a3c",
+          "#48484a",
+          "#636366",
+          "#8e8e93",
+          "#c7c7cc",
+          "#f2f2f7"
+        ]
+      },
+      "bg-grouped-dark": {
+        "role": "neutral",
+        "displayName": "Grouped Page (dark)",
+        "canonical": "#000000",
+        "appearance": "dark",
+        "pair": "bg-grouped",
+        "tonalRamp": [
+          "#1c1c1e",
+          "#2c2c2e",
+          "#3a3a3c",
+          "#48484a",
+          "#636366",
+          "#8e8e93",
+          "#c7c7cc",
+          "#f2f2f7"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface (light)",
+        "canonical": "#ffffff",
+        "appearance": "light",
+        "pair": "surface-dark",
+        "tonalRamp": [
+          "#1c1c1e",
+          "#2c2c2e",
+          "#3a3a3c",
+          "#48484a",
+          "#636366",
+          "#8e8e93",
+          "#c7c7cc",
+          "#f2f2f7"
+        ]
+      },
+      "surface-dark": {
+        "role": "neutral",
+        "displayName": "Surface (dark)",
+        "canonical": "#1c1c1e",
+        "appearance": "dark",
+        "pair": "surface",
+        "tonalRamp": [
+          "#1c1c1e",
+          "#2c2c2e",
+          "#3a3a3c",
+          "#48484a",
+          "#636366",
+          "#8e8e93",
+          "#c7c7cc",
+          "#f2f2f7"
+        ]
+      },
+      "fill": {
+        "role": "neutral",
+        "displayName": "Fill (light)",
+        "canonical": "rgba(118, 118, 128, 0.12)",
+        "appearance": "light",
+        "pair": "fill-dark",
+        "tonalRamp": [
+          "#1c1c1e",
+          "#2c2c2e",
+          "#3a3a3c",
+          "#48484a",
+          "#636366",
+          "#8e8e93",
+          "#c7c7cc",
+          "#f2f2f7"
+        ]
+      },
+      "fill-dark": {
+        "role": "neutral",
+        "displayName": "Fill (dark)",
+        "canonical": "rgba(118, 118, 128, 0.24)",
+        "appearance": "dark",
+        "pair": "fill",
+        "tonalRamp": [
+          "#1c1c1e",
+          "#2c2c2e",
+          "#3a3a3c",
+          "#48484a",
+          "#636366",
+          "#8e8e93",
+          "#c7c7cc",
+          "#f2f2f7"
+        ]
+      },
+      "fill-2": {
+        "role": "neutral",
+        "displayName": "Fill 2 (light)",
+        "canonical": "rgba(118, 118, 128, 0.2)",
+        "appearance": "light",
+        "pair": "fill-2-dark",
+        "tonalRamp": [
+          "#1c1c1e",
+          "#2c2c2e",
+          "#3a3a3c",
+          "#48484a",
+          "#636366",
+          "#8e8e93",
+          "#c7c7cc",
+          "#f2f2f7"
+        ]
+      },
+      "fill-2-dark": {
+        "role": "neutral",
+        "displayName": "Fill 2 (dark)",
+        "canonical": "rgba(118, 118, 128, 0.36)",
+        "appearance": "dark",
+        "pair": "fill-2",
+        "tonalRamp": [
+          "#1c1c1e",
+          "#2c2c2e",
+          "#3a3a3c",
+          "#48484a",
+          "#636366",
+          "#8e8e93",
+          "#c7c7cc",
+          "#f2f2f7"
+        ]
+      },
+      "separator": {
+        "role": "neutral",
+        "displayName": "Separator (light)",
+        "canonical": "rgba(60, 60, 67, 0.18)",
+        "appearance": "light",
+        "pair": "separator-dark",
+        "tonalRamp": [
+          "#1c1c1e",
+          "#2c2c2e",
+          "#3a3a3c",
+          "#48484a",
+          "#636366",
+          "#8e8e93",
+          "#c7c7cc",
+          "#f2f2f7"
+        ]
+      },
+      "separator-dark": {
+        "role": "neutral",
+        "displayName": "Separator (dark)",
+        "canonical": "rgba(84, 84, 88, 0.65)",
+        "appearance": "dark",
+        "pair": "separator",
+        "tonalRamp": [
+          "#1c1c1e",
+          "#2c2c2e",
+          "#3a3a3c",
+          "#48484a",
+          "#636366",
+          "#8e8e93",
+          "#c7c7cc",
+          "#f2f2f7"
+        ]
+      },
+      "material": {
+        "role": "neutral",
+        "displayName": "Material (light)",
+        "canonical": "rgba(255, 255, 255, 0.74)",
+        "appearance": "light",
+        "pair": "material-dark",
+        "tonalRamp": [
+          "#1c1c1e",
+          "#2c2c2e",
+          "#3a3a3c",
+          "#48484a",
+          "#636366",
+          "#8e8e93",
+          "#c7c7cc",
+          "#f2f2f7"
+        ]
+      },
+      "material-dark": {
+        "role": "neutral",
+        "displayName": "Material (dark)",
+        "canonical": "rgba(22, 22, 23, 0.74)",
+        "appearance": "dark",
+        "pair": "material",
+        "tonalRamp": [
+          "#1c1c1e",
+          "#2c2c2e",
+          "#3a3a3c",
+          "#48484a",
+          "#636366",
+          "#8e8e93",
+          "#c7c7cc",
+          "#f2f2f7"
+        ]
+      },
+      "material-thick": {
+        "role": "neutral",
+        "displayName": "Thick Material (light)",
+        "canonical": "rgba(250, 250, 252, 0.88)",
+        "appearance": "light",
+        "pair": "material-thick-dark",
+        "tonalRamp": [
+          "#1c1c1e",
+          "#2c2c2e",
+          "#3a3a3c",
+          "#48484a",
+          "#636366",
+          "#8e8e93",
+          "#c7c7cc",
+          "#f2f2f7"
+        ]
+      },
+      "material-thick-dark": {
+        "role": "neutral",
+        "displayName": "Thick Material (dark)",
+        "canonical": "rgba(36, 36, 38, 0.9)",
+        "appearance": "dark",
+        "pair": "material-thick",
+        "tonalRamp": [
+          "#1c1c1e",
+          "#2c2c2e",
+          "#3a3a3c",
+          "#48484a",
+          "#636366",
+          "#8e8e93",
+          "#c7c7cc",
+          "#f2f2f7"
+        ]
+      },
+      "viewer-backdrop": {
+        "role": "neutral",
+        "displayName": "Viewer Black",
+        "canonical": "#000000",
+        "appearance": "fixed",
+        "tonalRamp": [
+          "#1c1c1e",
+          "#2c2c2e",
+          "#3a3a3c",
+          "#48484a",
+          "#636366",
+          "#8e8e93",
+          "#c7c7cc",
+          "#f2f2f7"
+        ]
+      },
+      "viewer-label": {
+        "role": "neutral",
+        "displayName": "Viewer White",
+        "canonical": "#ffffff",
+        "appearance": "fixed",
+        "tonalRamp": [
+          "#1c1c1e",
+          "#2c2c2e",
+          "#3a3a3c",
+          "#48484a",
+          "#636366",
+          "#8e8e93",
+          "#c7c7cc",
+          "#f2f2f7"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "large-title": {
+        "displayName": "Large Title",
+        "purpose": "Page title under the transparent bar (40px/46px from md up)."
+      },
+      "title1": {
+        "displayName": "Title 1",
+        "purpose": "Titles on single-task pages: unlock, sign in, sign up."
+      },
+      "title3": {
+        "displayName": "Title 3",
+        "purpose": "Sheet titles."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Collapsed bar title, empty-state headings, emphasized rows, button labels."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default text: list rows, fields, comments."
+      },
+      "subhead": {
+        "displayName": "Subhead",
+        "purpose": "Subtitles, small button labels, secondary row lines, commenter names."
+      },
+      "footnote": {
+        "displayName": "Footnote",
+        "purpose": "List headers and footers, timestamps, errors, footer."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Smallest annotations."
+      },
+      "display": {
+        "displayName": "Display",
+        "purpose": "The page title from md up, fluid to 88px on desktop (clamp(40px, 6.25vw, 88px), -0.035em)."
+      }
+    },
+    "shadows": [
+      {
+        "name": "float",
+        "value": "0 10px 34px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08)",
+        "purpose": "Light appearance: the only elevation shadow, for the floating bar, sheets and the account menu."
+      },
+      {
+        "name": "float-dark",
+        "value": "0 10px 34px rgba(0, 0, 0, 0.55), 0 0 0 0.5px rgba(255, 255, 255, 0.08)",
+        "purpose": "Dark appearance of float, with a faint white edge so the layer reads against black."
+      },
+      {
+        "name": "focus-glow",
+        "value": "0 0 0 3px var(--tint-ring)",
+        "purpose": "Field focus and the grouped auth list focus-within."
+      },
+      {
+        "name": "focus-outline",
+        "value": "outline: 2px solid var(--tint); outline-offset: 2px",
+        "purpose": "Global :focus-visible ring."
+      },
+      {
+        "name": "hairline-bottom",
+        "value": "inset 0 -0.5px 0 var(--separator)",
+        "purpose": "Under the collapsed frosted bar."
+      },
+      {
+        "name": "hairline-top",
+        "value": "inset 0 0.5px 0 var(--separator)",
+        "purpose": "Above menu groups and the comment composer."
+      },
+      {
+        "name": "icon-on-photo",
+        "value": "drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5))",
+        "purpose": "White or pink icons placed directly on photographs (up to 0 4px 16px rgba(0,0,0,0.4) for the viewer burst)."
+      },
+      {
+        "name": "material",
+        "value": "backdrop-filter: saturate(180%) blur(20px)",
+        "purpose": "Frosted bars over Material."
+      },
+      {
+        "name": "material-thick",
+        "value": "backdrop-filter: saturate(180%) blur(28px)",
+        "purpose": "Floating bar and account menu over Thick Material."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-ios",
+        "value": "cubic-bezier(0.32, 0.72, 0, 1)",
+        "purpose": "Long soft settle with no overshoot: sheets, floating bar, collapsed title, view transitions, rise-in."
+      },
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Default for press feedback, fades, menus, keyframe pops."
+      },
+      {
+        "name": "duration-press",
+        "value": "150ms",
+        "purpose": "Press scale, hover fills, field focus glow."
+      },
+      {
+        "name": "duration-small",
+        "value": "200ms",
+        "purpose": "Menus, switch, tile affordance fades."
+      },
+      {
+        "name": "duration-layer",
+        "value": "300ms",
+        "purpose": "Floating bar, bar material change, scrims; sheet uses 320ms."
+      },
+      {
+        "name": "duration-image",
+        "value": "500ms",
+        "purpose": "Photo fade-in on load."
+      },
+      {
+        "name": "spring-default",
+        "value": "response 0.45s, damping 0.88",
+        "purpose": "Damped spring sampled into WAAPI keyframes (components/spring.ts); release velocity carries into the settle."
+      },
+      {
+        "name": "spring-viewer-open",
+        "value": "response 0.42s, damping 0.86",
+        "purpose": "Tile-to-viewer FLIP zoom."
+      },
+      {
+        "name": "spring-viewer-dismiss",
+        "value": "response 0.38-0.40s, damping 0.84-0.90",
+        "purpose": "Drag-to-dismiss return to tile or spring back."
+      },
+      {
+        "name": "spring-page",
+        "value": "response 0.36-0.38s, damping 0.86-0.92",
+        "purpose": "Viewer swipe paging and snap back."
+      },
+      {
+        "name": "view-transition",
+        "value": "0.42s ease-ios (root crossfade 0.2s)",
+        "purpose": "Grid density changes: tiles glide to new positions."
+      },
+      {
+        "name": "heart-pop",
+        "value": "0.8s ease-out",
+        "purpose": "Double-tap like burst."
+      },
+      {
+        "name": "shake",
+        "value": "0.42s ease-out",
+        "purpose": "Wrong password or failed sign-in."
+      },
+      {
+        "name": "rise-in",
+        "value": "0.45s ease-ios, from opacity 0.5 and 8px",
+        "purpose": "Entrances that start already legible."
+      },
+      {
+        "name": "pop-in",
+        "value": "0.22s ease-out, from scale 0.95",
+        "purpose": "Small inline confirmations (Copied)."
+      },
+      {
+        "name": "badge-in",
+        "value": "0.3s ease-out, 0.5 to 1.08 to 1",
+        "purpose": "Selection badge, kudos heart, unlock check."
+      },
+      {
+        "name": "shimmer",
+        "value": "1.6s ease-in-out infinite",
+        "purpose": "Loading skeleton."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "animations and transitions 1ms, view transitions off",
+        "purpose": "prefers-reduced-motion renders end states."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Filled Button",
+      "kind": "button",
+      "refersTo": "button-filled",
+      "description": "Primary action pill; Label fill inverts with appearance.",
+      "html": "<button class=\"ds-btn-filled\">Unlock</button>",
+      "css": ".ds-btn-filled { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 20px; border: none; border-radius: 9999px; background: var(--label, #1d1d1f); color: var(--on-label, #ffffff); font-size: 17px; line-height: 22px; letter-spacing: -0.022em; font-weight: 600; cursor: pointer; transition: transform 150ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-btn-filled:hover { opacity: 0.9; } .ds-btn-filled:active { transform: scale(0.97); } .ds-btn-filled:focus-visible { outline: 2px solid var(--tint, #0066cc); outline-offset: 2px; } .ds-btn-filled:disabled { opacity: 0.4; pointer-events: none; }"
+    },
+    {
+      "name": "Tinted Button",
+      "kind": "button",
+      "refersTo": "button-tinted",
+      "description": "Secondary small pill on translucent Fill; kudos shows a pink heart once given.",
+      "html": "<button class=\"ds-btn-tinted\"><svg width=\"17\" height=\"17\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 20.3c-.3 0-.6-.1-.8-.3C7.5 16.9 3 13.2 3 8.9 3 6.1 5.1 4 7.7 4c1.7 0 3.2.9 4.3 2.4C13.1 4.9 14.6 4 16.3 4 18.9 4 21 6.1 21 8.9c0 4.3-4.5 8-8.2 11.1-.2.2-.5.3-.8.3z\" fill=\"none\"/></svg><span>12</span></button> <button class=\"ds-btn-tinted ds-on\"><svg width=\"17\" height=\"17\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 20.3c-.3 0-.6-.1-.8-.3C7.5 16.9 3 13.2 3 8.9 3 6.1 5.1 4 7.7 4c1.7 0 3.2.9 4.3 2.4C13.1 4.9 14.6 4 16.3 4 18.9 4 21 6.1 21 8.9c0 4.3-4.5 8-8.2 11.1-.2.2-.5.3-.8.3z\" fill=\"currentColor\"/></svg><span>13</span></button>",
+      "css": ".ds-btn-tinted { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border: none; border-radius: 9999px; background: var(--fill, rgba(118,118,128,0.12)); color: var(--label, #1d1d1f); font-size: 15px; line-height: 20px; letter-spacing: -0.012em; font-weight: 600; font-variant-numeric: tabular-nums; cursor: pointer; transition: transform 150ms cubic-bezier(0.22, 1, 0.36, 1), background-color 150ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-btn-tinted:hover { background: var(--fill-2, rgba(118,118,128,0.2)); } .ds-btn-tinted:active { transform: scale(0.97); } .ds-btn-tinted:focus-visible { outline: 2px solid var(--tint, #0066cc); outline-offset: 2px; } .ds-btn-tinted.ds-on svg { color: var(--heart, #ff2d55); }"
+    },
+    {
+      "name": "Plain Button",
+      "kind": "button",
+      "refersTo": "button-plain",
+      "description": "Tint-colored text action for back links and bar actions.",
+      "html": "<a href=\"#\" class=\"ds-btn-plain\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M15 5l-7 7 7 7\"/></svg><span>Collections</span></a>",
+      "css": ".ds-btn-plain { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; display: inline-flex; align-items: center; gap: 2px; padding: 8px 8px 8px 0; color: var(--tint, #0066cc); font-size: 17px; line-height: 22px; letter-spacing: -0.022em; text-decoration: none; transition: opacity 150ms; } .ds-btn-plain:hover { opacity: 0.7; } .ds-btn-plain:active { opacity: 0.5; } .ds-btn-plain:focus-visible { outline: 2px solid var(--tint, #0066cc); outline-offset: 2px; border-radius: 6px; }"
+    },
+    {
+      "name": "Icon Button",
+      "kind": "button",
+      "refersTo": "button-icon",
+      "description": "36px circular icon control; Fill appears on hover, scale on press.",
+      "html": "<button class=\"ds-btn-icon\" aria-label=\"Download\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 3v12M7.5 10.5L12 15l4.5-4.5\"/><path d=\"M5 17v1.5A2.5 2.5 0 007.5 21h9a2.5 2.5 0 002.5-2.5V17\"/></svg></button>",
+      "css": ".ds-btn-icon { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: none; border-radius: 9999px; background: transparent; color: var(--label, #1d1d1f); cursor: pointer; transition: transform 150ms cubic-bezier(0.22, 1, 0.36, 1), background-color 150ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-btn-icon:hover { background: var(--fill, rgba(118,118,128,0.12)); } .ds-btn-icon:active { transform: scale(0.94); } .ds-btn-icon:focus-visible { outline: 2px solid var(--tint, #0066cc); outline-offset: 2px; }"
+    },
+    {
+      "name": "Filled Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Borderless filled input; focus draws a soft tint glow.",
+      "html": "<input class=\"ds-field\" type=\"password\" placeholder=\"Password\">",
+      "css": ".ds-field { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; width: 100%; max-width: 360px; height: 44px; padding: 0 16px; border: none; border-radius: 12px; background: var(--fill, rgba(118,118,128,0.12)); color: var(--label, #1d1d1f); caret-color: var(--tint, #0066cc); font-size: 17px; line-height: 22px; letter-spacing: -0.022em; outline: none; transition: box-shadow 150ms; } .ds-field::placeholder { color: var(--label-2, #6e6e73); } .ds-field:focus, .ds-field:focus-visible { box-shadow: 0 0 0 3px var(--tint-ring, rgba(0,102,204,0.32)); }"
+    },
+    {
+      "name": "Grouped Inset List",
+      "kind": "card",
+      "refersTo": "list",
+      "description": "iOS Settings-style list card with header, inset hairlines, chevron rows and footer.",
+      "html": "<div class=\"ds-group\"><p class=\"ds-list-header\">Collections</p><div class=\"ds-list\"><a href=\"#\" class=\"ds-list-row\"><span class=\"ds-row-main\"><span class=\"ds-row-title\">point reyes</span><span class=\"ds-row-sub\">83 photos \u00b7 Oct 2026</span></span><span class=\"ds-chev\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 5l7 7-7 7\"/></svg></span></a><a href=\"#\" class=\"ds-list-row\"><span class=\"ds-row-main\"><span class=\"ds-row-title\">formal</span><span class=\"ds-row-sub\">142 photos \u00b7 May 2026</span></span><span class=\"ds-chev\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 5l7 7-7 7\"/></svg></span></a></div><p class=\"ds-list-footer\">Ordered by event date.</p></div>",
+      "css": ".ds-group { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: var(--bg-grouped, #f2f2f7); padding: 16px; max-width: 420px; } .ds-list-header, .ds-list-footer { margin: 0; padding: 0 16px 6px; font-size: 13px; line-height: 18px; letter-spacing: -0.006em; color: var(--label-2, #6e6e73); } .ds-list-footer { padding: 6px 16px 0; } .ds-list { background: var(--surface, #ffffff); border-radius: 14px; overflow: hidden; } .ds-list-row { position: relative; display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 12px 16px; color: var(--label, #1d1d1f); text-decoration: none; font-size: 17px; line-height: 22px; letter-spacing: -0.022em; transition: background-color 150ms; } .ds-list-row + .ds-list-row::before { content: ''; position: absolute; top: 0; left: 16px; right: 0; height: 0.5px; background: var(--separator, rgba(60,60,67,0.18)); } .ds-list-row:hover { background: var(--fill, rgba(118,118,128,0.12)); } .ds-list-row:active { background: var(--fill-2, rgba(118,118,128,0.2)); } .ds-list-row:focus-visible { outline: 2px solid var(--tint, #0066cc); outline-offset: -2px; } .ds-row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; } .ds-row-sub { margin-top: 2px; font-size: 15px; line-height: 20px; letter-spacing: -0.012em; color: var(--label-2, #6e6e73); font-variant-numeric: tabular-nums; } .ds-chev { display: flex; color: var(--label-2, #6e6e73); opacity: 0.6; transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-list-row:hover .ds-chev { transform: translateX(2px); }"
+    },
+    {
+      "name": "Large-Title Navigation Bar",
+      "kind": "nav",
+      "refersTo": "nav-bar-collapsed",
+      "description": "52px bar over a large title; shown here in its collapsed frosted state with the small title.",
+      "html": "<div class=\"ds-nav\"><div class=\"ds-nav-bar\"><a href=\"#\" class=\"ds-nav-back\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M15 5l-7 7 7 7\"/></svg><span>Collections</span></a><span class=\"ds-nav-title\">point reyes</span><span class=\"ds-nav-actions\"><a href=\"#\" class=\"ds-nav-action\">Select</a></span></div><div class=\"ds-nav-large\"><h1>point reyes</h1><p>October 5, 2026 \u00b7 83 Photos</p></div></div>",
+      "css": ".ds-nav { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: var(--bg, #ffffff); max-width: 420px; } .ds-nav-bar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; height: 52px; padding: 0 16px; background: var(--material, rgba(255,255,255,0.74)); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); box-shadow: inset 0 -0.5px 0 var(--separator, rgba(60,60,67,0.18)); } .ds-nav-back, .ds-nav-action { display: inline-flex; align-items: center; gap: 2px; margin-left: -6px; color: var(--tint, #0066cc); text-decoration: none; font-size: 17px; letter-spacing: -0.022em; transition: opacity 150ms; } .ds-nav-back:hover, .ds-nav-action:hover { opacity: 0.7; } .ds-nav-back:focus-visible, .ds-nav-action:focus-visible { outline: 2px solid var(--tint, #0066cc); outline-offset: 2px; border-radius: 6px; } .ds-nav-title { font-size: 17px; line-height: 22px; font-weight: 600; letter-spacing: -0.022em; color: var(--label, #1d1d1f); } .ds-nav-actions { display: flex; justify-content: flex-end; } .ds-nav-large { padding: 4px 16px 16px; } .ds-nav-large h1 { margin: 0; font-size: 34px; line-height: 41px; font-weight: 700; letter-spacing: -0.022em; color: var(--label, #1d1d1f); } .ds-nav-large p { margin: 4px 0 0; font-size: 15px; line-height: 20px; letter-spacing: -0.012em; color: var(--label-2, #6e6e73); }"
+    },
+    {
+      "name": "Floating Bar",
+      "kind": "custom",
+      "refersTo": "floating-bar",
+      "description": "Thick-material bar floating above the bottom edge for selection and download progress.",
+      "html": "<div class=\"ds-float-stage\"><div class=\"ds-float\"><span class=\"ds-float-count\">8 Selected</span><button class=\"ds-float-btn\">Download 8</button></div></div>",
+      "css": ".ds-float-stage { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; padding: 24px 12px 12px; background: var(--bg, #ffffff); max-width: 520px; } .ds-float { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 16px; border-radius: 20px; background: var(--material-thick, rgba(250,250,252,0.88)); -webkit-backdrop-filter: saturate(180%) blur(28px); backdrop-filter: saturate(180%) blur(28px); box-shadow: var(--shadow-float, 0 10px 34px rgba(0,0,0,0.12), 0 1px 3px rgba(0,0,0,0.08)); animation: ds-float-in 300ms cubic-bezier(0.32, 0.72, 0, 1) both; } .ds-float-count { flex: 1; font-size: 15px; line-height: 20px; font-weight: 600; letter-spacing: -0.012em; color: var(--label, #1d1d1f); font-variant-numeric: tabular-nums; } .ds-float-btn { height: 32px; padding: 0 14px; border: none; border-radius: 9999px; background: var(--label, #1d1d1f); color: var(--on-label, #ffffff); font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; transition: transform 150ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms; } .ds-float-btn:hover { opacity: 0.9; } .ds-float-btn:active { transform: scale(0.97); } .ds-float-btn:focus-visible { outline: 2px solid var(--tint, #0066cc); outline-offset: 2px; } @keyframes ds-float-in { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } } @media (prefers-reduced-motion: reduce) { .ds-float { animation: none; } }"
+    },
+    {
+      "name": "Photo Tile",
+      "kind": "card",
+      "refersTo": "photo-tile",
+      "description": "Masonry tile on a dominant-color placeholder; like heart and frosted download appear on hover.",
+      "html": "<div class=\"ds-tile\" style=\"background:#8a9bb0\"><button class=\"ds-tile-like\" aria-label=\"Like photo\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 20.3c-.3 0-.6-.1-.8-.3C7.5 16.9 3 13.2 3 8.9 3 6.1 5.1 4 7.7 4c1.7 0 3.2.9 4.3 2.4C13.1 4.9 14.6 4 16.3 4 18.9 4 21 6.1 21 8.9c0 4.3-4.5 8-8.2 11.1-.2.2-.5.3-.8.3z\" fill=\"none\"/></svg></button><a href=\"#\" class=\"ds-tile-dl\" aria-label=\"Download\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 3v12M7.5 10.5L12 15l4.5-4.5\"/><path d=\"M5 17v1.5A2.5 2.5 0 007.5 21h9a2.5 2.5 0 002.5-2.5V17\"/></svg></a></div>",
+      "css": ".ds-tile { position: relative; width: 200px; aspect-ratio: 2 / 3; border-radius: 6px; overflow: hidden; background-image: linear-gradient(160deg, rgba(255,255,255,0.25), rgba(0,0,0,0.2)); } .ds-tile-like, .ds-tile-dl { position: absolute; bottom: 6px; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: none; border-radius: 9999px; color: #ffffff; opacity: 0; cursor: pointer; transition: opacity 200ms cubic-bezier(0.22, 1, 0.36, 1), transform 200ms cubic-bezier(0.22, 1, 0.36, 1), background-color 200ms; } .ds-tile-like { left: 6px; background: transparent; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5)); } .ds-tile-dl { right: 6px; background: rgba(0,0,0,0.35); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); } .ds-tile:hover .ds-tile-like, .ds-tile:hover .ds-tile-dl, .ds-tile-like:focus-visible, .ds-tile-dl:focus-visible { opacity: 1; } .ds-tile-dl:hover { background: rgba(0,0,0,0.55); } .ds-tile-like:hover { color: var(--heart, #ff2d55); } .ds-tile-like:active { transform: scale(0.9); } .ds-tile-like:focus-visible, .ds-tile-dl:focus-visible { outline: 2px solid var(--tint, #0066cc); outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Quiet System Chrome",
+    "overview": "The interface is the platform's own chrome, rendered with care: neutral, exact, and out of the way, so the only images on any screen are the photographs. It takes its vocabulary straight from Apple's system UI (semantic neutrals, the system font, frosted bars, grouped inset lists, pill buttons, hairline separators) and holds it to the finish of Apple Photos and Linear. It is deliberately unthemed. Two themed directions were rejected as too themed, and nothing here carries a metaphor, a texture, or a display gimmick.\n\nPolish lives in behavior rather than ornament. Things are smooth and animated but never showy: controls press by scaling down slightly, layers arrive on a long soft settle, a photo grows out of its grid tile into a black viewer and springs back on close, and grid density changes glide tiles to their new places. Every motion has a purpose and a reduced-motion end state.\n\nAppearance follows the visitor's system light or dark setting through one set of semantic tokens with a light and a dark value each. The photo viewer is the single exception: it is always black, in both appearances.",
+    "keyCharacteristics": [
+      "One neutral palette in two appearances, plus a single blue tint and a pink reserved for likes.",
+      "The system font stack, with hierarchy carried by size and weight on an eight-step ramp.",
+      "Depth by tonal steps and translucent material; one soft shadow for floating layers only.",
+      "Continuous rounded corners nested by scale, pill shapes for every action.",
+      "Spring and long-settle motion, press feedback by scale, never by color jumps.",
+      "Photos edge to edge on phones with 2px gutters; chrome steps back."
+    ],
+    "rules": [
+      {
+        "name": "The One Tint Rule",
+        "body": "Blue means \"you can tap this\" or \"this is selected\". It never decorates, never fills a large area, and never labels static text.",
+        "section": "colors"
+      },
+      {
+        "name": "The Heart Is Only For Likes Rule",
+        "body": "Pink appears only where a person has expressed affection: photo likes, kudos, and the Liked Photos entries. Not for brand, emphasis, or alerts.",
+        "section": "colors"
+      },
+      {
+        "name": "The Black Viewer Rule",
+        "body": "The photo viewer is black with white chrome in both appearances. Do not route it through the semantic tokens.",
+        "section": "colors"
+      },
+      {
+        "name": "The System Voice Rule",
+        "body": "Use the system stack and the eight named steps only. No webfont, no second family, no ad hoc sizes; the one exception is the large title's md-up step.",
+        "section": "typography"
+      },
+      {
+        "name": "The Sentence-Weight Rule",
+        "body": "Emphasis is weight (600 or 700), never uppercase or letter-spaced labels. No tracked small caps above titles.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Shadow Rule",
+        "body": "Only layers that float above content get the Float shadow. Cards, rows and buttons stay flat.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Material Earns Its Blur Rule",
+        "body": "Frosted material is for layers above moving content: the collapsed bar, the floating bar, menus. At rest the top bar is transparent and only turns frosted once the large title scrolls away.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Nested Radius Rule",
+        "body": "Radius grows with the container: tile < control < card < sheet < bar. A child never has a larger radius than its parent.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Pill Action Rule",
+        "body": "Anything you press to act is fully rounded. Rectangles hold content; pills and circles do things.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "**Do** use the semantic role (Label, Fill, Surface, System Blue) and let the light and dark pair resolve it; never hard-code one appearance's value in a component.",
+      "**Do** keep System Blue to tappable text and selected state, and Like Pink to likes and kudos.",
+      "**Do** put settings, forms, and admin content in grouped inset lists on the Grouped Page.",
+      "**Do** acknowledge presses by scale (0.97 for buttons, 0.90 to 0.94 for circles) over 150ms.",
+      "**Do** move layers on the long-settle curve (`cubic-bezier(0.32, 0.72, 0, 1)`) and direct manipulation on damped springs, between roughly 200 and 450ms.",
+      "**Do** give every animation an end state that reads correctly when reduced motion collapses it to 1ms; entrance animations start already legible.",
+      "**Do** keep the photo viewer black with white chrome in both appearances."
+    ],
+    "donts": [
+      "**Don't** add grain, textures, gradients as decoration, themed metaphors, or display typefaces; the system is deliberately unthemed.",
+      "**Don't** draw borders around fields, cards, or buttons; depth comes from tonal fill and the one Float shadow.",
+      "**Don't** put a shadow on anything that does not float above content.",
+      "**Don't** use uppercase, letter-spaced eyebrow labels or kickers above titles.",
+      "**Don't** change a button's color on press; press feedback is scale.",
+      "**Don't** let chrome compete with photos: no colored frames, overlays, or captions on tiles beyond the like, download, and selection affordances."
+    ]
+  }
+}

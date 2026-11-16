@@ -1,11 +1,17 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { MasonryGrid } from './MasonryGrid';
+import { flushSync } from 'react-dom';
+import { MasonryGrid, findTileImage } from './MasonryGrid';
 import { Lightbox } from './Lightbox';
 import { KudosButton } from './KudosButton';
 import { CommentSection } from './CommentSection';
 import { ScrollToTop } from './ScrollToTop';
+import { PageHeader } from './PageHeader';
+import { Sheet } from './Sheet';
+import { FloatingBar, ProgressTrack } from './FloatingBar';
+import { CommentIcon, DownloadIcon, MinusIcon, PlusIcon, PhotoStackIcon } from './icons';
+import { prefersReducedMotion } from './usePresence';
 import { downloadPhotosAsZip } from '@/lib/zip';
 import { useCanShareFiles, sharePhotos } from '@/lib/share';
 
@@ -14,6 +20,8 @@ const BATCH_SIZE = 24;
 // hundreds of files through the OS share sheet is unreliable and memory-heavy.
 // Small/medium saves go straight to the native "Save to Photos" sheet.
 const MAX_SHARE_FILES = 50;
+const MIN_SIZE = 1;
+const MAX_SIZE = 4;
 
 export interface GalleryPhoto {
   id: string;
@@ -36,6 +44,7 @@ interface Comment {
 interface Props {
   collectionId: string;
   collectionName: string;
+  subtitle: string;
   photos: GalleryPhoto[];
   kudosCount: number;
   hasKudos: boolean;
@@ -43,11 +52,16 @@ interface Props {
   comments: Comment[];
   currentUsername: string | null;
   likedPhotoIds?: string[];
+  /** Server-rendered account control for the header. */
+  accountMenu: React.ReactNode;
 }
+
+type DocWithVT = Document & { startViewTransition?: (cb: () => void) => { finished: Promise<void> } };
 
 export function GalleryClient({
   collectionId,
   collectionName,
+  subtitle,
   photos,
   kudosCount,
   hasKudos,
@@ -55,11 +69,13 @@ export function GalleryClient({
   comments,
   currentUsername,
   likedPhotoIds,
+  accountMenu,
 }: Props) {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [likedIds, setLikedIds] = useState<Set<string>>(() => new Set(likedPhotoIds ?? []));
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [hiddenId, setHiddenId] = useState<string | null>(null);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentCount, setCommentCount] = useState(comments.length);
   const [downloading, setDownloading] = useState(false);
@@ -79,12 +95,52 @@ export function GalleryClient({
   // Restore photo size after mount (not in the initializer — SSR markup must match)
   useEffect(() => {
     const stored = Number(localStorage.getItem('gallery-size'));
-    if (stored >= 1 && stored <= 4) setSizeLevel(stored);
+    if (stored >= MIN_SIZE && stored <= MAX_SIZE) setSizeLevel(stored);
   }, []);
 
-  function handleSizeChange(level: number) {
-    setSizeLevel(level);
-    localStorage.setItem('gallery-size', String(level));
+  /**
+   * Step the grid size. The visible tiles glide to their new places in a view
+   * transition, and the photo at the top of the screen stays put.
+   */
+  function changeSize(next: number) {
+    const level = Math.min(MAX_SIZE, Math.max(MIN_SIZE, next));
+    if (level === sizeLevel) return;
+    try { localStorage.setItem('gallery-size', String(level)); } catch { /* storage blocked */ }
+
+    const order = new Map(photos.map((p, i) => [p.id, i]));
+    const tiles = Array.from(document.querySelectorAll<HTMLElement>('[data-photo-id]'));
+    const onScreen = tiles.filter(t => {
+      const r = t.getBoundingClientRect();
+      return r.bottom > 0 && r.top < window.innerHeight;
+    });
+    const anchor = onScreen
+      .filter(t => t.getBoundingClientRect().bottom > 64)
+      .sort((a, b) => (order.get(a.dataset.photoId!) ?? 0) - (order.get(b.dataset.photoId!) ?? 0))[0];
+    const anchorTop = anchor?.getBoundingClientRect().top ?? 0;
+
+    const named = new Set(onScreen.map(t => t.dataset.photoId!));
+    const anchorId = anchor?.dataset.photoId;
+    let renamed: HTMLElement[] = [];
+
+    const apply = () => {
+      flushSync(() => setSizeLevel(level));
+      // Changing the column count remounts tiles in new columns, so the new
+      // elements need the same names for the browser to glide old → new.
+      renamed = Array.from(document.querySelectorAll<HTMLElement>('[data-photo-id]'))
+        .filter(t => named.has(t.dataset.photoId!));
+      renamed.forEach(t => { t.style.setProperty('view-transition-name', `ph-${t.dataset.photoId}`); });
+      const newAnchor = anchorId ? document.querySelector<HTMLElement>(`[data-photo-id="${anchorId}"]`) : null;
+      if (newAnchor && window.scrollY > 0) {
+        window.scrollBy(0, newAnchor.getBoundingClientRect().top - anchorTop);
+      }
+    };
+
+    const doc = document as DocWithVT;
+    if (!doc.startViewTransition || prefersReducedMotion()) { apply(); renamed.forEach(t => t.style.removeProperty('view-transition-name')); return; }
+    onScreen.forEach(t => { t.style.setProperty('view-transition-name', `ph-${t.dataset.photoId}`); });
+    doc.startViewTransition(apply).finished.finally(() => {
+      [...onScreen, ...renamed].forEach(t => { t.style.removeProperty('view-transition-name'); });
+    });
   }
 
   // Deep link: /c/[id]/gallery?photo=<id> opens the lightbox on that photo
@@ -112,7 +168,7 @@ export function GalleryClient({
     if (!sentinel || !hasMore) return;
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) loadMore(); },
-      { rootMargin: '600px' }
+      { rootMargin: '800px' }
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
@@ -132,11 +188,8 @@ export function GalleryClient({
   }
 
   function handleTap(index: number) {
-    if (selectionMode) {
-      toggleSelect(photos[index].id);
-    } else {
-      setLightboxIndex(index);
-    }
+    if (selectionMode) toggleSelect(photos[index].id);
+    else setLightboxIndex(index);
   }
 
   async function handleToggleLike(photoId: string) {
@@ -159,9 +212,18 @@ export function GalleryClient({
     }
   }
 
-  function handleDoubleTap(index: number) {
-    handleToggleLike(photos[index].id);
-  }
+  // Lightbox ↔ grid hand-off: where to zoom from, and making sure the tile
+  // exists (it may be past the loaded batch) before zooming back into it.
+  const getOrigin = useCallback((i: number) => {
+    const p = photos[i];
+    return p ? findTileImage(p.id)?.getBoundingClientRect() ?? null : null;
+  }, [photos]);
+
+  const prepareClose = useCallback((i: number) => {
+    if (i >= visibleCount) {
+      flushSync(() => setVisibleCount(Math.min(photos.length, i + BATCH_SIZE)));
+    }
+  }, [visibleCount, photos.length]);
 
   function cancelDownload() {
     abortRef.current?.abort();
@@ -251,147 +313,124 @@ export function GalleryClient({
   }
 
   const slugName = collectionName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'photos';
-  const busyLabel = sharing ? 'Preparing…' : 'Zipping…';
   const selectedPhotos = photos.filter(p => selectedIds.has(p.id));
+  const savesToDevice = (n: number) => canShareFiles && n <= MAX_SHARE_FILES;
+  const allLabel = savesToDevice(photos.length) ? 'Save All' : 'Download All';
+  const barOpen = selectionMode || downloading || pendingFiles.length > 0;
+
+  const toolbar = photos.length > 0 && (
+    <div className="flex items-center justify-between gap-2 lg:gap-5">
+      <div className="flex items-center gap-2">
+        <KudosButton collectionId={collectionId} initialCount={kudosCount} initialHasKudos={hasKudos} loggedIn={loggedIn} />
+        <button
+          type="button"
+          onClick={() => setCommentsOpen(true)}
+          aria-label={commentCount > 0 ? `Comments (${commentCount})` : 'Comments'}
+          className={`btn btn-sm btn-tinted gap-1.5 tabular-nums ${commentCount > 0 ? 'px-3' : 'w-8 px-0'}`}
+        >
+          <CommentIcon size={17} />
+          {commentCount > 0 && commentCount}
+        </button>
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="flex h-8 items-center rounded-full bg-fill" role="group" aria-label="Photo size">
+          <button
+            type="button"
+            onClick={() => changeSize(sizeLevel - 1)}
+            disabled={sizeLevel <= MIN_SIZE}
+            aria-label="Smaller photos"
+            className="flex h-8 w-9 items-center justify-center rounded-full text-label transition-[transform,opacity] duration-150 active:scale-90 disabled:opacity-30"
+          >
+            <MinusIcon size={15} />
+          </button>
+          <span className="h-4 w-px bg-separator" aria-hidden />
+          <button
+            type="button"
+            onClick={() => changeSize(sizeLevel + 1)}
+            disabled={sizeLevel >= MAX_SIZE}
+            aria-label="Larger photos"
+            className="flex h-8 w-9 items-center justify-center rounded-full text-label transition-[transform,opacity] duration-150 active:scale-90 disabled:opacity-30"
+          >
+            <PlusIcon size={15} />
+          </button>
+        </div>
+        <button
+          type="button"
+          onClick={() => getPhotos(photos, slugName)}
+          disabled={downloading}
+          aria-label={allLabel}
+          className="btn btn-sm btn-tinted gap-1.5 px-3"
+        >
+          <DownloadIcon size={17} />
+          <span className="hidden sm:inline">{allLabel}</span>
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <>
-      {/* Action row */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <KudosButton
-            collectionId={collectionId}
-            initialCount={kudosCount}
-            initialHasKudos={hasKudos}
-            loggedIn={loggedIn}
-          />
-          <button
-            onClick={() => setCommentsOpen(o => !o)}
-            className="flex items-center gap-1.5 group transition-colors"
-            aria-label="Toggle comments"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
-              className={`transition-colors duration-150 ${commentsOpen ? 'stroke-[#bbb]' : 'stroke-[#666] group-hover:stroke-[#888]'}`}>
-              <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
-            </svg>
-            <span className={`text-xs font-light transition-colors ${commentsOpen ? 'text-[#bbb]' : 'text-[#666] group-hover:text-[#888]'}`}>
-              {commentCount}
-            </span>
-          </button>
-        </div>
-        <div className="flex items-center gap-4">
-          {selectionMode ? (
-            <button
-              onClick={exitSelection}
-              className="text-[#666] text-xs hover:text-[#888] transition-colors"
-            >
-              Cancel
-            </button>
-          ) : (
-            <>
-              <div className="flex items-center gap-1.5" title="Photo size">
-                <svg width="9" height="9" viewBox="0 0 10 10" fill="none" aria-hidden>
-                  <rect x="1" y="1" width="8" height="8" rx="1.5" stroke="#555" />
-                </svg>
-                <input
-                  type="range"
-                  min={1}
-                  max={4}
-                  step={1}
-                  value={sizeLevel}
-                  onChange={e => handleSizeChange(Number(e.target.value))}
-                  aria-label="Photo size"
-                  className="w-14 sm:w-20 accent-[#888] cursor-pointer"
-                />
-                <svg width="14" height="14" viewBox="0 0 10 10" fill="none" aria-hidden>
-                  <rect x="1" y="1" width="8" height="8" rx="1.5" stroke="#555" />
-                </svg>
-              </div>
+      <PageHeader
+        width="wide"
+        title={collectionName}
+        subtitle={subtitle}
+        back={{ href: '/', label: 'Collections' }}
+        actions={
+          <>
+            {photos.length > 0 && (
               <button
-                onClick={() => setSelectionMode(true)}
-                className="text-[#666] text-xs hover:text-[#888] transition-colors"
+                type="button"
+                onClick={() => (selectionMode ? exitSelection() : setSelectionMode(true))}
+                className={`btn-plain px-1 py-2 ${selectionMode ? 'font-semibold' : ''}`}
               >
-                Select
+                {selectionMode ? 'Done' : 'Select'}
               </button>
-              <button
-                onClick={() => getPhotos(photos, slugName)}
-                disabled={downloading}
-                className="text-[#666] text-xs hover:text-[#888] transition-colors disabled:opacity-50"
-              >
-                {downloading ? busyLabel : 'Download all'}
-              </button>
-            </>
-          )}
-        </div>
-      </div>
+            )}
+            {accountMenu}
+          </>
+        }
+        toolbar={toolbar}
+      />
 
-      {/* Zip progress bar */}
-      {downloading && (
-        <div className="mb-4 space-y-1">
-          <div className="flex justify-between text-[#555] text-xs">
-            <span>{busyLabel}</span>
-            <div className="flex items-center gap-3">
-              <span>{Math.round(zipProgress * 100)}%</span>
-              <button onClick={cancelDownload} className="text-[#444] hover:text-[#666] transition-colors">
-                Cancel
-              </button>
-            </div>
-          </div>
-          <div className="h-px bg-[#1e1e1e] rounded-full overflow-hidden">
-            <div
-              className="h-full bg-[#555] transition-all duration-200"
-              style={{ width: `${zipProgress * 100}%` }}
-            />
-          </div>
-        </div>
+      {downloadError && (
+        <p role="alert" className="animate-rise mx-auto mb-3 w-full px-4 text-footnote text-destructive sm:px-6 lg:px-8">
+          {downloadError}
+        </p>
       )}
 
-      {pendingFiles.length > 0 && (
-        <button
-          onClick={retapShare}
-          className="mb-4 text-[#0f0f0f] bg-[#bbb] text-xs font-medium rounded px-4 py-2 hover:bg-white transition-colors"
-        >
-          Ready — tap to save {pendingFiles.length} photo{pendingFiles.length > 1 ? 's' : ''}
-        </button>
-      )}
-
-      {downloadError && <p className="text-red-500/70 text-xs mb-4">{downloadError}</p>}
-
-      {/* Comments — expands above grid */}
-      {commentsOpen && (
-        <CommentSection
-          collectionId={collectionId}
-          initialComments={comments}
-          currentUsername={currentUsername}
-          onCountChange={setCommentCount}
-        />
-      )}
-
-      {/* Grid */}
       {photos.length === 0 ? (
-        <p className="text-[#555] text-sm font-light mt-4">No photos yet.</p>
+        <div className="flex flex-col items-center px-6 py-24 text-center">
+          <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-fill text-label2">
+            <PhotoStackIcon size={26} />
+          </span>
+          <p className="text-headline">No Photos Yet</p>
+          <p className="mt-1 text-subhead text-label2">Photos from this event will appear here.</p>
+        </div>
       ) : (
-        <>
+        <div className="pb-28 sm:px-6 lg:px-8">
           <MasonryGrid
             photos={visiblePhotos}
             selectionMode={selectionMode}
             selectedIds={selectedIds}
             onTap={handleTap}
-            onDoubleTap={loggedIn ? handleDoubleTap : undefined}
             likedIds={likedIds}
             onToggleLike={loggedIn ? handleToggleLike : undefined}
             sizeLevel={sizeLevel}
+            hiddenId={hiddenId}
+            onDensityStep={dir => changeSize(sizeLevel + dir)}
           />
-          {hasMore && <div ref={sentinelRef} />}
-        </>
+          {hasMore && <div ref={sentinelRef} className="h-px" />}
+        </div>
       )}
 
-      {/* Lightbox */}
       {lightboxIndex !== null && (
         <Lightbox
           photos={photos}
           initialIndex={lightboxIndex}
-          onClose={() => { setLightboxIndex(null); syncPhotoParam(null); }}
+          getOrigin={getOrigin}
+          prepareClose={prepareClose}
+          onActiveChange={setHiddenId}
+          onClose={() => { setLightboxIndex(null); setHiddenId(null); syncPhotoParam(null); }}
           onIndexChange={i => syncPhotoParam(photos[i].id)}
           showShare
           likedIds={likedIds}
@@ -399,25 +438,53 @@ export function GalleryClient({
         />
       )}
 
-      {/* Bottom bar — selection mode */}
-      {selectionMode && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#111]/95 backdrop-blur-sm border-t border-[#222] px-5 py-4 flex items-center justify-between">
-          <span className="text-[#777] text-sm">
-            {selectedIds.size === 0 ? 'Tap photos to select' : `${selectedIds.size} selected`}
-          </span>
-          {selectedIds.size > 0 && (
-            <button
-              onClick={() => getPhotos(selectedPhotos, slugName)}
-              disabled={downloading}
-              className="text-[#0f0f0f] bg-[#bbb] text-xs font-medium rounded px-4 py-2 hover:bg-white transition-colors disabled:opacity-50"
-            >
-              {downloading ? busyLabel : `Download ${selectedIds.size}`}
-            </button>
-          )}
-        </div>
-      )}
+      <Sheet open={commentsOpen} onClose={() => setCommentsOpen(false)} title="Comments">
+        <CommentSection
+          collectionId={collectionId}
+          initialComments={comments}
+          currentUsername={currentUsername}
+          onCountChange={setCommentCount}
+        />
+      </Sheet>
 
-      <ScrollToTop />
+      <FloatingBar open={barOpen}>
+        {downloading ? (
+          <>
+            <div className="min-w-0 flex-1">
+              <div className="mb-1.5 flex items-baseline justify-between text-subhead">
+                <span className="font-semibold">{sharing ? 'Preparing Photos' : 'Zipping Photos'}</span>
+                <span className="tabular-nums text-label2">{Math.round(zipProgress * 100)}%</span>
+              </div>
+              <ProgressTrack value={zipProgress} />
+            </div>
+            <button type="button" onClick={cancelDownload} className="btn-plain shrink-0 pl-2">Cancel</button>
+          </>
+        ) : pendingFiles.length > 0 ? (
+          <>
+            <span className="flex-1 text-subhead">
+              {pendingFiles.length} {pendingFiles.length === 1 ? 'photo is' : 'photos are'} ready
+            </span>
+            <button type="button" onClick={retapShare} className="btn btn-sm btn-filled">Save</button>
+          </>
+        ) : (
+          <>
+            <span className="flex-1 text-subhead font-semibold tabular-nums">
+              {selectedIds.size === 0 ? 'Select Photos' : `${selectedIds.size} Selected`}
+            </span>
+            <button
+              type="button"
+              onClick={() => getPhotos(selectedPhotos, slugName)}
+              disabled={selectedIds.size === 0}
+              className="btn btn-sm btn-filled gap-1.5"
+            >
+              <DownloadIcon size={16} strokeWidth={2} />
+              {savesToDevice(selectedIds.size || 1) ? 'Save' : 'Download'}
+            </button>
+          </>
+        )}
+      </FloatingBar>
+
+      <ScrollToTop hidden={barOpen || lightboxIndex !== null} />
     </>
   );
 }

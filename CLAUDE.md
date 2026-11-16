@@ -22,6 +22,7 @@ Changes that increase costs:
 Current known cost drivers:
 - Gallery page generates presigned R2 URLs for every photo on each load (180 AWS SDK calls for a 60-photo gallery)
 - `revalidate = 0` on home, admin dashboard, manage collection, and profile pages (dynamic render per request)
+- Home query also returns up to 24 photo colors per public collection for the ambient glow (about 8KB from Supabase per load at 10 collections; still one query)
 
 ---
 
@@ -157,20 +158,20 @@ Middleware (`middleware.ts`) protects `/admin/:path+` and `/api/admin/((?!login)
 ## Page & Data Flow
 
 ### Home (`/`)
-- Server component (`revalidate = 0`). Queries public collections (`is_private = false`) with photo counts, ordered by `event_date` descending.
-- Renders `SearchBar` (client component — filters in-memory on every keystroke, no debounce) and `CollectionCard` grid.
-- Footer has hidden admin link `/admin`.
+- Server component (`revalidate = 0`). Queries public collections (`is_private = false`) with photo counts, ordered by `event_date` descending. The same query embeds up to 24 stored `dominant_color` values per collection (`swatches:photos(dominant_color)`, limited via `referencedTable`); `glowPalette` (`lib/glow.ts`) reduces them to 4 hex colors server-side for the ambient glow, so only those reach the client.
+- Renders `PageHeader` (large title; display-size from md up) and `CollectionList` (client: search field, shown only above 5 collections, plus a grouped list of collections that becomes a full-width index from `lg` up).
+- Footer carries the contact links (Instagram, email) that used to live in the old wordmark, plus a faint admin link `/admin`.
 - No error handling on the Supabase query.
 
 ### Login (`/login`) / Signup (`/signup`)
-- Client-side forms that POST to `/api/login` or `/api/signup`.
+- Both pages render the shared `AuthForm` (client): grouped fields, one filled button, shake on a rejected attempt. They POST to `/api/login` or `/api/signup`. Google sign-in stays disabled until it's configured.
 - On success, redirects to `/` with `user_session` cookie set.
 - Signup enforces password ≥ 8 chars client-side and server-side.
 
 ### Unlock (`/c/[id]`)
 - Checks `user_collection_access` for logged-in user → redirects to gallery if found.
 - Otherwise renders `UnlockForm` (client component).
-- `UnlockForm` → `POST /api/unlock` → bcrypt compare → sets `gallery_session` cookie → CSS fade animation (`setTimeout` chain) → navigates to gallery at 1250ms.
+- `UnlockForm` → `POST /api/unlock` → bcrypt compare → sets `gallery_session` cookie → lock turns to a check → navigates to the gallery after 450ms. A wrong password shakes the form.
 
 ### Gallery (`/c/[id]/gallery`)
 - Server component. Verifies `gallery_session` cookie (must match `collectionId`) or a valid `admin_session`.
@@ -185,7 +186,9 @@ Middleware (`middleware.ts`) protects `/admin/:path+` and `/api/admin/((?!login)
   ```
 - Injects `<link rel="preload" as="image">` for the first 8 thumbnails in the HTML head.
 - Fetches kudos count, whether current user has given kudos, all comments, and the user's liked photo IDs server-side.
-- Passes everything to `GalleryClient` as props — no client-side API calls on initial load.
+- Passes everything to `GalleryClient` as props — no client-side API calls on initial load. The account control (`AccountMenu`, a server component) is passed in as a prop.
+- An `AmbientGlow` layer behind the header uses `glowPalette` over the first 60 photos' stored dominant colors (already loaded, no extra query). The `main` is `relative isolate` so the layer sits behind content.
+- `loading.tsx` shows a static skeleton while the server renders (no data, no cost).
 - On signing errors, renders a "temporarily unavailable" message instead of the grid.
 
 ### Profile (`/profile`) and Liked Photos (`/profile/likes`)
@@ -205,50 +208,41 @@ Middleware (`middleware.ts`) protects `/admin/:path+` and `/api/admin/((?!login)
 
 ## Components
 
+Design system: tokens are CSS variables in `app/globals.css` (light and dark under `prefers-color-scheme`), named in `tailwind.config.ts` (`bg`, `grouped`, `surface`, `fill`, `label`, `label2`, `separator`, `tint`, `heart`, `destructive`, iOS-style type ramp). Shared classes: `.btn` / `.btn-filled` / `.btn-tinted` / `.btn-plain` / `.btn-icon`, `.field`, `.list` + `.list-row`, `.material`. DESIGN.md documents the system. Server pages must import page-width classes from `components/container.ts`, never from a `'use client'` module.
+
+### `PageHeader` / `TopBar`
+- Large title that collapses into a frosted sticky bar (with the title small) once it scrolls away; tap the small title to scroll to top. Props: `title`, `subtitle`, `back`, `actions`, `toolbar`, `width`.
+- `TopBar` is the back-link-only bar for single-task pages (unlock, sign in, admin login).
+
+### `AccountMenu` / `AccountMenuClient`
+- Server wrapper reads `user_session`; the client is one 32px circle in two states. Signed out it shows a person glyph and its popover explains accounts and offers Sign In and Create Account; signed in it shows the initial, with Liked Photos, Your Collections, and Sign Out. Replaces the old `UserNav` and the mobile hamburger drawer.
+
 ### `MasonryGrid`
-Flex-column masonry layout. Column count comes from breakpoint × `sizeLevel` prop (1 smallest – 4 largest, default 2 ⇒ 2/3/4 columns on mobile/tablet/desktop). Double-tap heart burst is pink for like, gray + crossed out for unlike (liked state read before the optimistic toggle). Per-image state:
-- `loadedIds` — tracks which images have fired `onLoad` to drive opacity fade-in.
-- First 8 images: `loading="eager"` + `fetchPriority="high"`. Rest: `loading="lazy"`.
-- `width`/`height` attributes set when available to prevent CLS.
-- Button background uses `dominantColor` placeholder while image loads.
-- When `onTap` prop is provided (always from `GalleryClient`), clicks delegate to parent. Without `onTap`, uses internal lightbox state.
+Flex-column masonry. Column count comes from breakpoint × `sizeLevel` (1–4). The server and first client render use the phone breakpoint, and the real breakpoint is applied in a layout effect before paint (avoids hydration mismatches). Tiles keep their aspect ratio, sit on a `dominantColor` placeholder and fade in on load. 2px gutters edge-to-edge on phones, 6px with rounded tiles from `sm`.
+- `data-photo-id` on each tile; `findTileImage(id)` gives the viewer its zoom origin, and `hiddenId` hides the tile while its photo is open.
+- `onDensityStep` turns a two-finger pinch into one size step.
+- With `onDoubleTap` it waits 280ms to tell a double-tap from a tap. `GalleryClient` no longer passes it, so photos open on the first tap; double-tap-to-like lives in the viewer.
+- Without `onTap` it runs its own `Lightbox` (used on `/profile/likes`).
 
 ### `GalleryClient`
-Manages selection mode, lightbox, likes, infinite scroll, and download:
-- Renders photos in batches of 24 with an IntersectionObserver sentinel (600px rootMargin) for infinite scroll.
-- Magnifier bar (range slider in the action row) scales photo size by driving `MasonryGrid`'s `sizeLevel`; persisted in `localStorage['gallery-size']`, restored after mount to avoid SSR mismatch.
-- Double-tap (or heart button) toggles a photo like, optimistic with revert on failure.
-- "Download all" and selection download call `downloadPhotosAsZip()` in `lib/zip.ts`: fetches originals via `photo.downloadUrl` (presigned R2 URL, direct — no Vercel proxy) with **bounded concurrency (6 at a time)**, accumulates blobs in memory, generates zip client-side with `jszip`. Failed fetches are counted and surfaced ("N of M photos couldn't be downloaded"); blobs still all sit in memory until zip generation, so very large collections remain memory-heavy.
-- Zip progress bar fills to 100% during fetch phase; zip generation phase has no progress.
-- Bottom bar appears in selection mode with "Download N" button.
-- `LikedPhotosClient` shares the same zip helper and error surfacing.
+Owns the header toolbar (kudos, comments, size −/+, Save/Download All), selection mode, likes, infinite scroll (batches of 24, 800px rootMargin), and downloads:
+- Size changes run inside a View Transition. Tiles visible before and after the change get matching `view-transition-name`s, so they glide to their new spots, and the top photo stays anchored. The size is persisted in `localStorage['gallery-size']`.
+- Downloads use `downloadPhotosAsZip()` in `lib/zip.ts`, which fetches presigned originals 6 at a time and zips them client-side. Share-capable phones use the native "Save to Photos" sheet for 50 photos or fewer (`lib/share.ts`).
+- `FloatingBar` (frosted, bottom) shows selection count and action, zip and save progress with Cancel, and the iOS re-tap "Save" step. Comments open in a `Sheet`: a bottom sheet on phones and a centered panel from `md` up, with drag-to-dismiss.
 
 ### `Lightbox`
-- Displays `photo.originalUrl ?? photo.url` (presigned R2 URL — no API call).
-- Arrow key navigation, Escape to close, `focus-trap-react` for accessibility.
-- Touch gestures via pointer events: swipe left/right to navigate, swipe down to close, pinch to zoom (1–4×) with pan, double-tap to zoom to the tap point.
-- `onIndexChange` callback lets `GalleryClient` keep `?photo=` in the URL; `showShare` adds a Share button (native share sheet, clipboard fallback) — gallery pages only. Also used standalone by `MasonryGrid`'s internal lightbox on `/profile/likes` (so that "unreachable lightbox" note was wrong — it's exercised there).
-- Download button is an `<a href={photo.downloadUrl}>` pointing to the presigned download URL (direct R2, no Vercel proxy).
+- Portaled, always-black viewer. It opens by zooming out of the grid tile (FLIP) and closes by settling back into it. Before measuring, the grid renders the tile and scrolls it into view (`prepareClose`).
+- Motion is spring-based (`components/spring.ts`: a damped spring sampled into Web Animations keyframes, no dependency). Releases carry the finger's velocity. `settled()` adds a timer fallback, so a throttled or hidden tab can't strand an animation. New input interrupts a moving page.
+- Gestures: swipe to page (3-slide track), drag down to dismiss (backdrop fades), pinch zoom 1–4× with pan. Double-tap likes when liking is enabled, otherwise it zooms. A single tap toggles the chrome. Keyboard: arrows and Escape.
+- Thumbnail shows instantly, and the original fades in on top. Only the current photo's original loads, which saves mobile data.
+- `focus-trap-react` with no `onDeactivate`. That fixed the old dev-mode self-close under StrictMode. Under reduced motion the viewer uses opacity-only fades and instant paging.
 
-### `KudosButton`
-- Optimistic update with revert on failure. `loading` guard prevents double-submission.
-- Requires `user_session` to toggle; display is visible to all.
-
-### `CommentSection`
-- Renders initial comments from props. POST/DELETE via fetch.
-- Delete button visible only to comment owner (matched by `username`), behind a `window.confirm` dialog.
-- Only logged-in users (`user_session`) can post; all gallery visitors can read.
-
-### `UserNav` / `UserNavClient`
-- `UserNav` is a server component that reads `user_session` and passes `username` to `UserNavClient` (client component).
-- Shows username + logout link when logged in; login/signup links otherwise.
-
-### `SearchBar` / `CollectionCard`
-- `SearchBar`: client component, case-insensitive substring filter on collection names, no debounce.
-- `CollectionCard`: plain link card showing name and photo count.
+### `KudosButton` / `CommentSection`
+- Kudos is an optimistic capsule with revert on failure. Its count is hidden at zero. Logged-out taps go to `/login`.
+- Comments render inside the sheet. The owner's Delete sits behind `window.confirm`. Only logged-in users can post; every gallery visitor can read.
 
 ### `UnlockForm`
-- Client form. Shows error on wrong password. Runs fade animation then navigates on success.
+- Client form. It shakes and shows the error on a wrong password. On success the lock becomes a check, then it navigates.
 
 ---
 
@@ -373,7 +367,7 @@ npx ts-node -r dotenv/config --project tsconfig.json scripts/set-r2-cors.ts
 - No startup validation of required env vars — missing secrets silently become `"placeholder"` strings.
 - No server-side file size or MIME type validation on upload — client sends whatever it wants.
 - No pagination on home page or admin dashboard — all collections load at once (photo grids use client-side batching).
-- `SearchBar` has no debounce — filters on every keystroke (in-memory, so harmless at current scale).
+- `CollectionList` search has no debounce — filters on every keystroke (in-memory, so harmless at current scale).
 - Width/height/dominant_color features require a DB migration that may not have been run yet; the gallery page will return no photos if the columns don't exist (Supabase returns an error for unknown columns in SELECT).
 
 ### Fixed (July 2026 audit)
