@@ -403,7 +403,7 @@ export function ManageCollectionClient({
               }}
               onDrop={e => { e.preventDefault(); setDragOver(false); handleUpload(e.dataTransfer.files); }}
               className={`flex w-full flex-col items-center justify-center gap-2 rounded-card border-2 border-dashed bg-surface px-6 py-10 text-center transition-colors duration-150 ${
-                dragOver ? 'border-tint' : 'border-separator hover:border-label2'
+                dragOver ? 'border-label' : 'border-separator hover:border-label2'
               }`}
             >
               {uploading
@@ -514,7 +514,7 @@ export function ManageCollectionClient({
                           <span
                             className={`flex h-[22px] w-[22px] items-center justify-center rounded-full ${
                               selected
-                                ? 'bg-tint text-white ring-2 ring-white'
+                                ? 'bg-white text-black ring-2 ring-white shadow-[0_1px_4px_rgba(0,0,0,0.35)]'
                                 : 'bg-black/10 ring-[1.5px] ring-inset ring-white/90'
                             }`}
                           >
@@ -628,7 +628,7 @@ export function ManageCollectionClient({
         <section>
           <h2 className="list-header">Invite link</h2>
           <div className="list">
-            <button type="button" onClick={handleCopyInvite} className="list-row text-tint">
+            <button type="button" onClick={handleCopyInvite} className="list-row font-medium">
               Copy Invite Link
             </button>
           </div>

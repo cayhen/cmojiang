@@ -269,10 +269,10 @@ export function MasonryGrid({
                     <span
                       aria-hidden
                       className={`pointer-events-none absolute bottom-1.5 right-1.5 flex h-[22px] w-[22px] items-center justify-center rounded-full ring-[1.5px] ring-white transition-colors duration-150 ${
-                        selected ? 'animate-badge bg-tint' : 'bg-black/20'
+                        selected ? 'animate-badge bg-white text-black shadow-[0_1px_4px_rgba(0,0,0,0.35)]' : 'bg-black/20'
                       }`}
                     >
-                      {selected && <CheckIcon size={13} className="text-white" />}
+                      {selected && <CheckIcon size={13} strokeWidth={2.5} />}
                     </span>
                   )}
                 </div>

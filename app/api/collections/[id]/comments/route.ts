@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { verifyToken, verifyUserToken, verifyAdminToken } from '@/lib/auth';
+import { verifyToken, verifyUserToken, verifyAdminUser } from '@/lib/auth';
 import { COOKIE_NAME, USER_COOKIE_NAME } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
 
 async function hasCollectionAccess(cookieStore: ReturnType<typeof cookies>, collectionId: string): Promise<boolean> {
-  const adminToken = cookieStore.get('admin_session')?.value;
-  if (adminToken && await verifyAdminToken(adminToken)) return true;
+  if (await verifyAdminUser(cookieStore.get(USER_COOKIE_NAME)?.value)) return true;
   const galleryToken = cookieStore.get(COOKIE_NAME)?.value;
   if (!galleryToken) return false;
   const payload = await verifyToken(galleryToken);

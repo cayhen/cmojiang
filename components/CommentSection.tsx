@@ -122,14 +122,14 @@ export function CommentSection({ collectionId, initialComments, currentUsername,
               type="submit"
               disabled={posting || !newComment.trim()}
               aria-label="Post comment"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-tint text-white transition-[transform,opacity] duration-150 active:scale-90 disabled:opacity-30"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-label text-onlabel transition-[transform,opacity] duration-150 active:scale-90 disabled:opacity-30"
             >
               <ArrowUpIcon size={18} />
             </button>
           </form>
         ) : (
           <p className="py-2 text-center text-subhead text-label2">
-            <Link href="/login" className="text-tint hover:opacity-70">Sign in</Link> to leave a comment.
+            <Link href="/login" className="link">Sign in</Link> to leave a comment.
           </p>
         )}
       </div>

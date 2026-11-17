@@ -14,7 +14,6 @@ function make(prefix: string, limit: number, window: Window): Ratelimit | null {
 export const ratelimit = make('ratelimit:unlock', 10, '15 m');
 export const loginRatelimit = make('ratelimit:login', 10, '15 m');
 export const signupRatelimit = make('ratelimit:signup', 5, '60 m');
-export const adminLoginRatelimit = make('ratelimit:admin-login', 5, '15 m');
 
 /** Extract the client IP from the first entry of x-forwarded-for. */
 export function getClientIp(req: NextRequest): string {

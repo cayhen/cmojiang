@@ -46,12 +46,7 @@ export function PageHeader({ title, subtitle, back, actions, toolbar, width = 'n
       >
         <div className={`${CONTAINER[width]} grid h-[52px] grid-cols-[1fr_auto_1fr] items-center gap-2`}>
           <div className="flex min-w-0 items-center">
-            {back && (
-              <Link href={back.href} className="btn-plain -ml-1.5 min-w-0 py-2 pr-2">
-                <ChevronLeftIcon size={22} className="shrink-0" />
-                <span className="truncate">{back.label}</span>
-              </Link>
-            )}
+            {back && <BackLink {...back} />}
           </div>
           <button
             type="button"
@@ -65,7 +60,7 @@ export function PageHeader({ title, subtitle, back, actions, toolbar, width = 'n
           >
             {title}
           </button>
-          <div className="flex items-center justify-end gap-1.5">{actions}</div>
+          <div className="flex items-center justify-end gap-3 lg:gap-4">{actions}</div>
         </div>
       </div>
 
@@ -90,14 +85,23 @@ export function TopBar({ back, actions }: { back?: { href: string; label: string
   return (
     <div className="pt-[env(safe-area-inset-top)]">
       <div className={`${CONTAINER.narrow} flex h-[52px] items-center justify-between`}>
-        {back ? (
-          <Link href={back.href} className="btn-plain -ml-1.5 py-2 pr-2">
-            <ChevronLeftIcon size={22} />
-            <span>{back.label}</span>
-          </Link>
-        ) : <span />}
-        <div className="flex items-center gap-1.5">{actions}</div>
+        {back ? <BackLink {...back} /> : <span />}
+        <div className="flex items-center gap-3 lg:gap-4">{actions}</div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Back control, the same Fill capsule as every other bar button: a chevron
+ * circle on phones (it mirrors the account circle opposite), the destination
+ * named from sm up. The label stays in the accessible name at every size.
+ */
+function BackLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Link href={href} className="btn btn-sm btn-tinted w-8 gap-1 px-0 sm:w-auto sm:pl-2 sm:pr-3.5">
+      <ChevronLeftIcon size={17} className="shrink-0" />
+      <span className="sr-only sm:not-sr-only">{label}</span>
+    </Link>
   );
 }

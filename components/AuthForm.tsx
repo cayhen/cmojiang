@@ -69,7 +69,7 @@ export function AuthForm({ title, subtitle, fields, submitLabel, endpoint, fallb
           <p className="mt-2 text-center text-subhead text-label2">{subtitle}</p>
 
           <form key={attempt} onSubmit={handleSubmit} className={`mt-8 ${attempt ? 'animate-shake' : ''}`}>
-            <div className="list transition-shadow duration-150 focus-within:shadow-[0_0_0_3px_var(--tint-ring)]">
+            <div className="list transition-shadow duration-150 focus-within:shadow-[0_0_0_3px_var(--ring)]">
               {fields.map((f, i) => (
                 <div key={f.name} className="list-row min-h-0 p-0">
                   <input
@@ -97,7 +97,7 @@ export function AuthForm({ title, subtitle, fields, submitLabel, endpoint, fallb
 
           <p className="mt-6 text-center text-subhead text-label2">
             {footer.prompt}{' '}
-            <Link href={footer.href} className="text-tint hover:opacity-70">{footer.label}</Link>
+            <Link href={footer.href} className="link">{footer.label}</Link>
           </p>
         </div>
       </div>
