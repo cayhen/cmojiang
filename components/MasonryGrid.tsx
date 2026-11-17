@@ -158,6 +158,7 @@ export function MasonryGrid({
           p.longTimer = setTimeout(() => {
             suppressClick.current = true; // the lift that ends this hold is not a tap
             endPress();
+            window.getSelection()?.removeAllRanges(); // in case the hold began a text selection
             navigator.vibrate?.(8);
             live.current.onLongPress?.(index);
           }, LONG_PRESS_MS);
@@ -243,8 +244,9 @@ export function MasonryGrid({
 
   return (
     <>
+      {/* Nothing in the grid is text to select: a held finger is a long press. */}
       <div
-        className="flex gap-0.5 sm:gap-1.5"
+        className="flex select-none gap-0.5 [-webkit-touch-callout:none] sm:gap-1.5"
         style={onDensityStep ? { touchAction: 'pan-x pan-y' } : undefined}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}

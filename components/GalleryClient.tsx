@@ -175,6 +175,7 @@ export function GalleryClient({
   }, [hasMore, loadMore]);
 
   function toggleSelect(id: string) {
+    setDownloadError('');
     setSelectedIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) { next.delete(id); } else { next.add(id); }
@@ -241,10 +242,13 @@ export function GalleryClient({
     setDownloading(true);
     setZipProgress(0);
     setDownloadError('');
+    let keepSelection = false;
 
     try {
       const failed = await downloadPhotosAsZip(photoList, zipName, controller.signal, setZipProgress);
       if (failed > 0 && !controller.signal.aborted) {
+        // Nothing saved: keep the selection so the error shows where Download was tapped.
+        keepSelection = failed === photoList.length;
         setDownloadError(
           failed === photoList.length
             ? 'Download failed. Please try again.'
@@ -254,13 +258,14 @@ export function GalleryClient({
     } catch (err) {
       if ((err as { name?: string }).name !== 'AbortError') {
         console.error('Download failed', err);
+        keepSelection = true;
         setDownloadError('Download failed. Please try again.');
       }
     } finally {
       abortRef.current = null;
       setDownloading(false);
       setZipProgress(0);
-      exitSelection();
+      if (!keepSelection) exitSelection();
     }
   }
 
@@ -398,7 +403,8 @@ export function GalleryClient({
         toolbar={toolbar}
       />
 
-      {downloadError && (
+      {/* With the bar open the error shows in it, where Save was tapped. */}
+      {downloadError && !barOpen && (
         <p role="alert" className="animate-rise mx-auto mb-3 w-full px-4 text-footnote text-destructive sm:px-6 lg:px-8">
           {downloadError}
         </p>
@@ -476,9 +482,12 @@ export function GalleryClient({
           </>
         ) : (
           <>
-            <span className="flex-1 text-subhead font-semibold tabular-nums">
-              {selectedIds.size === 0 ? 'Select Photos' : `${selectedIds.size} Selected`}
-            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-subhead font-semibold tabular-nums">
+                {selectedIds.size === 0 ? 'Select Photos' : `${selectedIds.size} Selected`}
+              </p>
+              {downloadError && <p role="alert" className="animate-rise text-footnote text-destructive">{downloadError}</p>}
+            </div>
             <button
               type="button"
               onClick={() => getPhotos(selectedPhotos, slugName)}
