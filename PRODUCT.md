@@ -27,7 +27,7 @@ These are personal galleries from one photographer to the people who were there.
 - Entry points: home page listing public collections, a direct `/c/[id]` link plus password, or a `/join/<token>` invite link that skips the password.
 - Visitors can browse without an account. Signing in (email/password or Google) adds kudos, comments, photo likes, a liked-photos page, and remembered access to unlocked collections.
 - Core visitor actions: browse the masonry grid, open the lightbox (swipe, pinch-zoom, share), like by double-tap or heart, select photos, save to Photos on mobile, and download originals singly or as a zip.
-- Admin work happens at `/admin`: create a collection, set its password and event date, mark it private, upload batches (including HEIC), delete photos, mint invite links.
+- Admin work happens at `/admin`, reached from Caden's own account menu (admin is a right on his account, set by `ADMIN_USER_IDS`, not a separate password): create a collection, set its password and event date, mark it private, upload batches (including HEIC), delete photos, mint invite links.
 - Collections can be private, which hides them from the home page so they're reachable only by link.
 
 ## Capabilities and Constraints
@@ -40,7 +40,7 @@ These are personal galleries from one photographer to the people who were there.
 
 ## Brand Commitments
 
-- Name: "cmojiang". The old Rogeta wordmark and its hover contact reveal are no longer binding (Caden, Nov 2026); contact details (email, Instagram, school) should stay reachable somewhere on the site.
+- Name: "cmojiang". The old Rogeta wordmark and its hover contact reveal are no longer binding (Caden, Nov 2026); the footer contact links and school line were removed too (Caden, Nov 2026), so the home page carries only the collections.
 - Standing visual preference (Caden, Nov 2026): clean and unthemed, at the polish of Apple Photos and Linear. Two themed directions were rejected as "too themed". Appearance follows the visitor's system light/dark setting; the photo viewer is always black. Later in Nov 2026 Caden found the desktop version and the plain black background too boring: desktop now has its own bolder layout (display-size titles, a full-width collection index), and pages carry a soft ambient glow made from the photos' own colors.
 - Voice: polished studio. Copy is clean, precise, and professional, never cute or chatty. It should sound like a capable photographer's service, even though the audience is friends.
 - Photography-first: the interface steps back so the photos lead (carried from the original 2026-05-23 spec).

@@ -43,22 +43,23 @@ export async function verifyInviteToken(token: string): Promise<{ collectionId: 
   }
 }
 
-export async function signAdminToken(): Promise<string> {
-  const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
-  return new SignJWT({ admin: true })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime('7d')
-    .sign(secret);
+/**
+ * Admin is a property of an account, not a separate password: the user IDs
+ * listed in ADMIN_USER_IDS (comma-separated) have it. Unset means no one does.
+ */
+export function isAdminUserId(userId: string): boolean {
+  return (process.env.ADMIN_USER_IDS ?? '')
+    .split(',')
+    .map(id => id.trim())
+    .filter(Boolean)
+    .includes(userId);
 }
 
-export async function verifyAdminToken(token: string): Promise<boolean> {
-  try {
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
-    const { payload } = await jwtVerify(token, secret);
-    return payload.admin === true;
-  } catch {
-    return false;
-  }
+/** The account behind a user_session token, if that account is an admin. */
+export async function verifyAdminUser(token: string | undefined): Promise<{ userId: string; username: string } | null> {
+  if (!token) return null;
+  const user = await verifyUserToken(token);
+  return user && isAdminUserId(user.userId) ? user : null;
 }
 
 export async function signUserToken(userId: string, username: string): Promise<string> {

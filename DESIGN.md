@@ -8,10 +8,8 @@ colors:
   label-2-dark: "#98989d"
   on-label: "#ffffff"
   on-label-dark: "#000000"
-  tint: "#0066cc"
-  tint-dark: "#2997ff"
-  tint-ring: "rgba(0, 102, 204, 0.32)"
-  tint-ring-dark: "rgba(41, 151, 255, 0.4)"
+  ring: "rgba(118, 118, 128, 0.3)"
+  ring-dark: "rgba(235, 235, 245, 0.26)"
   heart: "#ff2d55"
   heart-dark: "#ff375f"
   destructive: "#d70015"
@@ -131,7 +129,7 @@ components:
   button-tinted-hover:
     backgroundColor: "{colors.fill-2}"
   button-plain:
-    textColor: "{colors.tint}"
+    textColor: "{colors.label}"
     typography: "{typography.body}"
   button-icon:
     textColor: "{colors.label}"
@@ -194,7 +192,7 @@ Polish lives in behavior rather than ornament. Things are smooth and animated bu
 Appearance follows the visitor's system light or dark setting through one set of semantic tokens with a light and a dark value each. The photo viewer is the single exception: it is always black, in both appearances.
 
 **Key Characteristics:**
-- One neutral palette in two appearances, plus a single blue tint and a pink reserved for likes.
+- One neutral palette in two appearances; the only hues are a pink reserved for likes, red for destruction, and the photos' own colors.
 - The system font stack, with hierarchy carried by size and weight on an eight-step ramp.
 - Depth by tonal steps and translucent material; one soft shadow for floating layers only.
 - Continuous rounded corners nested by scale, pill shapes for every action.
@@ -204,21 +202,19 @@ Appearance follows the visitor's system light or dark setting through one set of
 
 ## Colors
 
-A neutral system with one blue for interaction and one pink for affection; every value is a semantic role with a light and a dark pair.
+A monochrome system: controls are Label on Fill, and the only hues are pink for affection, red for destruction, and the glow taken from the photos. Every value is a semantic role with a light and a dark pair.
 
 The frontmatter records each role twice: the bare key is the light appearance, the `-dark` key is the value it switches to under `prefers-color-scheme: dark`. Both come straight from the `:root` custom properties in `app/globals.css`. Build with the role, never with one appearance's literal.
 
 ### Primary
-- **System Blue** (`tint` / `tint-dark`): tappable text and links (back links, Select, Copy Invite Link, footer links), the caret, the selection highlight's base, the selected-photo badge, and the comment send button. Its translucent companion **Tint Ring** (`tint-ring` / `tint-ring-dark`) is the soft focus glow on fields and the text-selection color.
-
-### Secondary
 - **Like Pink** (`heart` / `heart-dark`): photo likes, the double-tap heart burst, kudos when given, and the Liked Photos entry points. Nothing else.
 
-### Tertiary
+### Secondary
 - **Destructive Red** (`destructive` / `destructive-dark`): Sign Out, inline error messages, and comment delete on hover.
 
 ### Neutral
-- **Label** (`label` / `label-dark`): primary text and icons; also the fill of the filled pill button, which inverts with appearance.
+- **Label** (`label` / `label-dark`): primary text and icons, text links, the caret, the keyboard focus outline, and the fill of the filled pill button, which inverts with appearance.
+- **Ring** (`ring` / `ring-dark`): translucent neutral for the soft focus glow on fields and the text-selection highlight.
 - **Secondary Label** (`label-2` / `label-2-dark`): subtitles, counts, dates, list headers and footers, placeholder text, chevrons.
 - **On Label** (`on-label` / `on-label-dark`): text on a Label-filled surface (filled buttons, the unlocked badge).
 - **Page** (`bg` / `bg-dark`): the plain page behind photo grids and liked photos.
@@ -233,9 +229,9 @@ The frontmatter records each role twice: the bare key is the light appearance, t
 Pages with photos behind them (home, a gallery, Liked Photos) carry a soft light at the top in the photos' own colors. `lib/glow.ts` reduces the stored per-photo dominant colors to four. It buckets hues, ranks the buckets by how much visible color they hold across the set, and lifts each pick to lightness 0.42 to 0.58, with saturation capped at 0.62. A forest shoot glows green and amber, not in the one red jacket, and a mostly gray set puts its gray in a minor slot. In dark appearance the palette is used as is at 0.86 opacity. In light it is mixed to 35% with white at 0.62 opacity, a pale wash, because gray text on white has little contrast to spare.
 
 ### Named Rules
-**The Photos Light The Page Rule.** The only color in the page background comes from the photos on it. Never pick glow colors by hand or by brand, and never let the glow take a text element below 4.5:1 (it is tuned so every title, subtitle, bar link and index number clears that in both appearances, on phones and desktop).
+**The Photos Light The Page Rule.** The only color in the page background comes from the photos on it. Never pick glow colors by hand or by brand, and never let the glow take a text element below 4.5:1 (it is tuned so every title, subtitle, bar control and index number clears that in both appearances, on phones and desktop).
 
-**The One Tint Rule.** Blue means "you can tap this" or "this is selected". It never decorates, never fills a large area, and never labels static text.
+**The No Accent Rule.** There is no interaction color. A control reads as tappable by its shape (a Fill capsule or circle), a selected or active state inverts to the filled style, and a text link is Label at weight 500 among Secondary Label copy. Never bring back a blue or brand tint for links or buttons.
 
 **The Heart Is Only For Likes Rule.** Pink appears only where a person has expressed affection: photo likes, kudos, and the Liked Photos entries. Not for brand, emphasis, or alerts.
 
@@ -283,7 +279,7 @@ Depth is tonal and material first. Pages are flat apart from the Ambient Glow, w
 
 ### Shadow Vocabulary
 - **Float** (light `0 10px 34px rgba(0,0,0,0.12), 0 1px 3px rgba(0,0,0,0.08)`; dark `0 10px 34px rgba(0,0,0,0.55), 0 0 0 0.5px rgba(255,255,255,0.08)`): the only elevation shadow, for the floating bar, sheets and the account menu. In dark it adds a faint white edge so the layer reads against black.
-- **Focus Glow** (`0 0 0 3px` Tint Ring): fields and the grouped auth list on focus.
+- **Focus Glow** (`0 0 0 3px` Ring): fields and the grouped auth list on focus.
 - **Icon Lift on Photos** (drop shadows from `0 1px 3px rgba(0,0,0,0.5)` to `0 4px 16px rgba(0,0,0,0.4)`): only for white or pink icons placed directly on photographs, for legibility.
 
 ### Named Rules
@@ -304,15 +300,16 @@ Continuous, softly rounded corners nested by scale: photo tiles (6px; 2px on pho
 ### Buttons
 Calm and tactile: they acknowledge a press by scaling, never by flashing color.
 - **Shape:** fully rounded pill (`rounded.full`); 44px tall with 20px padding at default, 32px tall with 14px padding at small. Label is semibold (600).
-- **Filled:** Label background with On Label text, so it inverts with appearance (near-black in light, near-white in dark). Primary actions: Unlock, Sign In, Save, Download N. Hover drops to 90% opacity.
-- **Tinted:** Fill background with Label text; hover steps to Fill 2. Secondary actions: kudos, comments, download all, the size control.
-- **Plain:** System Blue text with no container; hover 70% opacity, press 50%. Back links, Select, Cancel.
+- **Filled:** Label background with On Label text, so it inverts with appearance (near-black in light, near-white in dark). Primary actions: Unlock, Sign In, Save, Download N, and Done while selecting. Hover drops to 90% opacity.
+- **Tinted:** Fill background with Label text; hover steps to Fill 2. Every bar and toolbar control: back, Select, kudos, comments, download all, the size control. Select turns Filled (as Done) while selection is on.
+- **Plain:** Label text with no container; hover 70% opacity, press 50%. Only inside other surfaces: Cancel in the floating bar, inline Save on admin fields, admin list-header actions.
+- **Link:** Label text at weight 500 inside Secondary Label copy; hover 70%, press 50%. "Create one", "Sign in to leave a comment".
 - **Icon:** 36px circle, Label icon, Fill on hover, scale 0.94 on press. The sheet close button is a 32px Fill circle with a Secondary Label glyph.
-- **Press / Disabled:** press scales to 0.97 (icon buttons 0.94, small circular controls 0.90) over 150ms; disabled is 40% opacity with no pointer events. Focus is a 2px System Blue outline at 2px offset, globally.
+- **Press / Disabled:** press scales to 0.97 (icon buttons 0.94, small circular controls 0.90) over 150ms; disabled is 40% opacity with no pointer events. Focus is a 2px Label outline at 2px offset, globally.
 
 ### Inputs / Fields
-- **Style:** filled with Fill, no border, 12px radius, 44px tall, 16px padding, Body text, Secondary Label placeholder, System Blue caret.
-- **Focus:** a 3px Tint Ring glow fades in over 150ms; no outline change.
+- **Style:** filled with Fill, no border, 12px radius, 44px tall, 16px padding, Body text, Secondary Label placeholder, Label caret.
+- **Focus:** a 3px Ring glow fades in over 150ms; no outline change.
 - **Variants:** search (40px, 10px radius, leading search glyph, circular clear button), comment composer (40px pill), unlock password (centered text).
 - **Error:** the form shakes horizontally once (0.42s) and a footnote-size Destructive Red message appears below; fields themselves do not turn red.
 
@@ -322,25 +319,25 @@ The backbone of every non-photo page, in the manner of iOS Settings.
 - **Rows:** min 48px, 16px horizontal padding, Body text; tappable rows take Fill on hover and Fill 2 on press. Trailing chevrons are Secondary Label at 60%, nudging 2px right on hover.
 - **Separators:** half-pixel Separator lines inset 16px from the leading edge.
 - **Header / Footer:** footnote, Secondary Label, 16px inset, sitting just outside the card.
-- **Auth forms:** fields are borderless rows inside one list card, and the whole card takes the Tint Ring glow when any field is focused.
+- **Auth forms:** fields are borderless rows inside one list card, and the whole card takes the Ring glow when any field is focused.
 - **Switch:** iOS proportions (51 x 31px track, 27px white knob with a small shadow), Fill 2 track when off, green when on, sliding in 200ms.
 
 ### Navigation
-- **Large-title header:** a 52px three-column bar (back link, centered small title, actions) over a Large Title. While the title is visible the bar is transparent; once it scrolls under, the bar turns to Material with a bottom hairline and the small Headline title fades and rises in (300ms). Tapping the small title scrolls to top.
-- **Top bar:** single-task pages use the same 52px bar with only a back link and actions.
-- **Account control:** one 32px Fill circle in two states, never a text link or a pill. Signed out it holds a person glyph in Secondary Label; signed in, the user's initial in Label. Either opens a 256px Thick Material menu with Float shadow, scaling from 95% out of its top-right corner (200ms). Signed out, the menu says what an account is for ("like photos & leave comments"), offers a full-width filled Sign In, and has a Create Account row. Signed in, it shows a header, hairline-separated rows, and Sign Out in Destructive Red.
+- **Large-title header:** a 52px three-column bar (back, centered small title, actions) over a Large Title. Every bar control is a 32px Fill shape: back is a chevron circle on phones, mirroring the account circle, and a capsule naming the destination from sm up (the name stays in the accessible label on phones). Actions sit 12px apart, 16px from lg, so Select never crowds the account circle. While the title is visible the bar is transparent; once it scrolls under, the bar turns to Material with a bottom hairline and the small Headline title fades and rises in (300ms). Tapping the small title scrolls to top.
+- **Top bar:** single-task pages use the same 52px bar with only the back control and actions.
+- **Account control:** one 32px Fill circle in two states, never a text link or a pill. Signed out it holds a person glyph in Secondary Label; signed in, the user's initial in Label. Either opens a 256px Thick Material menu with Float shadow, scaling from 95% out of its top-right corner (200ms). Signed out, the menu says what an account is for ("like photos & leave comments"), offers a full-width filled Sign In, and has a Create Account row. Signed in, it shows a header, hairline-separated rows (an admin account gets its own Manage Collections group), and Sign Out in Destructive Red.
 
 ### Collection Index (home, lg and up)
-The grouped list drops its card and becomes an index between hairlines on the plain Page background. Each row is a four-column grid: the collection name in Title 1 at weight 600, then the photo count and the month in Body, Secondary Label, tabular and right-aligned, then a chevron. Rows are 24px tall in padding with full-width hairlines. On hover the name slides 6px right on the long-settle curve, the count and month brighten to Label, and the chevron moves 4px and goes full strength; press dims the name to 60%. The search field narrows to 320px above it, and the footer splits into school on the left and links on the right.
+The grouped list drops its card and becomes an index between hairlines on the plain Page background. Each row is a four-column grid: the collection name in Title 1 at weight 600, then the photo count and the month in Body, Secondary Label, tabular and right-aligned, then a chevron. Rows are 24px tall in padding with full-width hairlines. On hover the name slides 6px right on the long-settle curve, the count and month brighten to Label, and the chevron moves 4px and goes full strength; press dims the name to 60%. The search field narrows to 320px above it, and nothing sits below it: home has no footer.
 
 ### Ambient Glow Layer
-An absolutely positioned layer behind everything in its page (the page is `relative isolate`; the layer is `z-index: -1`). Four elliptical radial gradients, one per palette color, each fading to transparent by 70%. A vertical mask runs from 30% at the top edge, so the top bar's blue links keep contrast, to full strength at 128px, then fades out. Header reach is 300px on phones and 440px on desktop, ending near the top of the grid. Page reach (home) is 380px and 760px, so on dark desktop the light runs behind the index. Phones keep the light in the top-right corner, clear of the title block. Desktop spreads it beside the title, where the header is empty; light home on desktop keeps it up by the title. The four colors are registered custom properties, so on home they ease over 0.9s on the long-settle curve to the colors of whichever collection is hovered or focused.
+An absolutely positioned layer behind everything in its page (the page is `relative isolate`; the layer is `z-index: -1`). Four elliptical radial gradients, one per palette color, each fading to transparent by 70%. A vertical mask runs from 30% at the top edge, so the top bar stays calm, to full strength at 128px, then fades out. Header reach is 300px on phones and 440px on desktop, ending near the top of the grid. Page reach (home) is 380px and 760px, so on dark desktop the light runs behind the index. Phones keep the light in the top-right corner, clear of the title block. Desktop spreads it beside the title, where the header is empty; light home on desktop keeps it up by the title. The four colors are registered custom properties, so on home they ease over 0.9s on the long-settle curve to the colors of whichever collection is hovered or focused.
 
 ### Photo Tile
 - **Style:** the photo fills a 6px-radius tile (2px on phones) whose background is the photo's stored dominant color, or Fill, until the image loads and fades in over 500ms.
 - **Hover (pointer devices):** a white like heart (bottom left) and a frosted black download circle (bottom right, `black/35` with blur) fade in; a liked heart stays visible in Like Pink.
 - **Double tap:** a 60px heart bursts in place (Like Pink to like; translucent white with a strike to unlike).
-- **Selection:** the photo insets to 94% scale and a 22px circular badge with a white ring fills System Blue with a check, popping in.
+- **Selection:** the photo insets to 94% scale and a 22px circular badge with a white ring fills white with a black check and a soft lift shadow, popping in.
 
 ### Floating Bar
 A Thick Material pill-rectangle (20px radius, min 56px tall, max 512px wide) with the Float shadow, floating 12px above the bottom safe area. It slides up 24px and fades in over 300ms on the long-settle curve. It carries selection counts and actions, and zip progress on a 4px Fill track with a Label fill.
@@ -354,8 +351,8 @@ Always black, with white chrome under black gradients at top and bottom: a close
 ## Do's and Don'ts
 
 ### Do:
-- **Do** use the semantic role (Label, Fill, Surface, System Blue) and let the light and dark pair resolve it; never hard-code one appearance's value in a component.
-- **Do** keep System Blue to tappable text and selected state, and Like Pink to likes and kudos.
+- **Do** use the semantic role (Label, Fill, Surface, Ring) and let the light and dark pair resolve it; never hard-code one appearance's value in a component.
+- **Do** keep controls monochrome (Fill capsules, inverted when active), and Like Pink to likes and kudos.
 - **Do** put settings, forms, and admin content in grouped inset lists on the Grouped Page.
 - **Do** acknowledge presses by scale (0.97 for buttons, 0.90 to 0.94 for circles) over 150ms.
 - **Do** move layers on the long-settle curve (`cubic-bezier(0.32, 0.72, 0, 1)`) and direct manipulation on damped springs, between roughly 200 and 450ms.

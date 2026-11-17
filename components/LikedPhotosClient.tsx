@@ -114,7 +114,7 @@ export function LikedPhotosClient({ initialSections, accountMenu }: Props) {
               <button
                 type="button"
                 onClick={() => (selectionMode ? exitSelection() : setSelectionMode(true))}
-                className={`btn-plain px-1 py-2 ${selectionMode ? 'font-semibold' : ''}`}
+                className={`btn btn-sm ${selectionMode ? 'btn-filled' : 'btn-tinted'}`}
               >
                 {selectionMode ? 'Done' : 'Select'}
               </button>

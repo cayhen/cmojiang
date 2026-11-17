@@ -15,7 +15,6 @@ const config: Config = {
         label: 'var(--label)',
         label2: 'var(--label-2)',
         separator: 'var(--separator)',
-        tint: 'var(--tint)',
         heart: 'var(--heart)',
         destructive: 'var(--destructive)',
         onlabel: 'var(--on-label)',

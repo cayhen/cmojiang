@@ -1,6 +1,6 @@
 import 'server-only';
 import { cookies } from 'next/headers';
-import { verifyToken, verifyUserToken } from './auth';
+import { isAdminUserId, verifyToken, verifyUserToken } from './auth';
 
 export const COOKIE_NAME = 'gallery_session';
 
@@ -30,6 +30,12 @@ export async function getUserSession(): Promise<{ userId: string; username: stri
   const token = cookieStore.get(USER_COOKIE_NAME)?.value;
   if (!token) return null;
   return verifyUserToken(token);
+}
+
+/** The signed-in user if that account has admin rights (JWT and env only, no DB). */
+export async function getAdminSession(): Promise<{ userId: string; username: string } | null> {
+  const session = await getUserSession();
+  return session && isAdminUserId(session.userId) ? session : null;
 }
 
 export function userCookieOptions() {

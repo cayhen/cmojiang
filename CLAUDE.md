@@ -48,7 +48,7 @@ Current known cost drivers:
 
 ```
 JWT_SECRET
-ADMIN_PASSWORD
+ADMIN_USER_IDS          (comma-separated users.id values that get admin rights; unset = no admin)
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY
@@ -131,13 +131,12 @@ Key functions in `lib/r2.ts`:
 
 ---
 
-## Authentication: Three Independent Sessions
+## Authentication: Two Sessions, Admin Rides On The Account
 
-All three session types use the same `JWT_SECRET` with `jose` HS256.
+Both session types use the same `JWT_SECRET` with `jose` HS256. There is no separate admin password: an account is admin when its `users.id` is listed in `ADMIN_USER_IDS` (`isAdminUserId` in `lib/auth.ts`, env only, no DB lookup).
 
 | Cookie | Duration | JWT payload | Verified via |
 |---|---|---|---|
-| `admin_session` | 7 days | `{ admin: true }` | `crypto.timingSafeEqual` vs `ADMIN_PASSWORD` |
 | `user_session` | 30 days | `{ userId, username }` | bcrypt vs `users.password_hash`, or Google OAuth |
 | `gallery_session` | 30 days | `{ collectionId }` | bcrypt vs `collections.password_hash` |
 
@@ -147,11 +146,11 @@ Google OAuth: `GET /api/auth/google` redirects to Google with a random `state` s
 
 **Invite links**: admin mints a 30-day invite token (`POST /api/admin/collections/[id]/invite` → `{ url }`, copied from the manage page). The link (`/join/<jwt>`) exchanges the token for a `gallery_session` and redirects into the gallery — no password typing. Token payload is `{ collectionId, invite: true }`, same `JWT_SECRET`.
 
-When a logged-in user unlocks a collection, a `user_collection_access` row is upserted. On subsequent visits to `/c/[id]`, the server checks for that row and redirects straight to the gallery, skipping the password form. A valid `admin_session` can view any gallery without a `gallery_session`.
+When a logged-in user unlocks a collection, a `user_collection_access` row is upserted. On subsequent visits to `/c/[id]`, the server checks for that row and redirects straight to the gallery, skipping the password form. An admin account can view any gallery without a `gallery_session`.
 
-Middleware (`middleware.ts`) protects `/admin/:path+` and `/api/admin/((?!login).+)` by verifying `admin_session`.
+Middleware (`middleware.ts`) protects `/admin`, `/admin/:path*` and `/api/admin/:path*`: it verifies `user_session` and checks the ID against `ADMIN_USER_IDS`. Pages redirect to `/login` when signed out and to `/` for a non-admin account; API routes answer 401. Admin opens from the account menu (Manage Collections, shown only to admin accounts). The old `/admin/login` password flow and `admin_session` cookie were removed in Nov 2026; `/admin` just forwards to the dashboard.
 
-**Rate limiting** (`lib/ratelimit.ts`, Upstash sliding window, keyed by client IP; fails open without Redis env vars): unlock 10/15m, login 10/15m, signup 5/60m, admin login 5/15m (failed attempts only).
+**Rate limiting** (`lib/ratelimit.ts`, Upstash sliding window, keyed by client IP; fails open without Redis env vars): unlock 10/15m, login 10/15m, signup 5/60m.
 
 ---
 
@@ -160,7 +159,7 @@ Middleware (`middleware.ts`) protects `/admin/:path+` and `/api/admin/((?!login)
 ### Home (`/`)
 - Server component (`revalidate = 0`). Queries public collections (`is_private = false`) with photo counts, ordered by `event_date` descending. The same query embeds up to 24 stored `dominant_color` values per collection (`swatches:photos(dominant_color)`, limited via `referencedTable`); `glowPalette` (`lib/glow.ts`) reduces them to 4 hex colors server-side for the ambient glow, so only those reach the client.
 - Renders `PageHeader` (large title; display-size from md up) and `CollectionList` (client: search field, shown only above 5 collections, plus a grouped list of collections that becomes a full-width index from `lg` up).
-- Footer carries the contact links (Instagram, email) that used to live in the old wordmark, plus a faint admin link `/admin`.
+- No footer (the contact links, school line and footer admin link were removed Nov 2026; admin opens from the account menu).
 - No error handling on the Supabase query.
 
 ### Login (`/login`) / Signup (`/signup`)
@@ -174,7 +173,7 @@ Middleware (`middleware.ts`) protects `/admin/:path+` and `/api/admin/((?!login)
 - `UnlockForm` → `POST /api/unlock` → bcrypt compare → sets `gallery_session` cookie → lock turns to a check → navigates to the gallery after 450ms. A wrong password shakes the form.
 
 ### Gallery (`/c/[id]/gallery`)
-- Server component. Verifies `gallery_session` cookie (must match `collectionId`) or a valid `admin_session`.
+- Server component. Verifies `gallery_session` cookie (must match `collectionId`) or an admin account's `user_session`.
 - Photo rows come from `fetchPhotosChronological` (`lib/photos.ts`) — ordered by EXIF capture time (`taken_at`), falling back to `uploaded_at`, earliest first so the gallery reads like the event. Sorting happens in JS so the fallback is a plain `COALESCE`-style coalesce; if the `taken_at` column doesn't exist yet the query retries without it.
 - Rows are wrapped in a Redis cache (`lib/redis.ts` `cachedFetch`, key `gallery:v3:{id}:photos`, 5-min TTL) — photo mutations in the admin routes bust this key via `invalidate()`. Falls through to Supabase when Redis isn't configured.
 - `?photo=<id>` deep-links open the lightbox on that photo; the lightbox keeps the param in sync via `history.replaceState`.
@@ -195,8 +194,8 @@ Middleware (`middleware.ts`) protects `/admin/:path+` and `/api/admin/((?!login)
 - Require `user_session` (redirect to `/login`). `revalidate = 0`.
 - Likes page fetches all of the user's `photo_likes` joined to photos, signs presigned URLs per photo, and groups them into per-collection sections (`LikedPhotosClient`) with unlike, select, and per-gallery zip download.
 
-### Admin Login (`/admin`)
-- Simple password form that POSTs to `/api/admin/login`.
+### Admin entry (`/admin`)
+- Redirects to `/admin/dashboard`; reached from the account menu's Manage Collections row.
 
 ### Admin Dashboard (`/admin/dashboard`)
 - Lists all collections with photo count and plaintext password displayed inline.
@@ -208,14 +207,14 @@ Middleware (`middleware.ts`) protects `/admin/:path+` and `/api/admin/((?!login)
 
 ## Components
 
-Design system: tokens are CSS variables in `app/globals.css` (light and dark under `prefers-color-scheme`), named in `tailwind.config.ts` (`bg`, `grouped`, `surface`, `fill`, `label`, `label2`, `separator`, `tint`, `heart`, `destructive`, iOS-style type ramp). Shared classes: `.btn` / `.btn-filled` / `.btn-tinted` / `.btn-plain` / `.btn-icon`, `.field`, `.list` + `.list-row`, `.material`. DESIGN.md documents the system. Server pages must import page-width classes from `components/container.ts`, never from a `'use client'` module.
+Design system: tokens are CSS variables in `app/globals.css` (light and dark under `prefers-color-scheme`), named in `tailwind.config.ts` (`bg`, `grouped`, `surface`, `fill`, `label`, `label2`, `separator`, `heart`, `destructive`, iOS-style type ramp). Shared classes: `.btn` / `.btn-filled` / `.btn-tinted` / `.btn-plain` / `.btn-icon`, `.link`, `.field`, `.list` + `.list-row`, `.material`. Controls are monochrome (no blue tint; `--ring` is the neutral focus/selection color). DESIGN.md documents the system. Server pages must import page-width classes from `components/container.ts`, never from a `'use client'` module.
 
 ### `PageHeader` / `TopBar`
 - Large title that collapses into a frosted sticky bar (with the title small) once it scrolls away; tap the small title to scroll to top. Props: `title`, `subtitle`, `back`, `actions`, `toolbar`, `width`.
-- `TopBar` is the back-link-only bar for single-task pages (unlock, sign in, admin login).
+- `TopBar` is the back-link-only bar for single-task pages (unlock, sign in).
 
 ### `AccountMenu` / `AccountMenuClient`
-- Server wrapper reads `user_session`; the client is one 32px circle in two states. Signed out it shows a person glyph and its popover explains accounts and offers Sign In and Create Account; signed in it shows the initial, with Liked Photos, Your Collections, and Sign Out. Replaces the old `UserNav` and the mobile hamburger drawer.
+- Server wrapper reads `user_session`; the client is one 32px circle in two states. Signed out it shows a person glyph and its popover explains accounts and offers Sign In and Create Account; signed in it shows the initial, with Liked Photos, Your Collections, Manage Collections (admin accounts only), and Sign Out. Replaces the old `UserNav` and the mobile hamburger drawer.
 
 ### `MasonryGrid`
 Flex-column masonry. Column count comes from breakpoint × `sizeLevel` (1–4). The server and first client render use the phone breakpoint, and the real breakpoint is applied in a layout effect before paint (avoids hydration mismatches). Tiles keep their aspect ratio, sit on a `dominantColor` placeholder and fade in on load. 2px gutters edge-to-edge on phones, 6px with rounded tiles from `sm`.
@@ -300,13 +299,11 @@ Steps in `ManageCollectionClient.tsx`:
 | `GET/POST /api/collections/[id]/comments` | GET: `gallery_session` or admin, POST: `user_session` + gallery/admin | Read / post comments |
 | `DELETE /api/comments/[id]` | `user_session` | Delete own comment (ownership verified) |
 | `POST /api/photos/[id]/like` | `user_session` | Toggle a photo like |
-| `POST /api/admin/login` | none (failed attempts rate limited) → sets `admin_session` | Admin login |
-| `POST /api/admin/logout` | none | Clear `admin_session` |
-| `GET/POST /api/admin/collections` | `admin_session` | List / create collections |
-| `PATCH/DELETE /api/admin/collections/[id]` | `admin_session` | Rename, change password, or delete collection + R2 cleanup |
-| `POST /api/admin/collections/[id]/photos/upload-url` | `admin_session` | Get presigned PUT URLs for direct R2 upload |
-| `POST/DELETE /api/admin/collections/[id]/photos` | `admin_session` | Register photos in DB / delete photos (single `photoId` or bulk `photoIds`) from R2 + DB |
-| `POST /api/admin/collections/[id]/invite` | `admin_session` | Mint a 30-day invite link |
+| `GET/POST /api/admin/collections` | admin account | List / create collections |
+| `PATCH/DELETE /api/admin/collections/[id]` | admin account | Rename, change password, or delete collection + R2 cleanup |
+| `POST /api/admin/collections/[id]/photos/upload-url` | admin account | Get presigned PUT URLs for direct R2 upload |
+| `POST/DELETE /api/admin/collections/[id]/photos` | admin account | Register photos in DB / delete photos (single `photoId` or bulk `photoIds`) from R2 + DB |
+| `POST /api/admin/collections/[id]/invite` | admin account | Mint a 30-day invite link |
 
 ---
 
@@ -315,6 +312,7 @@ Steps in `ManageCollectionClient.tsx`:
 Jest with `ts-jest` and `jest-environment-node`. Run with `npm test` or `npm run test:watch`.
 
 Tests live in `__tests__/`:
+- `middleware.test.ts` — admin gating: admin account passes, signed out → `/login`, non-admin → `/`, API → 401
 - `api/unlock.test.ts` — tests `POST /api/unlock` (missing fields, not found, wrong password, correct password sets cookie)
 - `lib/auth.test.ts` — tests JWT sign/verify functions
 - `lib/r2.test.ts` — tests R2 helpers (e.g. `thumbPath`)

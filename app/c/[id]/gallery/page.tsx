@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect, notFound } from 'next/navigation';
-import { verifyToken, verifyAdminToken } from '@/lib/auth';
+import { verifyToken, isAdminUserId } from '@/lib/auth';
 import { COOKIE_NAME } from '@/lib/session';
 import { getUserSession } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
@@ -16,9 +16,9 @@ import { fetchPhotosChronological, type PhotoRow } from '@/lib/photos';
 export default async function GalleryPage({ params }: { params: { id: string } }) {
   const cookieStore = cookies();
 
-  // Admin can view any gallery without a gallery_session
-  const adminToken = cookieStore.get('admin_session')?.value;
-  const isAdmin = adminToken ? await verifyAdminToken(adminToken) : false;
+  // An admin account can view any gallery without a gallery_session
+  const userSession = await getUserSession();
+  const isAdmin = !!userSession && isAdminUserId(userSession.userId);
 
   if (!isAdmin) {
     const token = cookieStore.get(COOKIE_NAME)?.value;
@@ -32,7 +32,7 @@ export default async function GalleryPage({ params }: { params: { id: string } }
   // Collection-wide reads are independent — fetch them in one round trip.
   // The photo cache holds raw rows (not URLs) so we never cache an expiring
   // signed URL; URL generation happens below, outside the cache boundary.
-  const [collectionRes, rawPhotos, kudosRes, commentsRes, userSession] = await Promise.all([
+  const [collectionRes, rawPhotos, kudosRes, commentsRes] = await Promise.all([
     supabaseAdmin.from('collections').select('name, event_date').eq('id', params.id).single(),
     cachedFetch<PhotoRow[]>(galleryPhotosKey(params.id), 300, () =>
       fetchPhotosChronological(params.id)
@@ -43,7 +43,6 @@ export default async function GalleryPage({ params }: { params: { id: string } }
       .select('id, content, created_at, users(username)')
       .eq('collection_id', params.id)
       .order('created_at', { ascending: true }),
-    getUserSession(),
   ]);
 
   const collection = collectionRes.data;

@@ -8,9 +8,10 @@ import { HeartIcon, ChevronRightIcon, PersonIcon } from './icons';
 /**
  * One account control in two states: an empty circle when signed out (its menu
  * says what an account is for and offers Sign In), the user's initial when
- * signed in (Liked Photos, Your Collections, Sign Out).
+ * signed in (Liked Photos, Your Collections, Sign Out, and Manage Collections
+ * for an admin account).
  */
-export function AccountMenuClient({ username }: { username: string | null }) {
+export function AccountMenuClient({ username, isAdmin = false }: { username: string | null; isAdmin?: boolean }) {
   const [open, setOpen] = useState(false);
   const { mounted, shown } = usePresence(open, 180);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -78,6 +79,14 @@ export function AccountMenuClient({ username }: { username: string | null }) {
                   <ChevronRightIcon size={14} className="text-label2" />
                 </MenuLink>
               </div>
+              {isAdmin && (
+                <div className="hairline-t">
+                  <MenuLink href="/admin/dashboard" onSelect={close}>
+                    <span className="flex-1">Manage Collections</span>
+                    <ChevronRightIcon size={14} className="text-label2" />
+                  </MenuLink>
+                </div>
+              )}
               <div className="hairline-t">
                 <button
                   role="menuitem"
