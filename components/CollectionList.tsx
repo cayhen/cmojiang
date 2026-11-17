@@ -35,7 +35,7 @@ export function CollectionList({ collections }: { collections: Collection[] }) {
 
   return (
     <div>
-      <AmbientGlow colors={glow} reach="page" />
+      <AmbientGlow colors={glow} />
       {collections.length > 5 && (
         <div className="relative mb-5 lg:mb-8 lg:max-w-xs">
           <SearchIcon size={17} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-label2" />

@@ -14,7 +14,7 @@
   --fill: rgba(118, 118, 128, 0.12);
   --fill-2: rgba(118, 118, 128, 0.2);
   --label: #1d1d1f;
-  --label-2: #6e6e73;
+  --label-2: #636368; /* 5.3:1 on Grouped Page, 6:1 on white, with headroom for the glow */
   --separator: rgba(60, 60, 67, 0.18);
   --ring: rgba(118, 118, 128, 0.3);
   --heart: #ff2d55;
@@ -36,7 +36,7 @@
     --fill: rgba(118, 118, 128, 0.24);
     --fill-2: rgba(118, 118, 128, 0.36);
     --label: #f5f5f7;
-    --label-2: #98989d;
+    --label-2: #a1a1a6; /* brighter than the system gray so it holds 4.5:1 over the glow */
     --separator: rgba(84, 84, 88, 0.65);
     --ring: rgba(235, 235, 245, 0.26);
     --heart: #ff375f;
@@ -177,68 +177,60 @@
 }
 
 /* ── Ambient glow ─────────────────────────────────────────────────────────
-   Light in the photos' own colors behind the top of the page (AmbientGlow).
-   The colors are registered so a palette change eases instead of jumping.
-   Brightest off to the trailing side, where desktop headers are empty; text
-   over it stays above 4.5:1 in both appearances. */
+   Light in the photos' own colors spread across the whole screen (AmbientGlow):
+   four soft pools at the corners and edges, with black (or white) still holding
+   most of the view. The layer is fixed, so content scrolls over every part of
+   it; its strength is capped so text stays above 4.5:1 wherever it passes.
+   The colors are registered so a palette change eases instead of jumping. */
 @property --glow-1 { syntax: '<color>'; inherits: false; initial-value: transparent; }
 @property --glow-2 { syntax: '<color>'; inherits: false; initial-value: transparent; }
 @property --glow-3 { syntax: '<color>'; inherits: false; initial-value: transparent; }
 @property --glow-4 { syntax: '<color>'; inherits: false; initial-value: transparent; }
 
 :root {
-  --glow-strength: 0.62;
-  --glow-purity: 35%; /* light appearance: a pale wash, since gray text on white has little contrast to spare */
+  /* Light appearance: a pale wash mixed toward white. */
+  --glow-strength: 0.55;
+  --glow-purity: 35%;
   --glow-base: #ffffff;
 }
 @media (prefers-color-scheme: dark) {
-  :root { --glow-strength: 0.86; --glow-purity: 100%; --glow-base: #000000; }
+  :root { --glow-strength: 0.7; --glow-purity: 100%; --glow-base: #000000; }
+}
+/* Landscape screens scroll gray text (the home index's counts and dates)
+   across the pools, so dark light is capped lower there. Each strength is the
+   most that keeps every collection's palette above 4.5:1. */
+@media (min-aspect-ratio: 1/1) and (prefers-color-scheme: dark) {
+  :root { --glow-strength: 0.55; }
 }
 
 .ambient-glow {
-  position: absolute;
-  inset: 0 0 auto 0;
+  position: fixed;
+  inset: 0;
   z-index: -1;
   pointer-events: none;
-  /* Geometry per light (size and center). Phones keep it in the top-right
-     corner, clear of the title block; desktop spreads it beside the title. */
-  --g1: 70% 80% at 100% -5%;
-  --g2: 50% 60% at 62% -30%;
-  --g3: 40% 50% at 0% -45%;
-  --g4: 34% 50% at 104% 46%;
+  /* Pool size and center, for a portrait screen: top-right corner, left edge,
+     lower right edge, bottom-left corner. Centers sit just past the edges so
+     each pool reads as broad light coming in, not a bright spot. */
+  --g1: 84% 46% at 104% -8%;
+  --g2: 76% 40% at -12% 40%;
+  --g3: 80% 44% at 112% 76%;
+  --g4: 80% 38% at 8% 112%;
   background:
-    radial-gradient(var(--g1), color-mix(in oklab, var(--glow-1) var(--glow-purity), var(--glow-base)), transparent 72%),
+    radial-gradient(var(--g1), color-mix(in oklab, var(--glow-1) var(--glow-purity), var(--glow-base)), transparent 70%),
     radial-gradient(var(--g2), color-mix(in oklab, var(--glow-2) var(--glow-purity), var(--glow-base)), transparent 70%),
     radial-gradient(var(--g3), color-mix(in oklab, var(--glow-3) var(--glow-purity), var(--glow-base)), transparent 70%),
     radial-gradient(var(--g4), color-mix(in oklab, var(--glow-4) var(--glow-purity), var(--glow-base)), transparent 70%);
   opacity: var(--glow-strength);
-  /* Dim under the top bar so its blue links keep contrast, full beside the
-     title, then fading into the page. */
-  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0, #000 128px, #000 34%, transparent);
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0, #000 128px, #000 34%, transparent);
   transition: --glow-1 0.9s var(--ease-ios), --glow-2 0.9s var(--ease-ios),
     --glow-3 0.9s var(--ease-ios), --glow-4 0.9s var(--ease-ios);
 }
-.ambient-glow-header { height: 300px; }
-.ambient-glow-page { height: 380px; }
-@media (min-width: 1024px) {
+/* Landscape screens: the same four pools, proportioned for a wide view. */
+@media (min-aspect-ratio: 1/1) {
   .ambient-glow {
-    --g1: 46% 78% at 84% 22%;
-    --g2: 40% 66% at 54% 0%;
-    --g3: 34% 56% at 10% -12%;
-    --g4: 28% 56% at 102% 56%;
-  }
-  .ambient-glow-header { height: 440px; }
-  .ambient-glow-page { height: 760px; }
-}
-/* Light home on desktop: keep the light up by the title, off the index's gray
-   numbers, which have little contrast to spare on white. */
-@media (min-width: 1024px) and (prefers-color-scheme: light) {
-  .ambient-glow-page {
-    --g1: 46% 50% at 86% 10%;
-    --g2: 40% 42% at 54% 0%;
-    --g3: 34% 36% at 10% -7%;
-    --g4: 28% 34% at 102% 30%;
+    --g1: 60% 92% at 100% -12%;
+    --g2: 52% 86% at -10% 48%;
+    --g3: 58% 88% at 76% 120%;
+    --g4: 46% 74% at 34% -26%;
   }
 }
 

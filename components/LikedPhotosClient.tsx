@@ -51,6 +51,7 @@ export function LikedPhotosClient({ initialSections, accountMenu }: Props) {
   }
 
   function toggleSelect(id: string) {
+    setDownloadError('');
     setSelectedIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
@@ -69,10 +70,13 @@ export function LikedPhotosClient({ initialSections, accountMenu }: Props) {
     setDownloading(collectionId);
     setZipProgress(0);
     setDownloadError('');
+    let keepSelection = false;
 
     try {
       const failed = await downloadPhotosAsZip(photoList, zipName, controller.signal, setZipProgress);
       if (failed > 0 && !controller.signal.aborted) {
+        // Nothing saved: keep the selection so the error shows where Download was tapped.
+        keepSelection = failed === photoList.length;
         setDownloadError(
           failed === photoList.length
             ? 'Download failed. Please try again.'
@@ -82,13 +86,14 @@ export function LikedPhotosClient({ initialSections, accountMenu }: Props) {
     } catch (err) {
       if ((err as { name?: string }).name !== 'AbortError') {
         console.error('Download failed', err);
+        keepSelection = true;
         setDownloadError('Download failed. Please try again.');
       }
     } finally {
       abortRef.current = null;
       setDownloading(null);
       setZipProgress(0);
-      exitSelection();
+      if (!keepSelection) exitSelection();
     }
   }
 
@@ -124,7 +129,8 @@ export function LikedPhotosClient({ initialSections, accountMenu }: Props) {
         }
       />
 
-      {downloadError && (
+      {/* With the bar open the error shows in it, where Download was tapped. */}
+      {downloadError && !selectionMode && (
         <p role="alert" className="animate-rise mb-3 px-4 text-footnote text-destructive sm:px-6 lg:px-8">{downloadError}</p>
       )}
 
@@ -168,6 +174,7 @@ export function LikedPhotosClient({ initialSections, accountMenu }: Props) {
                     selectionMode={selectionMode}
                     selectedIds={selectedIds}
                     onTap={selectionMode ? (i) => toggleSelect(section.photos[i].id) : undefined}
+                    onLongPress={i => { setSelectionMode(true); setSelectedIds(new Set([section.photos[i].id])); }}
                     likedIds={likedIds}
                     onToggleLike={selectionMode ? undefined : handleUnlike}
                   />
@@ -192,9 +199,12 @@ export function LikedPhotosClient({ initialSections, accountMenu }: Props) {
           </>
         ) : (
           <>
-            <span className="flex-1 text-subhead font-semibold tabular-nums">
-              {selectedIds.size === 0 ? 'Select Photos' : `${selectedIds.size} Selected`}
-            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-subhead font-semibold tabular-nums">
+                {selectedIds.size === 0 ? 'Select Photos' : `${selectedIds.size} Selected`}
+              </p>
+              {downloadError && <p role="alert" className="animate-rise text-footnote text-destructive">{downloadError}</p>}
+            </div>
             <button
               type="button"
               onClick={() => downloadPhotos(selectedPhotos, 'liked-photos', 'selection')}
