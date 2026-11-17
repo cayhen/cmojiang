@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
+import { memo, useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react';
 import { Lightbox } from './Lightbox';
 import { HeartIcon, DownloadIcon, CheckIcon } from './icons';
 
@@ -20,7 +20,10 @@ interface Props {
   selectionMode?: boolean;
   selectedIds?: Set<string>;
   onTap?: (index: number) => void;
+  /** Double-tap on a tile (like / unlike). Single taps then wait one double-tap window. */
   onDoubleTap?: (index: number) => void;
+  /** Press and hold on a tile outside selection mode (start selecting with it). */
+  onLongPress?: (index: number) => void;
   likedIds?: Set<string>;
   onToggleLike?: (photoId: string) => void;
   /** Photo size 1 (smallest) – 4 (largest); maps to column count per breakpoint. */
@@ -40,6 +43,13 @@ const SIZE_COLUMNS: Record<Breakpoint, number[]> = {
   lg: [7, 5, 4, 3],
 };
 
+const DOUBLE_TAP_MS = 250;
+const LONG_PRESS_MS = 450;
+/** How far a finger may drift and still be a press rather than a scroll. */
+const PRESS_SLOP = 10;
+/** The pressed look waits this long, so the start of a scroll never flashes it. */
+const PRESS_FEEDBACK_MS = 70;
+
 const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 function breakpointFor(width: number): Breakpoint {
@@ -51,16 +61,30 @@ export function findTileImage(photoId: string): HTMLImageElement | null {
   return document.querySelector<HTMLImageElement>(`[data-photo-id="${photoId}"] img`);
 }
 
+interface TileHandlers {
+  down: (e: React.PointerEvent<HTMLElement>, index: number) => void;
+  move: (e: React.PointerEvent<HTMLElement>) => void;
+  end: () => void;
+  click: (index: number) => void;
+  contextMenu: (e: React.MouseEvent) => void;
+  like: (photoId: string) => void;
+}
+
+interface Press {
+  x: number;
+  y: number;
+  tile: HTMLElement;
+  longTimer?: ReturnType<typeof setTimeout>;
+  feedbackTimer: ReturnType<typeof setTimeout>;
+}
+
 export function MasonryGrid({
-  photos, selectionMode, selectedIds, onTap, onDoubleTap, likedIds, onToggleLike,
+  photos, selectionMode = false, selectedIds, onTap, onDoubleTap, onLongPress, likedIds, onToggleLike,
   sizeLevel = 2, hiddenId, onDensityStep,
 }: Props) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [internalHidden, setInternalHidden] = useState<string | null>(null);
-  const [loadedIds, setLoadedIds] = useState<Set<string>>(new Set());
   const [hearts, setHearts] = useState<Map<string, 'like' | 'unlike'>>(new Map());
-  const lastClickRef = useRef<{ time: number; index: number } | null>(null);
-  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pinchRef = useRef<{ start: number; fired: boolean } | null>(null);
   // Server and first client render agree on the phone layout (the main device);
   // the real breakpoint is applied before the first paint after hydration.
@@ -73,56 +97,122 @@ export function MasonryGrid({
     return () => window.removeEventListener('resize', update);
   }, []);
 
-  useEffect(() => () => { if (clickTimerRef.current) clearTimeout(clickTimerRef.current); }, []);
+  // Tiles are memoized and share one stable set of handlers that read the
+  // latest props from here, so a tile re-renders only when its own photo,
+  // selection, like or visibility changes, not on every grid update.
+  const live = useRef({ photos, selectionMode, onTap, onDoubleTap, onLongPress, likedIds, onToggleLike });
+  live.current = { photos, selectionMode, onTap, onDoubleTap, onLongPress, likedIds, onToggleLike };
+
+  const press = useRef<Press | null>(null);
+  const suppressClick = useRef(false);
+  const lastPointer = useRef('mouse');
+  const lastTap = useRef<{ time: number; index: number } | null>(null);
+  const tapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (tapTimer.current) clearTimeout(tapTimer.current);
+    if (press.current) { clearTimeout(press.current.longTimer); clearTimeout(press.current.feedbackTimer); }
+  }, []);
+
+  const handlers = useMemo<TileHandlers>(() => {
+    function endPress() {
+      const p = press.current;
+      if (!p) return;
+      clearTimeout(p.longTimer);
+      clearTimeout(p.feedbackTimer);
+      delete p.tile.dataset.pressed;
+      press.current = null;
+    }
+
+    function open(i: number) {
+      const { onTap } = live.current;
+      if (onTap) onTap(i);
+      else setLightboxIndex(i);
+    }
+
+    function showHeart(photoId: string, kind: 'like' | 'unlike') {
+      setHearts(prev => new Map(prev).set(photoId, kind));
+      setTimeout(() => {
+        setHearts(prev => { const n = new Map(prev); n.delete(photoId); return n; });
+      }, 820);
+    }
+
+    return {
+      down(e, index) {
+        lastPointer.current = e.pointerType;
+        // A second finger means a pinch, not a press.
+        if (!e.isPrimary) { endPress(); return; }
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        endPress();
+        suppressClick.current = false;
+        const tile = e.currentTarget.closest<HTMLElement>('[data-photo-id]');
+        if (!tile) return;
+        const p: Press = {
+          x: e.clientX,
+          y: e.clientY,
+          tile,
+          feedbackTimer: setTimeout(() => { tile.dataset.pressed = ''; }, PRESS_FEEDBACK_MS),
+        };
+        const { onLongPress, selectionMode } = live.current;
+        if (onLongPress && !selectionMode) {
+          p.longTimer = setTimeout(() => {
+            suppressClick.current = true; // the lift that ends this hold is not a tap
+            endPress();
+            navigator.vibrate?.(8);
+            live.current.onLongPress?.(index);
+          }, LONG_PRESS_MS);
+        }
+        press.current = p;
+      },
+      move(e) {
+        const p = press.current;
+        if (p && Math.hypot(e.clientX - p.x, e.clientY - p.y) > PRESS_SLOP) endPress();
+      },
+      end: endPress,
+      click(index) {
+        if (suppressClick.current) { suppressClick.current = false; return; }
+        const { selectionMode, onTap, onDoubleTap, photos, likedIds } = live.current;
+        if (selectionMode) { onTap?.(index); return; }
+        // Without double-tap there is nothing to wait for: open at once.
+        if (!onDoubleTap) { open(index); return; }
+
+        const now = performance.now();
+        const last = lastTap.current;
+        if (last && last.index === index && now - last.time < DOUBLE_TAP_MS) {
+          if (tapTimer.current) { clearTimeout(tapTimer.current); tapTimer.current = null; }
+          lastTap.current = null;
+          const id = photos[index].id;
+          // Read liked state before onDoubleTap flips it optimistically
+          showHeart(id, likedIds?.has(id) ? 'unlike' : 'like');
+          onDoubleTap(index);
+          return;
+        }
+        lastTap.current = { time: now, index };
+        if (tapTimer.current) clearTimeout(tapTimer.current);
+        tapTimer.current = setTimeout(() => {
+          tapTimer.current = null;
+          lastTap.current = null;
+          open(index);
+        }, DOUBLE_TAP_MS);
+      },
+      contextMenu(e) {
+        // A held finger is our long press; keep the system image menu out of it.
+        if (lastPointer.current === 'touch') e.preventDefault();
+      },
+      like(photoId) {
+        live.current.onToggleLike?.(photoId);
+      },
+    };
+  }, []);
 
   const numCols = SIZE_COLUMNS[bp][Math.min(Math.max(Math.round(sizeLevel), 1), 4) - 1];
   const hidden = hiddenId ?? internalHidden;
 
-  function triggerHeartAnimation(photoId: string, kind: 'like' | 'unlike') {
-    setHearts(prev => new Map(prev).set(photoId, kind));
-    setTimeout(() => {
-      setHearts(prev => { const n = new Map(prev); n.delete(photoId); return n; });
-    }, 820);
-  }
-
-  function open(i: number) {
-    if (onTap) onTap(i);
-    else setLightboxIndex(i);
-  }
-
-  function handleClick(i: number) {
-    if (selectionMode) { onTap?.(i); return; }
-
-    // Without double-tap-to-like there is nothing to wait for: open at once.
-    if (!onDoubleTap) { open(i); return; }
-
-    const now = Date.now();
-    const last = lastClickRef.current;
-    if (last && last.index === i && now - last.time < 280) {
-      if (clickTimerRef.current) { clearTimeout(clickTimerRef.current); clickTimerRef.current = null; }
-      lastClickRef.current = null;
-      // Read liked state before onDoubleTap flips it optimistically
-      triggerHeartAnimation(photos[i].id, likedIds?.has(photos[i].id) ? 'unlike' : 'like');
-      onDoubleTap(i);
-      return;
-    }
-    lastClickRef.current = { time: now, index: i };
-    if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
-    clickTimerRef.current = setTimeout(() => { clickTimerRef.current = null; open(i); }, 280);
-  }
-
-  function markLoaded(id: string) {
-    setLoadedIds(prev => {
-      if (prev.has(id)) return prev;
-      const next = new Set(prev);
-      next.add(id);
-      return next;
-    });
-  }
-
   // Two-finger pinch steps the grid once per gesture, like Photos.
   function onTouchStart(e: React.TouchEvent) {
-    if (!onDensityStep || e.touches.length !== 2) return;
+    if (e.touches.length !== 2) return;
+    handlers.end();
+    if (!onDensityStep) return;
     const [a, b] = [e.touches[0], e.touches[1]];
     pinchRef.current = { start: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), fired: false };
   }
@@ -145,11 +235,11 @@ export function MasonryGrid({
 
   // Each photo is permanently assigned to column (i % numCols).
   // Appending new photos never redistributes existing ones.
-  const columns = Array.from({ length: numCols }, (_, ci) =>
-    photos
-      .map((photo, i) => ({ photo, originalIndex: i }))
-      .filter(({ originalIndex: i }) => i % numCols === ci)
-  );
+  const columns = useMemo(() => {
+    const cols: { photo: Photo; index: number }[][] = Array.from({ length: numCols }, () => []);
+    photos.forEach((photo, index) => cols[index % numCols].push({ photo, index }));
+    return cols;
+  }, [photos, numCols]);
 
   return (
     <>
@@ -162,122 +252,20 @@ export function MasonryGrid({
       >
         {columns.map((colItems, ci) => (
           <div key={ci} className="flex min-w-0 flex-1 flex-col gap-0.5 sm:gap-1.5">
-            {colItems.map(({ photo, originalIndex: i }) => {
-              const selected = selectedIds?.has(photo.id) ?? false;
-              const loaded = loadedIds.has(photo.id);
-              const liked = likedIds?.has(photo.id) ?? false;
-              const hasDims = photo.width != null && photo.height != null;
-              const heart = hearts.get(photo.id);
-
-              return (
-                <div
-                  key={photo.id}
-                  data-photo-id={photo.id}
-                  className="group relative overflow-hidden rounded-[2px] sm:rounded-tile"
-                  style={{
-                    // Placeholder colour until the image lands, then clear so a selected
-                    // (inset) photo sits on the page, not on a coloured frame.
-                    backgroundColor: loaded ? 'transparent' : photo.dominantColor ?? 'var(--fill)',
-                    visibility: hidden === photo.id ? 'hidden' : undefined,
-                    aspectRatio: hasDims ? `${photo.width} / ${photo.height}` : undefined,
-                  }}
-                >
-                  <button
-                    type="button"
-                    className="block h-full w-full"
-                    style={{ touchAction: 'manipulation' }}
-                    onClick={() => handleClick(i)}
-                    aria-pressed={selectionMode ? selected : undefined}
-                    aria-label={selectionMode
-                      ? (selected ? `Deselect ${photo.filename}` : `Select ${photo.filename}`)
-                      : `Open ${photo.filename}`}
-                  >
-                    <img
-                      src={photo.url}
-                      alt={photo.filename}
-                      width={hasDims ? photo.width : undefined}
-                      height={hasDims ? photo.height : undefined}
-                      draggable={false}
-                      loading={i < 12 ? 'eager' : 'lazy'}
-                      decoding="async"
-                      fetchPriority={i < 8 ? 'high' : 'auto'}
-                      onLoad={() => markLoaded(photo.id)}
-                      onError={e => {
-                        markLoaded(photo.id);
-                        const el = e.currentTarget;
-                        if (!el.dataset.fallback) {
-                          // thumbnail failed → fall back to the (presigned) original once
-                          el.dataset.fallback = '1';
-                          if (photo.originalUrl) el.src = photo.originalUrl;
-                        }
-                      }}
-                      className={`block h-full w-full object-cover transition-[opacity,transform] duration-500 ease-out ${
-                        loaded ? 'opacity-100' : 'opacity-0'
-                      } ${selected ? 'scale-[0.94]' : 'scale-100'}`}
-                    />
-                  </button>
-
-                  {/* Double-tap burst: pink for like, grey and struck for unlike */}
-                  {heart && (
-                    <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                      <div className={`animate-heart-pop relative ${heart === 'like' ? 'text-heart' : 'text-white/80'}`}>
-                        <HeartIcon size={60} filled className="drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]" />
-                        {heart === 'unlike' && (
-                          <span className="absolute left-1/2 top-1/2 h-[3px] w-[70px] -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-full bg-white/90" />
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {!selectionMode && onToggleLike && (
-                    <button
-                      type="button"
-                      onClick={e => { e.stopPropagation(); onToggleLike(photo.id); }}
-                      aria-label={liked ? 'Unlike photo' : 'Like photo'}
-                      aria-pressed={liked}
-                      className={`absolute bottom-1.5 left-1.5 flex h-8 w-8 items-center justify-center rounded-full transition-[opacity,transform] duration-200 ease-out active:scale-90 ${
-                        liked
-                          ? 'opacity-100'
-                          : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100'
-                      }`}
-                    >
-                      <HeartIcon
-                        size={18}
-                        filled={liked}
-                        strokeWidth={2}
-                        className={`drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)] ${liked ? 'text-heart' : 'text-white'}`}
-                      />
-                    </button>
-                  )}
-                  {!selectionMode && !onToggleLike && liked && (
-                    <HeartIcon size={16} filled className="pointer-events-none absolute bottom-2 left-2 text-heart drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]" />
-                  )}
-
-                  {!selectionMode && photo.downloadUrl && (
-                    <a
-                      href={photo.downloadUrl}
-                      download={photo.filename}
-                      onClick={e => e.stopPropagation()}
-                      aria-label={`Download ${photo.filename}`}
-                      className="absolute bottom-1.5 right-1.5 hidden h-8 w-8 items-center justify-center rounded-full bg-black/35 text-white opacity-0 backdrop-blur-md transition-opacity duration-200 hover:bg-black/55 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 sm:flex"
-                    >
-                      <DownloadIcon size={16} strokeWidth={2} />
-                    </a>
-                  )}
-
-                  {selectionMode && (
-                    <span
-                      aria-hidden
-                      className={`pointer-events-none absolute bottom-1.5 right-1.5 flex h-[22px] w-[22px] items-center justify-center rounded-full ring-[1.5px] ring-white transition-colors duration-150 ${
-                        selected ? 'animate-badge bg-white text-black shadow-[0_1px_4px_rgba(0,0,0,0.35)]' : 'bg-black/20'
-                      }`}
-                    >
-                      {selected && <CheckIcon size={13} strokeWidth={2.5} />}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
+            {colItems.map(({ photo, index }) => (
+              <Tile
+                key={photo.id}
+                photo={photo}
+                index={index}
+                selectionMode={selectionMode}
+                selected={selectedIds?.has(photo.id) ?? false}
+                liked={likedIds?.has(photo.id) ?? false}
+                canLike={!!onToggleLike}
+                hidden={hidden === photo.id}
+                heart={hearts.get(photo.id)}
+                handlers={handlers}
+              />
+            ))}
           </div>
         ))}
       </div>
@@ -296,3 +284,137 @@ export function MasonryGrid({
     </>
   );
 }
+
+interface TileProps {
+  photo: Photo;
+  index: number;
+  selectionMode: boolean;
+  selected: boolean;
+  liked: boolean;
+  canLike: boolean;
+  hidden: boolean;
+  heart?: 'like' | 'unlike';
+  handlers: TileHandlers;
+}
+
+/**
+ * One photo. It owns its loaded state, so an image arriving repaints only its
+ * own tile. Hover controls (like, download) exist only for a real pointer: on
+ * touch screens every tap reaches the photo, and a liked heart is just a mark.
+ */
+const Tile = memo(function Tile({ photo, index, selectionMode, selected, liked, canLike, hidden, heart, handlers }: TileProps) {
+  const [loaded, setLoaded] = useState(false);
+  const hasDims = photo.width != null && photo.height != null;
+
+  return (
+    <div
+      data-photo-id={photo.id}
+      className="group relative overflow-hidden rounded-[2px] sm:rounded-tile"
+      style={{
+        // Placeholder colour until the image lands, then clear so a selected
+        // (inset) photo sits on the page, not on a coloured frame.
+        backgroundColor: loaded ? 'transparent' : photo.dominantColor ?? 'var(--fill)',
+        visibility: hidden ? 'hidden' : undefined,
+        aspectRatio: hasDims ? `${photo.width} / ${photo.height}` : undefined,
+      }}
+    >
+      <button
+        type="button"
+        className="block h-full w-full select-none transition-transform duration-150 ease-out [-webkit-touch-callout:none] group-data-[pressed]:scale-[0.97]"
+        style={{ touchAction: 'manipulation' }}
+        onPointerDown={e => handlers.down(e, index)}
+        onPointerMove={handlers.move}
+        onPointerUp={handlers.end}
+        onPointerCancel={handlers.end}
+        onPointerLeave={handlers.end}
+        onContextMenu={handlers.contextMenu}
+        onClick={() => handlers.click(index)}
+        aria-pressed={selectionMode ? selected : undefined}
+        aria-label={selectionMode
+          ? (selected ? `Deselect ${photo.filename}` : `Select ${photo.filename}`)
+          : `Open ${photo.filename}`}
+      >
+        <img
+          src={photo.url}
+          alt={photo.filename}
+          width={hasDims ? photo.width : undefined}
+          height={hasDims ? photo.height : undefined}
+          draggable={false}
+          loading={index < 12 ? 'eager' : 'lazy'}
+          decoding="async"
+          fetchPriority={index < 8 ? 'high' : 'auto'}
+          onLoad={() => setLoaded(true)}
+          onError={e => {
+            setLoaded(true);
+            const el = e.currentTarget;
+            if (!el.dataset.fallback) {
+              // thumbnail failed → fall back to the (presigned) original once
+              el.dataset.fallback = '1';
+              if (photo.originalUrl) el.src = photo.originalUrl;
+            }
+          }}
+          className={`pointer-events-none block h-full w-full object-cover transition-[opacity,transform] duration-500 ease-out [-webkit-touch-callout:none] ${
+            loaded ? 'opacity-100' : 'opacity-0'
+          } ${selected ? 'scale-[0.94]' : 'scale-100'}`}
+        />
+      </button>
+
+      {/* Double-tap burst: pink for like, grey and struck for unlike */}
+      {heart && (
+        <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <div className={`animate-heart-pop relative ${heart === 'like' ? 'text-heart' : 'text-white/80'}`}>
+            <HeartIcon size={60} filled className="drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]" />
+            {heart === 'unlike' && (
+              <span className="absolute left-1/2 top-1/2 h-[3px] w-[70px] -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-full bg-white/90" />
+            )}
+          </div>
+        </div>
+      )}
+
+      {!selectionMode && canLike && (
+        <button
+          type="button"
+          onClick={e => { e.stopPropagation(); handlers.like(photo.id); }}
+          aria-label={liked ? 'Unlike photo' : 'Like photo'}
+          aria-pressed={liked}
+          className={`pointer-events-none absolute bottom-1.5 left-1.5 flex h-8 w-8 items-center justify-center rounded-full transition-[opacity,transform] duration-200 ease-out can-hover:pointer-events-auto focus-visible:opacity-100 active:scale-90 ${
+            liked ? 'opacity-100' : 'opacity-0 can-hover:group-hover:opacity-100 can-hover:group-focus-within:opacity-100'
+          }`}
+        >
+          <HeartIcon
+            size={18}
+            filled={liked}
+            strokeWidth={2}
+            className={`drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)] ${liked ? 'text-heart' : 'text-white'}`}
+          />
+        </button>
+      )}
+      {!selectionMode && !canLike && liked && (
+        <HeartIcon size={16} filled className="pointer-events-none absolute bottom-2 left-2 text-heart drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]" />
+      )}
+
+      {!selectionMode && photo.downloadUrl && (
+        <a
+          href={photo.downloadUrl}
+          download={photo.filename}
+          onClick={e => e.stopPropagation()}
+          aria-label={`Download ${photo.filename}`}
+          className="absolute bottom-1.5 right-1.5 hidden h-8 w-8 items-center justify-center rounded-full bg-black/45 text-white opacity-0 transition-opacity duration-200 hover:bg-black/60 focus-visible:opacity-100 can-hover:flex can-hover:group-hover:opacity-100 can-hover:group-focus-within:opacity-100"
+        >
+          <DownloadIcon size={16} strokeWidth={2} />
+        </a>
+      )}
+
+      {selectionMode && (
+        <span
+          aria-hidden
+          className={`pointer-events-none absolute bottom-1.5 right-1.5 flex h-[22px] w-[22px] items-center justify-center rounded-full ring-[1.5px] ring-white transition-colors duration-150 ${
+            selected ? 'animate-badge bg-white text-black shadow-[0_1px_4px_rgba(0,0,0,0.35)]' : 'bg-black/20'
+          }`}
+        >
+          {selected && <CheckIcon size={13} strokeWidth={2.5} />}
+        </span>
+      )}
+    </div>
+  );
+});

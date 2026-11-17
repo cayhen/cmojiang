@@ -23,6 +23,7 @@ Current known cost drivers:
 - Gallery page generates presigned R2 URLs for every photo on each load (180 AWS SDK calls for a 60-photo gallery)
 - `revalidate = 0` on home, admin dashboard, manage collection, and profile pages (dynamic render per request)
 - Home query also returns up to 24 photo colors per public collection for the ambient glow (about 8KB from Supabase per load at 10 collections; still one query)
+- Admin dashboard query returns up to 12 photo colors per collection for its glow (about 4KB per load; admin-only, approved Nov 2026)
 
 ---
 
@@ -186,7 +187,7 @@ Middleware (`middleware.ts`) protects `/admin`, `/admin/:path*` and `/api/admin/
 - Injects `<link rel="preload" as="image">` for the first 8 thumbnails in the HTML head.
 - Fetches kudos count, whether current user has given kudos, all comments, and the user's liked photo IDs server-side.
 - Passes everything to `GalleryClient` as props — no client-side API calls on initial load. The account control (`AccountMenu`, a server component) is passed in as a prop.
-- An `AmbientGlow` layer behind the header uses `glowPalette` over the first 60 photos' stored dominant colors (already loaded, no extra query). The `main` is `relative isolate` so the layer sits behind content.
+- An `AmbientGlow` layer (fixed to the viewport, behind everything) uses `glowPalette` over the first 60 photos' stored dominant colors (already loaded, no extra query). The `main` is `relative isolate` so the layer sits behind content. Glow strength per appearance and orientation lives in `app/globals.css` and is capped so Secondary Label text keeps 4.5:1 at any scroll position; check contrast before raising it.
 - `loading.tsx` shows a static skeleton while the server renders (no data, no cost).
 - On signing errors, renders a "temporarily unavailable" message instead of the grid.
 
@@ -199,6 +200,7 @@ Middleware (`middleware.ts`) protects `/admin`, `/admin/:path*` and `/api/admin/
 
 ### Admin Dashboard (`/admin/dashboard`)
 - Lists all collections with photo count and plaintext password displayed inline.
+- The same query embeds up to 12 `dominant_color` values per collection (`swatches:photos(dominant_color)`); `glowPalette` over all of them gives the page's `AmbientGlow`.
 
 ### Admin Manage Collection (`/admin/collections/[id]`)
 - Renders `ManageCollectionClient` with collection info and initial photo list.
@@ -220,11 +222,13 @@ Design system: tokens are CSS variables in `app/globals.css` (light and dark und
 Flex-column masonry. Column count comes from breakpoint × `sizeLevel` (1–4). The server and first client render use the phone breakpoint, and the real breakpoint is applied in a layout effect before paint (avoids hydration mismatches). Tiles keep their aspect ratio, sit on a `dominantColor` placeholder and fade in on load. 2px gutters edge-to-edge on phones, 6px with rounded tiles from `sm`.
 - `data-photo-id` on each tile; `findTileImage(id)` gives the viewer its zoom origin, and `hiddenId` hides the tile while its photo is open.
 - `onDensityStep` turns a two-finger pinch into one size step.
-- With `onDoubleTap` it waits 280ms to tell a double-tap from a tap. `GalleryClient` no longer passes it, so photos open on the first tap; double-tap-to-like lives in the viewer.
+- Each photo is a memoized `Tile` that owns its loaded state, and all tiles share one stable handler set that reads the latest props from a ref. An image landing, a like or a selection change repaints only the tiles it touches. (The old grid kept loaded state in the parent, so every image load re-rendered every tile, which was the main source of phone scroll jank.) Keep it that way: don't pass per-render closures or derived Sets into `Tile`.
+- Gestures (pointer events on the tile button): a tap opens; with `onDoubleTap` a second tap within 250ms likes or unlikes with a heart burst instead, so single taps wait that window (logged-out visitors get no double-tap, so their taps open at once). `onLongPress` fires after a 450ms hold that drifts under 10px, then suppresses that lift's click; a second finger or a scroll (`pointercancel`) cancels it. In selection mode taps toggle immediately. The pressed look (`data-pressed`, scale 0.97) waits 70ms so a scroll never flashes it. Touch long presses suppress the system image menu (`-webkit-touch-callout: none`, `contextmenu` prevented for touch only).
+- Hover controls (tile like heart, download circle) exist only for `can-hover` devices (`@media (hover: hover) and (pointer: fine)`, a variant in `tailwind.config.ts`). On touch screens they are non-interactive, so taps always reach the photo; iOS otherwise spends the first tap revealing hover content, so a photo took two taps to open. `future.hoverOnlyWhenSupported` does the same for every `hover:` class, so tapped buttons don't stick in their hover state.
 - Without `onTap` it runs its own `Lightbox` (used on `/profile/likes`).
 
 ### `GalleryClient`
-Owns the header toolbar (kudos, comments, size −/+, Save/Download All), selection mode, likes, infinite scroll (batches of 24, 800px rootMargin), and downloads:
+Owns the header toolbar (kudos, comments, size −/+, Save/Download All), selection mode (Select button, or press and hold a photo to start with it), likes (double-tap a tile when signed in), infinite scroll (batches of 24, 800px rootMargin), and downloads:
 - Size changes run inside a View Transition. Tiles visible before and after the change get matching `view-transition-name`s, so they glide to their new spots, and the top photo stays anchored. The size is persisted in `localStorage['gallery-size']`.
 - Downloads use `downloadPhotosAsZip()` in `lib/zip.ts`, which fetches presigned originals 6 at a time and zips them client-side. Share-capable phones use the native "Save to Photos" sheet for 50 photos or fewer (`lib/share.ts`).
 - `FloatingBar` (frosted, bottom) shows selection count and action, zip and save progress with Cancel, and the iOS re-tap "Save" step. Comments open in a `Sheet`: a bottom sheet on phones and a centered panel from `md` up, with drag-to-dismiss.

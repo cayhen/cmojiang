@@ -192,6 +192,12 @@ export function GalleryClient({
     else setLightboxIndex(index);
   }
 
+  // Press and hold a photo: selection starts with it; further taps add more.
+  function startSelectionWith(index: number) {
+    setSelectionMode(true);
+    setSelectedIds(new Set([photos[index].id]));
+  }
+
   async function handleToggleLike(photoId: string) {
     if (!loggedIn) return;
     const wasLiked = likedIds.has(photoId);
@@ -413,6 +419,8 @@ export function GalleryClient({
             selectionMode={selectionMode}
             selectedIds={selectedIds}
             onTap={handleTap}
+            onDoubleTap={loggedIn ? i => handleToggleLike(photos[i].id) : undefined}
+            onLongPress={startSelectionWith}
             likedIds={likedIds}
             onToggleLike={loggedIn ? handleToggleLike : undefined}
             sizeLevel={sizeLevel}

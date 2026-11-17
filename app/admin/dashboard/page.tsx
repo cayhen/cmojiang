@@ -3,6 +3,8 @@ import { PageHeader } from '@/components/PageHeader';
 import { CONTAINER } from '@/components/container';
 import { ChevronRightIcon, PhotoStackIcon, PlusIcon } from '@/components/icons';
 import { supabaseAdmin } from '@/lib/supabase';
+import { AmbientGlow } from '@/components/AmbientGlow';
+import { glowPalette } from '@/lib/glow';
 
 export const revalidate = 0;
 
@@ -10,13 +12,21 @@ export const revalidate = 0;
 export default async function AdminDashboard() {
   const { data: collections } = await supabaseAdmin
     .from('collections')
-    .select('id, name, password_plain, is_private, created_at, photos(count)')
+    // swatches: a dozen stored photo colors per collection for the page glow
+    // (same single query; reduced to 4 hex values before rendering).
+    .select('id, name, password_plain, is_private, created_at, photos(count), swatches:photos(dominant_color)')
+    .not('swatches.dominant_color', 'is', null)
+    .limit(12, { referencedTable: 'swatches' })
     .order('created_at', { ascending: false });
 
   const list = collections ?? [];
+  const glow = glowPalette(
+    list.flatMap(c => ((c as { swatches?: { dominant_color: string | null }[] }).swatches ?? []).map(s => s.dominant_color))
+  );
 
   return (
-    <main className="min-h-screen bg-grouped pb-16">
+    <main className="relative isolate min-h-screen bg-grouped pb-16">
+      <AmbientGlow colors={glow} />
       <PageHeader
         title="Collections"
         subtitle={list.length ? `${list.length} collection${list.length === 1 ? '' : 's'}` : undefined}

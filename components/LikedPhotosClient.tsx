@@ -168,6 +168,7 @@ export function LikedPhotosClient({ initialSections, accountMenu }: Props) {
                     selectionMode={selectionMode}
                     selectedIds={selectedIds}
                     onTap={selectionMode ? (i) => toggleSelect(section.photos[i].id) : undefined}
+                    onLongPress={i => { setSelectionMode(true); setSelectedIds(new Set([section.photos[i].id])); }}
                     likedIds={likedIds}
                     onToggleLike={selectionMode ? undefined : handleUnlike}
                   />

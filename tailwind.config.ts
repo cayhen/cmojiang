@@ -1,9 +1,14 @@
 import type { Config } from 'tailwindcss';
+import plugin from 'tailwindcss/plugin';
 
 // Semantic tokens live as CSS variables in app/globals.css so light and dark
 // appearance switch with the system setting. Tailwind only names them.
 const config: Config = {
   content: ['./app/**/*.{ts,tsx}', './components/**/*.{ts,tsx}'],
+  // hover: styles only on devices that can really hover. On touch screens a
+  // tap would otherwise "stick" the hover look, and iOS spends the first tap
+  // on hover when it reveals content, so it takes two taps to click.
+  future: { hoverOnlyWhenSupported: true },
   theme: {
     extend: {
       colors: {
@@ -55,7 +60,11 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    // can-hover: for controls that only exist for a mouse or trackpad (the
+    // like and download buttons on grid tiles).
+    plugin(({ addVariant }) => { addVariant('can-hover', '@media (hover: hover) and (pointer: fine)'); }),
+  ],
 };
 
 export default config;

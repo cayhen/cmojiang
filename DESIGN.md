@@ -4,8 +4,8 @@ description: Private event galleries in neutral system chrome, so the photos are
 colors:
   label: "#1d1d1f"
   label-dark: "#f5f5f7"
-  label-2: "#6e6e73"
-  label-2-dark: "#98989d"
+  label-2: "#636368"
+  label-2-dark: "#a1a1a6"
   on-label: "#ffffff"
   on-label-dark: "#000000"
   ring: "rgba(118, 118, 128, 0.3)"
@@ -198,7 +198,7 @@ Appearance follows the visitor's system light or dark setting through one set of
 - Continuous rounded corners nested by scale, pill shapes for every action.
 - Spring and long-settle motion, press feedback by scale, never by color jumps.
 - Photos edge to edge on phones with 2px gutters; chrome steps back.
-- One soft ambient glow behind the top of photo pages and home, made from the event's own photo colors.
+- One soft ambient glow spread across the whole screen behind photo pages, home and the admin dashboard, made from the photos' own colors.
 
 ## Colors
 
@@ -226,10 +226,10 @@ The frontmatter records each role twice: the bare key is the light appearance, t
 - **Viewer Black** (`viewer-backdrop`) and **Viewer White** (`viewer-label`): the fixed photo viewer, independent of appearance. Its chrome uses white at reduced opacity (10% button wash, 80% counter text) over black gradients at 50%.
 
 ### Ambient Glow
-Pages with photos behind them (home, a gallery, Liked Photos) carry a soft light at the top in the photos' own colors. `lib/glow.ts` reduces the stored per-photo dominant colors to four. It buckets hues, ranks the buckets by how much visible color they hold across the set, and lifts each pick to lightness 0.42 to 0.58, with saturation capped at 0.62. A forest shoot glows green and amber, not in the one red jacket, and a mostly gray set puts its gray in a minor slot. In dark appearance the palette is used as is at 0.86 opacity. In light it is mixed to 35% with white at 0.62 opacity, a pale wash, because gray text on white has little contrast to spare.
+Pages with photos behind them (home, a gallery, Liked Photos, the admin dashboard) carry soft light across the whole screen in the photos' own colors. `lib/glow.ts` reduces the stored per-photo dominant colors to four. It buckets hues, ranks the buckets by how much visible color they hold across the set, and lifts each pick to lightness 0.42 to 0.58, with saturation capped at 0.62. A forest shoot glows green and amber, not in the one red jacket, and a mostly gray set puts its gray in a minor slot. In dark appearance the palette is used as is, at 0.7 opacity on portrait screens and 0.55 on landscape ones. In light it is mixed to 35% with white at 0.55 opacity, a pale wash. Those strengths are the most that keep every collection's palette above 4.5:1 for Secondary Label text wherever it scrolls; Secondary Label itself sits a step further from the page than the system gray (`#636368` light, `#a1a1a6` dark) to make that room.
 
 ### Named Rules
-**The Photos Light The Page Rule.** The only color in the page background comes from the photos on it. Never pick glow colors by hand or by brand, and never let the glow take a text element below 4.5:1 (it is tuned so every title, subtitle, bar control and index number clears that in both appearances, on phones and desktop).
+**The Photos Light The Page Rule.** The only color in the page background comes from the photos on it. Never pick glow colors by hand or by brand, and never let the glow take a text element below 4.5:1 (it is tuned so every title, subtitle, bar control and index number clears that at any scroll position, in both appearances, on phones, tablets and desktop).
 
 **The No Accent Rule.** There is no interaction color. A control reads as tappable by its shape (a Fill capsule or circle), a selected or active state inverts to the filled style, and a text link is Label at weight 500 among Secondary Label copy. Never bring back a blue or brand tint for links or buttons.
 
@@ -331,12 +331,14 @@ The backbone of every non-photo page, in the manner of iOS Settings.
 The grouped list drops its card and becomes an index between hairlines on the plain Page background. Each row is a four-column grid: the collection name in Title 1 at weight 600, then the photo count and the month in Body, Secondary Label, tabular and right-aligned, then a chevron. Rows are 24px tall in padding with full-width hairlines. On hover the name slides 6px right on the long-settle curve, the count and month brighten to Label, and the chevron moves 4px and goes full strength; press dims the name to 60%. The search field narrows to 320px above it, and nothing sits below it: home has no footer.
 
 ### Ambient Glow Layer
-An absolutely positioned layer behind everything in its page (the page is `relative isolate`; the layer is `z-index: -1`). Four elliptical radial gradients, one per palette color, each fading to transparent by 70%. A vertical mask runs from 30% at the top edge, so the top bar stays calm, to full strength at 128px, then fades out. Header reach is 300px on phones and 440px on desktop, ending near the top of the grid. Page reach (home) is 380px and 760px, so on dark desktop the light runs behind the index. Phones keep the light in the top-right corner, clear of the title block. Desktop spreads it beside the title, where the header is empty; light home on desktop keeps it up by the title. The four colors are registered custom properties, so on home they ease over 0.9s on the long-settle curve to the colors of whichever collection is hovered or focused.
+A layer fixed to the viewport behind everything in its page (the page is `relative isolate`; the layer is `z-index: -1`), so content scrolls over it and the light never scrolls away. Four broad elliptical radial gradients, one per palette color, each fading to transparent by 70%, pool in from the edges: the top-right corner, the left edge, the lower right and the bottom-left on portrait screens; top right, left edge, bottom and top-left on landscape ones (from a 1:1 aspect ratio up). Each center sits just past the screen edge, so the pools read as broad light coming in rather than bright spots, and black (or white) still holds the middle. Photos cover it in galleries, so it shows in the header, the margins and the gutters. The four colors are registered custom properties, so on home they ease over 0.9s on the long-settle curve to the colors of whichever collection is hovered or focused.
 
 ### Photo Tile
 - **Style:** the photo fills a 6px-radius tile (2px on phones) whose background is the photo's stored dominant color, or Fill, until the image loads and fades in over 500ms.
-- **Hover (pointer devices):** a white like heart (bottom left) and a frosted black download circle (bottom right, `black/35` with blur) fade in; a liked heart stays visible in Like Pink.
-- **Double tap:** a 60px heart bursts in place (Like Pink to like; translucent white with a strike to unlike).
+- **Hover (mouse and trackpad only):** a white like heart (bottom left) and a black download circle (bottom right, `black/45`) fade in; a liked heart stays visible in Like Pink. On touch screens neither control exists to tap, so every tap reaches the photo, and a liked heart is only a mark.
+- **Tap:** opens the photo. A press shows by insetting the tile to 97% after 70ms, so the start of a scroll never flashes it.
+- **Double tap (signed in):** likes or unlikes, and a 60px heart bursts in place (Like Pink to like; translucent white with a strike to unlike). Single taps wait the 250ms double-tap window; signed-out taps open at once.
+- **Press and hold (450ms):** starts selection with that photo; further taps add or remove photos. No system image menu appears.
 - **Selection:** the photo insets to 94% scale and a 22px circular badge with a white ring fills white with a black check and a soft lift shadow, popping in.
 
 ### Floating Bar
